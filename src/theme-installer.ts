@@ -1,6 +1,7 @@
 import { StorageManager, CachedTheme } from './storage-manager';
 import { ThemeManager } from './theme-manager';
 import { FontLoader } from './font-loader';
+import { ThemeListFetcher, ExternalThemeItem } from './theme-list-fetcher';
 
 interface ThemeData {
   name: string;
@@ -18,16 +19,20 @@ export class ThemeInstaller {
   private storageManager: StorageManager;
   private themeManager: ThemeManager;
   private fontLoader: FontLoader;
+  private themeListFetcher: ThemeListFetcher;
   private modal: HTMLElement | null = null;
   private form: HTMLFormElement | null = null;
   private urlInput: HTMLInputElement | null = null;
   private previewContainer: HTMLElement | null = null;
   private installButton: HTMLButtonElement | null = null;
   private currentThemeData: ThemeData | null = null;
+  private themeListContainer: HTMLElement | null = null;
+  private searchInput: HTMLInputElement | null = null;
 
   constructor(themeManager: ThemeManager) {
     this.storageManager = new StorageManager();
     this.themeManager = themeManager;
+    this.themeListFetcher = new ThemeListFetcher();
     this.fontLoader = new FontLoader();
   }
 
@@ -59,6 +64,14 @@ export class ThemeInstaller {
     this.urlInput = document.getElementById('theme-url-input') as HTMLInputElement;
     this.previewContainer = document.getElementById('theme-preview');
     this.installButton = document.getElementById('theme-install-submit') as HTMLButtonElement;
+    
+    // Get search themes button
+    const searchThemesBtn = document.getElementById('search-themes-btn');
+    if (searchThemesBtn) {
+      searchThemesBtn.addEventListener('click', () => {
+        this.searchAvailableThemes();
+      });
+    }
 
     if (!this.modal || !this.form || !this.urlInput || !this.previewContainer || !this.installButton) {
       console.error('🚨 ThemeInstaller: Required DOM elements not found');
@@ -625,6 +638,229 @@ export class ThemeInstaller {
       
       // Show error in preview
       this.showPreviewError(error instanceof Error ? error.message : 'Installation failed');
+    }
+  }
+
+  /**
+   * Search and display available themes from TweakCN registry
+   */
+  private async searchAvailableThemes(): Promise<void> {
+    const previewContainer = this.previewContainer;
+    if (!previewContainer) return;
+
+    // Show loading state
+    previewContainer.innerHTML = `
+      <div class="flex items-center justify-center py-8">
+        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mr-3"></div>
+        <span class="text-muted-foreground text-sm">Searching available themes...</span>
+      </div>
+    `;
+
+    try {
+      // Check for cached themes first
+      const cachedNames = this.themeListFetcher.getCachedThemeNames();
+      if (cachedNames.length > 0) {
+        console.log(`🎨 Found ${cachedNames.length} cached theme names`);
+        this.renderThemeNamesList(cachedNames, false);
+        return;
+      }
+
+      // Fetch and cache theme names (first time)
+      const themeNames = await this.themeListFetcher.fetchAndCacheThemeNames();
+      this.renderThemeNamesList(themeNames, true);
+      
+    } catch (error) {
+      console.error('❌ Failed to search themes:', error);
+      previewContainer.innerHTML = `
+        <div class="text-center py-8">
+          <p class="text-destructive text-sm mb-2">Failed to load themes</p>
+          <button 
+            type="button"
+            class="text-primary hover:underline text-xs"
+            onclick="document.getElementById('search-themes-btn').click()"
+          >
+            Try again
+          </button>
+        </div>
+      `;
+    }
+  }
+
+  /**
+   * Render themes list with names only (memory efficient)
+   */
+  private renderThemeNamesList(themeNames: string[], freshFetch: boolean): void {
+    const previewContainer = this.previewContainer;
+    if (!previewContainer) return;
+
+    // Header with refresh option
+    const headerHtml = `
+      <div class="flex items-center justify-between mb-4 pb-2 border-b">
+        <h4 class="text-sm font-medium text-foreground">
+          Available Themes (${themeNames.length})
+        </h4>
+        <button 
+          type="button"
+          id="refresh-themes-btn"
+          class="text-xs text-primary hover:underline"
+          ${freshFetch ? 'style="opacity: 0.5; pointer-events: none;"' : ''}
+        >
+          ${freshFetch ? 'Updated' : 'Refresh'}
+        </button>
+      </div>
+    `;
+
+    // Search input for filtering
+    const searchHtml = `
+      <div class="mb-3">
+        <input 
+          type="text" 
+          id="theme-search"
+          placeholder="Filter themes..."
+          class="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        />
+      </div>
+    `;
+
+    // Themes grid - simple names only
+    const themesHtml = themeNames.map(name => `
+      <div class="theme-name-item flex items-center justify-between p-2 border rounded hover:bg-accent/50 transition-colors" data-theme-name="${name}">
+        <span class="text-sm font-mono text-foreground">${name}</span>
+        <button 
+          class="install-theme-btn text-xs bg-primary text-primary-foreground px-2 py-1 rounded hover:bg-primary/90 transition-colors"
+          data-theme-name="${name}"
+        >
+          Install
+        </button>
+      </div>
+    `).join('');
+
+    previewContainer.innerHTML = `
+      ${headerHtml}
+      ${searchHtml}
+      <div class="max-h-64 overflow-y-auto">
+        <div id="themes-list" class="space-y-1">
+          ${themesHtml}
+        </div>
+      </div>
+      <p class="text-xs text-muted-foreground mt-3 pt-2 border-t">
+        Themes from TweakCN registry • Cached for 24h
+      </p>
+    `;
+
+    // Setup refresh button
+    const refreshBtn = document.getElementById('refresh-themes-btn');
+    if (refreshBtn && !freshFetch) {
+      refreshBtn.addEventListener('click', async () => {
+        refreshBtn.textContent = 'Refreshing...';
+        refreshBtn.style.opacity = '0.5';
+        try {
+          const newNames = await this.themeListFetcher.fetchAndCacheThemeNames(true);
+          this.renderThemeNamesList(newNames, true);
+        } catch (error) {
+          refreshBtn.textContent = 'Error';
+          setTimeout(() => {
+            refreshBtn.textContent = 'Refresh';
+            refreshBtn.style.opacity = '1';
+          }, 2000);
+        }
+      });
+    }
+
+    // Setup search functionality
+    const searchInput = document.getElementById('theme-search') as HTMLInputElement;
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const query = (e.target as HTMLInputElement).value.toLowerCase();
+        this.filterThemeNames(themeNames, query);
+      });
+    }
+
+    // Setup install buttons
+    const installButtons = previewContainer.querySelectorAll('.install-theme-btn');
+    installButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const themeName = (e.target as HTMLElement).getAttribute('data-theme-name');
+        if (themeName) {
+          this.installThemeFromRegistry(themeName);
+        }
+      });
+    });
+  }
+
+  /**
+   * Filter theme names (memory efficient)
+   */
+  private filterThemeNames(themeNames: string[], query: string): void {
+    const list = document.getElementById('themes-list');
+    if (!list) return;
+
+    const filteredNames = themeNames.filter(name => 
+      name.toLowerCase().includes(query)
+    );
+
+    const themesHtml = filteredNames.map(name => `
+      <div class="theme-name-item flex items-center justify-between p-2 border rounded hover:bg-accent/50 transition-colors" data-theme-name="${name}">
+        <span class="text-sm font-mono text-foreground">${name}</span>
+        <button 
+          class="install-theme-btn text-xs bg-primary text-primary-foreground px-2 py-1 rounded hover:bg-primary/90 transition-colors"
+          data-theme-name="${name}"
+        >
+          Install
+        </button>
+      </div>
+    `).join('');
+
+    list.innerHTML = themesHtml;
+
+    // Re-setup install buttons
+    const installButtons = list.querySelectorAll('.install-theme-btn');
+    installButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const themeName = (e.target as HTMLElement).getAttribute('data-theme-name');
+        if (themeName) {
+          this.installThemeFromRegistry(themeName);
+        }
+      });
+    });
+  }
+
+  /**
+   * Install theme directly from registry (memory optimized)
+   */
+  private async installThemeFromRegistry(themeName: string): Promise<void> {
+    try {
+      const themeUrl = this.themeListFetcher.getThemeInstallUrl(themeName);
+      console.log(`🎨 Installing theme from registry: ${themeName}`);
+      
+      // Show installing state
+      const button = document.querySelector(`[data-theme-name="${themeName}"]`) as HTMLElement;
+      if (button) {
+        button.textContent = 'Installing...';
+        (button as HTMLButtonElement).disabled = true;
+      }
+      
+      // Use existing validation and installation logic
+      await this.validateAndPreviewTheme(themeUrl);
+      
+      if (this.currentThemeData) {
+        await this.installCurrentTheme();
+        this.closeModal();
+      }
+      
+    } catch (error) {
+      console.error(`❌ Failed to install theme ${themeName}:`, error);
+      
+      // Reset button state
+      const button = document.querySelector(`[data-theme-name="${themeName}"]`) as HTMLElement;
+      if (button) {
+        button.textContent = 'Install';
+        (button as HTMLButtonElement).disabled = false;
+      }
+      
+      this.showError(`Failed to install ${themeName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 }

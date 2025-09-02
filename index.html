@@ -376,20 +376,28 @@
 
         <!-- Content -->
         <form id="theme-install-form" class="px-6 pb-6 space-y-4">
-          <!-- URL Input -->
+          <!-- URL Input with Search Button -->
           <div class="space-y-2">
             <label for="theme-url-input" class="block text-sm font-medium text-foreground">
               Theme URL
             </label>
-            <input 
-              type="url"
-              id="theme-url-input"
-              placeholder="https://tweakcn.com/r/themes/example.json"
-              class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              required
-            />
+            <div class="flex space-x-2">
+              <input 
+                type="url"
+                id="theme-url-input"
+                placeholder="https://tweakcn.com/r/themes/example.json"
+                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
+              <button 
+                type="button"
+                id="search-themes-btn"
+                class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 whitespace-nowrap"
+              >
+                Buscar themes
+              </button>
+            </div>
             <p class="text-xs text-muted-foreground">
-              Enter a TweakCN-compatible theme URL or JSON endpoint
+              Enter a TweakCN-compatible theme URL or search available themes
             </p>
           </div>
 
