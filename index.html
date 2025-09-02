@@ -5,188 +5,94 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vite Theme Switching Demo</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>" />
+  <!-- Preload critical resources for better performance -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="/src/style.css" as="style">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   
-  <!-- Critical CSS - Eliminates flash by applying theme immediately -->
+  <!-- FOUC Prevention - visibility hidden method -->
   <style>
-    /* Default theme variables (light mode) */
+    /* Hide body until CSS is loaded to prevent flash */
+    body {
+      visibility: hidden;
+      opacity: 0;
+    }
+    
+    /* Basic theme variables for immediate application */
     :root {
       --background: oklch(1.0000 0 0);
       --foreground: oklch(0.1448 0 0);
-      --card: oklch(1.0000 0 0);
-      --card-foreground: oklch(0.1448 0 0);
-      --popover: oklch(1.0000 0 0);
-      --popover-foreground: oklch(0.1448 0 0);
-      --primary: oklch(0.3527 0.1722 263.94);
-      --primary-foreground: oklch(0.9851 0 0);
-      --secondary: oklch(0.9702 0 0);
-      --secondary-foreground: oklch(0.2046 0 0);
-      --muted: oklch(0.9702 0 0);
-      --muted-foreground: oklch(0.5486 0 0);
-      --accent: oklch(0.9702 0 0);
-      --accent-foreground: oklch(0.2046 0 0);
-      --destructive: oklch(0.5830 0.2387 28.4765);
-      --destructive-foreground: oklch(0.9702 0 0);
-      --border: oklch(0.9219 0 0);
-      --input: oklch(0.9219 0 0);
-      --ring: oklch(0.7090 0 0);
-      --radius: 0.5rem;
       --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-      --font-serif: Georgia, Cambria, "Times New Roman", Times, serif;
-      --font-mono: "Fira Code", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    }
-    
-    /* Critical Tailwind classes for immediate render */
-    body {
-      background-color: var(--background);
-      color: var(--foreground);
-      font-family: var(--font-sans);
-      margin: 0;
-      padding: 0;
-    }
-    * {
-      border-color: var(--border);
-    }
-    .antialiased {
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-    
-    /* Critical layout classes */
-    .fixed { position: fixed; }
-    .sticky { position: sticky; }
-    .relative { position: relative; }
-    .absolute { position: absolute; }
-    .inset-0 { top: 0px; right: 0px; bottom: 0px; left: 0px; }
-    .top-0 { top: 0px; }
-    .top-4 { top: 1rem; }
-    .right-4 { right: 1rem; }
-    .z-40 { z-index: 40; }
-    .z-50 { z-index: 50; }
-    
-    /* Critical flexbox */
-    .flex { display: flex; }
-    .items-center { align-items: center; }
-    .justify-center { justify-content: center; }
-    .justify-between { justify-content: space-between; }
-    .space-x-2 > :not([hidden]) ~ :not([hidden]) { --tw-space-x-reverse: 0; margin-right: calc(0.5rem * var(--tw-space-x-reverse)); margin-left: calc(0.5rem * calc(1 - var(--tw-space-x-reverse))); }
-    .space-x-3 > :not([hidden]) ~ :not([hidden]) { --tw-space-x-reverse: 0; margin-right: calc(0.75rem * var(--tw-space-x-reverse)); margin-left: calc(0.75rem * calc(1 - var(--tw-space-x-reverse))); }
-    .space-x-4 > :not([hidden]) ~ :not([hidden]) { --tw-space-x-reverse: 0; margin-right: calc(1rem * var(--tw-space-x-reverse)); margin-left: calc(1rem * calc(1 - var(--tw-space-x-reverse))); }
-    
-    /* Critical sizing */
-    .w-full { width: 100%; }
-    .h-4 { height: 1rem; }
-    .h-16 { height: 4rem; }
-    .w-4 { width: 1rem; }
-    
-    /* Critical colors */
-    .bg-background { background-color: var(--background); }
-    .text-foreground { color: var(--foreground); }
-    .text-muted-foreground { color: var(--muted-foreground); }
-    .text-primary { color: var(--primary); }
-    .border { border-width: 1px; border-color: var(--border); }
-    .border-b { border-bottom-width: 1px; border-color: var(--border); }
-    
-    /* Critical spacing */
-    .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
-    .px-4 { padding-left: 1rem; padding-right: 1rem; }
-    .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
-    .mx-auto { margin-left: auto; margin-right: auto; }
-    .mb-2 { margin-bottom: 0.5rem; }
-    .mb-4 { margin-bottom: 1rem; }
-    .ml-2 { margin-left: 0.5rem; }
-    
-    /* Critical text */
-    .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
-    .text-xs { font-size: 0.75rem; line-height: 1rem; }
-    .font-bold { font-weight: 700; }
-    .font-medium { font-weight: 500; }
-    
-    /* Critical layout helpers */
-    .container { width: 100%; margin-left: auto; margin-right: auto; }
-    @media (min-width: 768px) { .container { max-width: 768px; } }
-    @media (min-width: 1024px) { .container { max-width: 1024px; } }
-    @media (min-width: 1280px) { .container { max-width: 1280px; } }
-    
-    /* Critical opacity and transitions */
-    .opacity-0 { opacity: 0; }
-    .transition-opacity { transition-property: opacity; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
-    .duration-300 { transition-duration: 300ms; }
-    
-    /* Critical rounded corners */
-    .rounded-lg { border-radius: 0.5rem; }
-    .rounded-full { border-radius: 9999px; }
-    
-    .theme-loading {
-      /* No opacity changes during initial load */
     }
   </style>
   
-  <!-- Smart theme detection and immediate CSS application -->
+  <!-- FOUC Prevention Script - Reveal when ready -->
   <script>
     (function() {
+      // Detect theme for basic variables
       try {
-        // Detect saved theme and mode immediately
         const savedTheme = localStorage.getItem('theme') || 'default';
         const savedMode = localStorage.getItem('theme-mode') || 'auto';
         
-        // Resolve mode
         let resolvedMode = savedMode;
         if (savedMode === 'auto') {
           resolvedMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
         
-        // Apply theme-specific variables immediately (before any render)
-        if (savedTheme === 'supabase') {
-          if (resolvedMode === 'light') {
-            document.documentElement.style.setProperty('--primary', 'oklch(0.4902 0.2157 158.72)');
-            document.documentElement.style.setProperty('--ring', 'oklch(0.4902 0.2157 158.72)');
-          } else {
-            document.documentElement.style.setProperty('--background', 'oklch(0.1448 0 0)');
-            document.documentElement.style.setProperty('--foreground', 'oklch(0.9851 0 0)');
-            document.documentElement.style.setProperty('--card', 'oklch(0.1448 0 0)');
-            document.documentElement.style.setProperty('--card-foreground', 'oklch(0.9851 0 0)');
-            document.documentElement.style.setProperty('--primary', 'oklch(0.5569 0.2157 158.72)');
-            document.documentElement.style.setProperty('--secondary', 'oklch(0.1961 0 0)');
-            document.documentElement.style.setProperty('--muted', 'oklch(0.1961 0 0)');
-            document.documentElement.style.setProperty('--border', 'oklch(0.1961 0 0)');
-            document.documentElement.style.setProperty('--input', 'oklch(0.1961 0 0)');
-          }
-        } else if (savedTheme === 'default' && resolvedMode === 'dark') {
+        // Apply basic theme variables for dark mode
+        if (resolvedMode === 'dark') {
           document.documentElement.style.setProperty('--background', 'oklch(0.1448 0 0)');
           document.documentElement.style.setProperty('--foreground', 'oklch(0.9851 0 0)');
-          document.documentElement.style.setProperty('--card', 'oklch(0.1448 0 0)');
-          document.documentElement.style.setProperty('--card-foreground', 'oklch(0.9851 0 0)');
-          document.documentElement.style.setProperty('--primary', 'oklch(0.7090 0.1722 263.94)');
-          document.documentElement.style.setProperty('--secondary', 'oklch(0.1961 0 0)');
-          document.documentElement.style.setProperty('--muted', 'oklch(0.1961 0 0)');
-          document.documentElement.style.setProperty('--border', 'oklch(0.1961 0 0)');
-          document.documentElement.style.setProperty('--input', 'oklch(0.1961 0 0)');
         }
         
-        // Set theme attributes for debugging
         document.documentElement.setAttribute('data-theme', savedTheme);
         document.documentElement.setAttribute('data-mode', resolvedMode);
-        document.documentElement.classList.add('theme-loading');
-        
-        // Show subtle loading only for external themes
-        if (savedTheme !== 'default' && savedTheme !== 'supabase') {
-          document.addEventListener('DOMContentLoaded', function() {
-            const loading = document.getElementById('loading-overlay');
-            if (loading) loading.style.opacity = '1';
-          });
-        }
-        
-        console.log(`🚀 Inline CSS: ${savedTheme} ${resolvedMode} applied before render`);
       } catch (error) {
-        console.warn('Theme detection failed, using defaults:', error);
+        console.warn('Theme detection failed:', error);
       }
+      
+      // Reveal content when fully loaded
+      function revealContent() {
+        document.body.style.visibility = 'visible';
+        document.body.style.opacity = '1';
+        document.body.style.transition = 'opacity 0.2s ease-in-out';
+        console.log('✅ FOUC: Content revealed');
+      }
+      
+      // Primary method: document ready state
+      document.onreadystatechange = function() {
+        if (document.readyState === 'complete') {
+          revealContent();
+        }
+      };
+      
+      // Fallback 1: DOM content loaded
+      document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(revealContent, 100);
+      });
+      
+      // Fallback 2: Firefox-specific workaround
+      if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) {
+        document.addEventListener('DOMContentLoaded', function() {
+          setTimeout(revealContent, 50);
+        });
+      }
+      
+      // Fallback 3: Safety timeout to prevent forever hidden
+      setTimeout(function() {
+        if (document.body.style.visibility === 'hidden') {
+          revealContent();
+          console.warn('⚠️ FOUC: Timeout fallback triggered');
+        }
+      }, 3000);
     })();
   </script>
 </head>
 <body class="antialiased">
+  <!-- Firefox FOUC workaround - dummy script -->
+  <script>/* Firefox FOUC fix */</script>
+  
   <div id="app">
     <!-- Subtle loading indicator (top corner) -->
     <div id="loading-overlay" class="fixed top-4 right-4 z-50 transition-opacity duration-300 opacity-0">
