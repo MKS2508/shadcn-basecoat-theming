@@ -50,7 +50,6 @@ export class ThemePreview extends BaseComponent {
     
     // Extract specific theme colors for inline usage based on current mode (to show PREVIEW theme, not current theme)
     const modeVars = resolvedMode === 'dark' ? themeData.cssVars.dark : themeData.cssVars.light;
-    console.log(`🎨 ThemePreview: Using ${resolvedMode} mode for theme preview`, { currentMode, resolvedMode, hasLightVars: !!themeData.cssVars.light, hasDarkVars: !!themeData.cssVars.dark });
     const previewColors = this.extractInlineColors(modeVars || themeData.cssVars.theme || {});
 
     const templateData = {
@@ -242,7 +241,6 @@ export class ThemePreview extends BaseComponent {
    * Extract colors as inline CSS values for preview components
    */
   private extractInlineColors(cssVars: Record<string, string>): Record<string, string> {
-    console.log('🔍 ThemePreview: cssVars received:', Object.keys(cssVars), cssVars);
     const colors: Record<string, string> = {};
     
     // Define mappings for preview components (cssVars come without -- prefix)
@@ -275,9 +273,7 @@ export class ThemePreview extends BaseComponent {
         fallbackCount++;
       }
     }
-    console.log(`🔍 ThemePreview: Found ${foundCount} theme colors, used ${fallbackCount} fallbacks`);
 
-    console.log('🎨 ThemePreview: Extracted inline colors:', colors);
     return colors;
   }
 

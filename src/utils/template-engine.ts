@@ -34,11 +34,9 @@ export class TemplateEngine {
       // Cache the template
       this.templateCache.set(fullPath, template);
       
-      console.log(`📄 TemplateEngine: Loaded and cached template: ${templatePath}`);
       return template;
       
     } catch (error) {
-      console.error(`❌ TemplateEngine: Failed to load template: ${templatePath}`, error);
       throw error;
     }
   }
@@ -157,7 +155,6 @@ export class TemplateEngine {
    */
   clearCache(): void {
     this.templateCache.clear();
-    console.log('🗑️ TemplateEngine: Cache cleared');
   }
 
   /**

@@ -67,9 +67,7 @@ export class ThemeRegistryList extends BaseComponent {
 
   async loadThemes(forceRefresh: boolean = false): Promise<void> {
     try {
-      console.log('🎨 ThemeRegistryList: loadThemes() called with forceRefresh:', forceRefresh);
       const themes = await this.themeListFetcher.fetchThemeList(forceRefresh);
-      console.log('🎨 ThemeRegistryList: fetchThemeList returned:', themes.length, 'themes');
       const themeNames = themes.map((t: any) => t.name);
       this.allThemes = themeNames;
       
@@ -82,17 +80,13 @@ export class ThemeRegistryList extends BaseComponent {
         isFresh: true // Always fresh for now
       };
 
-      console.log('🎨 ThemeRegistryList: templateData created:', templateData);
       this.setData(templateData);
-      console.log('🎨 ThemeRegistryList: calling render()...');
       await this.render();
-      console.log('🎨 ThemeRegistryList: render() completed');
 
       // REMOVED: Re-bind events after render (causes infinite loop)
       // Events are already bound in BaseComponent.init()
 
     } catch (error) {
-      console.error('Failed to load themes:', error);
       throw error;
     }
   }

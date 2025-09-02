@@ -88,16 +88,13 @@ export class FontLoader {
   async loadThemeFonts(cssVars: Record<string, string>): Promise<void> {
     const fontConfigs = this.extractFontsFromTheme(cssVars);
     
-    console.log('🔤 FontLoader: Detected fonts to load:', fontConfigs.map(f => f.family));
 
     // Load each font
     const loadPromises = fontConfigs.map(config => this.loadFont(config));
     
     try {
       await Promise.all(loadPromises);
-      console.log('✅ FontLoader: All fonts loaded successfully');
     } catch (error) {
-      console.warn('⚠️ FontLoader: Some fonts failed to load:', error);
     }
   }
 
@@ -109,7 +106,6 @@ export class FontLoader {
     
     // Skip if already loaded
     if (this.loadedFonts.has(fontKey)) {
-      console.log(`🔤 FontLoader: Font already loaded: ${config.family}`);
       return;
     }
 
@@ -122,10 +118,8 @@ export class FontLoader {
       }
       
       this.loadedFonts.add(fontKey);
-      console.log(`✅ FontLoader: Loaded font: ${config.family}`);
       
     } catch (error) {
-      console.warn(`❌ FontLoader: Failed to load font ${config.family}:`, error);
     }
   }
 
@@ -161,10 +155,9 @@ export class FontLoader {
   /**
    * Load web font from external source
    */
-  private async loadWebFont(config: FontConfig): Promise<void> {
+  private async loadWebFont(_config: FontConfig): Promise<void> {
     // For now, we'll try to detect and load common web fonts
     // In a real implementation, this might parse @font-face rules
-    console.log(`🔤 FontLoader: Attempting to load web font: ${config.family}`);
     
     // Try to create a FontFace if we have a URL (this would be expanded)
     // For now, we'll just mark as loaded to avoid repeated attempts
@@ -189,12 +182,10 @@ export class FontLoader {
       link.crossOrigin = 'anonymous';
 
       link.onload = () => {
-        console.log(`🔤 FontLoader: CSS loaded from ${url}`);
         resolve();
       };
 
       link.onerror = () => {
-        console.error(`❌ FontLoader: Failed to load CSS from ${url}`);
         reject(new Error(`Failed to load font CSS: ${url}`));
       };
 
@@ -235,7 +226,6 @@ export class FontLoader {
   cleanup(): void {
     // Remove font CSS links that are no longer needed
     // This would be implemented based on current theme requirements
-    console.log('🧹 FontLoader: Cleanup called (implementation pending)');
   }
 
   /**

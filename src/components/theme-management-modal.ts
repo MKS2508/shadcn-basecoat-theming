@@ -43,7 +43,6 @@ export class ThemeManagementModal extends ModalComponent {
     
     await this.storageManager.init();
     this.setupModalEvents();
-    console.log('⚙️ ThemeManagementModal initialized');
   }
 
   /**
@@ -90,7 +89,6 @@ export class ThemeManagementModal extends ModalComponent {
    * Load and display installed themes
    */
   async loadInstalledThemes(): Promise<void> {
-    console.log('📋 Loading installed themes for management...');
     
     if (!this.themesList || !this.installedCount || !this.storageUsed) return;
 
@@ -99,7 +97,6 @@ export class ThemeManagementModal extends ModalComponent {
       const allThemes = await this.storageManager.getAllThemes();
       const installedThemes = allThemes.filter(theme => theme.installed);
 
-      console.log(`📊 Found ${installedThemes.length} installed themes`);
 
       // Update stats
       this.installedCount.textContent = installedThemes.length.toString();
@@ -132,7 +129,6 @@ export class ThemeManagementModal extends ModalComponent {
       this.setupThemeCardListeners();
 
     } catch (error) {
-      console.error('❌ Failed to load installed themes:', error);
       this.themesList.innerHTML = `
         <div class="flex items-center justify-center py-12 text-destructive">
           <div class="text-center">
@@ -243,7 +239,6 @@ export class ThemeManagementModal extends ModalComponent {
    * Apply a theme
    */
   private async applyTheme(themeName: string): Promise<void> {
-    console.log(`🎨 Applying theme: ${themeName}`);
     
     try {
       const button = document.querySelector(`[data-theme-name="${themeName}"].apply-theme-btn`) as HTMLButtonElement;
@@ -264,10 +259,8 @@ export class ThemeManagementModal extends ModalComponent {
         }, 2000);
       }
 
-      console.log(`✅ Theme applied: ${themeName}`);
 
     } catch (error) {
-      console.error(`❌ Failed to apply theme: ${themeName}`, error);
       
       const button = document.querySelector(`[data-theme-name="${themeName}"].apply-theme-btn`) as HTMLButtonElement;
       if (button) {
@@ -288,39 +281,28 @@ export class ThemeManagementModal extends ModalComponent {
     
     if (!confirmed) return;
 
-    console.log(`🗑️ Deleting theme: ${themeName}`);
 
     try {
-      console.log(`🗑️ ThemeManagementModal: Starting deletion process for: ${themeName}`);
       
       // Delete from storage first
-      console.log(`🗑️ ThemeManagementModal: Deleting from StorageManager...`);
       await this.storageManager.deleteTheme(themeName);
-      console.log(`✅ ThemeManagementModal: Deleted from StorageManager: ${themeName}`);
       
       // Remove from theme registry
-      console.log(`🗑️ ThemeManagementModal: Removing from ThemeRegistry...`);
       try {
         await this.themeManager.getThemeRegistry().uninstallTheme(themeName);
-        console.log(`✅ ThemeManagementModal: Removed from ThemeRegistry: ${themeName}`);
       } catch (registryError) {
-        console.warn(`⚠️ ThemeManagementModal: Failed to remove from registry (continuing anyway): ${themeName}`, registryError);
       }
 
-      console.log(`✅ ThemeManagementModal: Theme deletion completed: ${themeName}`);
 
       // Reload the themes list
-      console.log(`🔄 ThemeManagementModal: Reloading themes list...`);
       await this.loadInstalledThemes();
 
       // Trigger callback to update dropdown
       if (this.onThemeDeleted) {
-        console.log(`🔄 ThemeManagementModal: Triggering dropdown update callback...`);
         this.onThemeDeleted();
       }
 
     } catch (error) {
-      console.error(`❌ ThemeManagementModal: Failed to delete theme: ${themeName}`, error);
       alert(`Failed to delete theme "${themeName}". Check console for details.`);
     }
   }
@@ -341,7 +323,6 @@ export class ThemeManagementModal extends ModalComponent {
     
     if (!confirmed) return;
 
-    console.log(`🗑️ Clearing all ${installedThemes.length} installed themes...`);
 
     try {
       // Delete all installed themes
@@ -350,11 +331,9 @@ export class ThemeManagementModal extends ModalComponent {
         try {
           await this.themeManager.getThemeRegistry().uninstallTheme(theme.name);
         } catch (registryError) {
-          console.warn(`Failed to remove ${theme.name} from registry:`, registryError);
         }
       }
 
-      console.log(`✅ All themes cleared`);
 
       // Reload the themes list
       await this.loadInstalledThemes();
@@ -365,7 +344,6 @@ export class ThemeManagementModal extends ModalComponent {
       }
 
     } catch (error) {
-      console.error(`❌ Failed to clear all themes:`, error);
       alert('Failed to clear all themes. Check console for details.');
     }
   }

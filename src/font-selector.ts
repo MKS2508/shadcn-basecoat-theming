@@ -17,16 +17,16 @@ export class FontSelector {
    * Initialize font selector
    */
   async init(): Promise<void> {
-    fontLogger.info('Init starting');
+    (themeLogger|fontLogger|componentLogger|logError|logSuccess).info();
     
     // Initialize modal component
     this.selectorModal = new FontSelectorModal(this.fontManager);
     
     try {
       await this.selectorModal.init();
-      fontLogger.info('Modal init completed');
+      (themeLogger|fontLogger|componentLogger|logError|logSuccess).info();
     } catch (error) {
-      fontLogger.error('Modal init failed:', error);
+      (themeLogger|fontLogger|componentLogger|logError|logSuccess).info();
     }
 
     this.setupEventListeners();
@@ -49,7 +49,7 @@ export class FontSelector {
       });
       
       const clickHandler = (event: Event) => {
-        fontLogger.debug('Button clicked');
+        (themeLogger|fontLogger|componentLogger|logError|logSuccess).info();
         event.preventDefault();
         event.stopPropagation();
         this.openModal();
@@ -57,7 +57,7 @@ export class FontSelector {
       
       fontButton.addEventListener('click', clickHandler);
     } else {
-      fontLogger.error('font-selector-btn not found!');
+      (themeLogger|fontLogger|componentLogger|logError|logSuccess).info();
     }
 
     // Font manager doesn't have onFontChange event, we'll update manually after operations
@@ -70,7 +70,7 @@ export class FontSelector {
     if (this.selectorModal) {
       this.selectorModal.openModal();
     } else {
-      fontLogger.error('selectorModal is null!');
+      (themeLogger|fontLogger|componentLogger|logError|logSuccess).info();
     }
   }
 
@@ -101,9 +101,9 @@ export class FontSelector {
     try {
       // Apply temporary font preview
       await this.fontManager.previewFont(category, fontId);
-      fontLogger.debug(`Previewing ${category} font: ${fontId}`);
+      (themeLogger|fontLogger|componentLogger|logError|logSuccess).info();
     } catch (error) {
-      fontLogger.error('Font preview error:', error);
+      (themeLogger|fontLogger|componentLogger|logError|logSuccess).info();
     }
   }
 
@@ -151,7 +151,7 @@ export class FontSelector {
     await this.fontManager.removeFontOverride('serif');
     await this.fontManager.removeFontOverride('mono');
     this.updateFontSelectorButton();
-    fontLogger.success('All fonts reset to theme defaults');
+    (themeLogger|fontLogger|componentLogger|logError|logSuccess).info();
   }
 
   /**
@@ -177,6 +177,6 @@ export class FontSelector {
     if (this.selectorModal) {
       this.selectorModal.unmount();
     }
-    fontLogger.debug('FontSelector destroyed');
+    (themeLogger|fontLogger|componentLogger|logError|logSuccess).info();
   }
 }

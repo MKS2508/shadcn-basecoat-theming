@@ -31,9 +31,7 @@ export class StorageManager {
     try {
       await this.initIndexedDB();
       this.indexedDBAvailable = true;
-      console.log('📦 StorageManager: Using IndexedDB');
     } catch (error) {
-      console.warn('📦 StorageManager: IndexedDB failed, using localStorage fallback', error);
       this.indexedDBAvailable = false;
     }
   }
@@ -125,13 +123,10 @@ export class StorageManager {
    * Delete theme
    */
   async deleteTheme(name: string): Promise<void> {
-    console.log(`🗑️ StorageManager: Starting deletion of theme: ${name}`);
-    console.log(`📊 StorageManager: Using ${this.indexedDBAvailable ? 'IndexedDB' : 'localStorage'} for deletion`);
     
     if (this.indexedDBAvailable && this.db) {
       await this.deleteFromIndexedDB(name);
     } else {
-      console.log(`💾 StorageManager: Deleting from localStorage: ${name}`);
       this.deleteFromLocalStorage(name);
     }
   }
@@ -139,22 +134,15 @@ export class StorageManager {
   // IndexedDB implementations
   private storeInIndexedDB(theme: CachedTheme): Promise<void> {
     return new Promise((resolve, reject) => {
-      console.log(`💾 StorageManager: Storing theme in IndexedDB:`, {
-        name: theme.name,
-        installed: theme.installed,
-        url: theme.url
-      });
       
       const transaction = this.db!.transaction([this.storeName], 'readwrite');
       const store = transaction.objectStore(this.storeName);
       const request = store.put(theme);
 
       request.onsuccess = () => {
-        console.log(`✅ StorageManager: Successfully stored theme: ${theme.name} (installed: ${theme.installed})`);
         resolve();
       };
       request.onerror = () => {
-        console.error(`❌ StorageManager: Failed to store theme: ${theme.name}`, request.error);
         reject(request.error);
       };
     });
@@ -184,18 +172,15 @@ export class StorageManager {
 
   private deleteFromIndexedDB(name: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      console.log(`🗑️ StorageManager: Deleting theme from IndexedDB: ${name}`);
       
       const transaction = this.db!.transaction([this.storeName], 'readwrite');
       const store = transaction.objectStore(this.storeName);
       const request = store.delete(name);
 
       request.onsuccess = () => {
-        console.log(`✅ StorageManager: Successfully deleted theme from IndexedDB: ${name}`);
         resolve();
       };
       request.onerror = () => {
-        console.error(`❌ StorageManager: Failed to delete theme from IndexedDB: ${name}`, request.error);
         reject(request.error);
       };
     });
@@ -223,7 +208,6 @@ export class StorageManager {
           try {
             themes.push(JSON.parse(data));
           } catch (error) {
-            console.warn(`Failed to parse cached theme: ${key}`, error);
           }
         }
       }

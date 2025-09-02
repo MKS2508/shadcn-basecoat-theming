@@ -31,7 +31,7 @@ export class AppController {
    */
   async init(): Promise<void> {
     try {
-      componentLogger.info('🚀 Initializing App Controller...');
+      (themeLogger|fontLogger|componentLogger|logError|logSuccess).info();
 
       // Initialize core theme system first
       await this.themeManager.init();
@@ -65,13 +65,13 @@ export class AppController {
   private setupThemeCallbacks(): void {
     // Theme manager callback
     this.themeManager.setOnThemeInstalledCallback(() => {
-      componentLogger.info('🔄 Theme installed, refreshing dropdown...');
+      (themeLogger|fontLogger|componentLogger|logError|logSuccess).info();
       this.refreshThemeDropdown();
     });
     
     // Theme installer callback
     this.themeInstaller.setOnThemeInstalledCallback(() => {
-      componentLogger.info('🔄 Theme installer callback triggered, refreshing dropdown...');
+      (themeLogger|fontLogger|componentLogger|logError|logSuccess).info();
       this.refreshThemeDropdown();
     });
   }
@@ -86,7 +86,7 @@ export class AppController {
       throw new Error('Theme dropdown menu element not found');
     }
 
-    componentLogger.debug('Found dropdown menu element:', dropdownMenu);
+    (themeLogger|fontLogger|componentLogger|logError|logSuccess).info();
     this.themeDropdown = new ThemeDropdown('#theme-menu', this.themeManager);
     
     // Set up dropdown callbacks
@@ -143,11 +143,8 @@ export class AppController {
    */
   private setupModeToggle(): void {
     const modeToggle = document.getElementById('mode-toggle');
-    console.log('setupModeToggle: Looking for mode-toggle button...');
-    console.log('setupModeToggle: Found button:', !!modeToggle, modeToggle);
     
     if (!modeToggle) {
-      console.error('setupModeToggle: mode-toggle button not found!');
       return;
     }
 
@@ -159,7 +156,6 @@ export class AppController {
     });
 
     const clickHandler = async (event: Event) => {
-      console.log('setupModeToggle: Mode toggle button clicked!', event.target);
       event.preventDefault();
       event.stopPropagation();
       
@@ -179,20 +175,19 @@ export class AppController {
           break;
       }
 
-      componentLogger.info(`🌓 Switching mode from ${currentMode} to ${newMode}`);
+      (themeLogger|fontLogger|componentLogger|logError|logSuccess).info();
       
       try {
         const currentTheme = this.themeManager.getCurrentTheme();
         await this.themeManager.setTheme(currentTheme, newMode);
         this.updateModeToggleIcon(newMode);
-        componentLogger.info(`✅ Mode toggle completed: ${newMode}`);
+        (themeLogger|fontLogger|componentLogger|logError|logSuccess).info();
       } catch (error) {
         logError('Failed to switch mode', error as Error);
       }
     };
 
     modeToggle.addEventListener('click', clickHandler);
-    console.log('setupModeToggle: Click event listener added to mode toggle button');
   }
 
   /**
@@ -202,7 +197,7 @@ export class AppController {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     mediaQuery.addEventListener('change', async () => {
       if (this.themeManager.getCurrentMode() === 'auto') {
-        componentLogger.info('🔄 System theme changed, updating auto mode');
+        (themeLogger|fontLogger|componentLogger|logError|logSuccess).info();
         // Re-apply current theme with auto mode to pick up system change
         const currentTheme = this.themeManager.getCurrentTheme();
         await this.themeManager.setTheme(currentTheme, 'auto');
@@ -215,7 +210,7 @@ export class AppController {
    */
   private async handleThemeSelection(themeName: string): Promise<void> {
     try {
-      componentLogger.info(`🎨 Switching to theme: ${themeName}`);
+      (themeLogger|fontLogger|componentLogger|logError|logSuccess).info();
       
       const currentMode = this.themeManager.getCurrentMode();
       await this.themeManager.setTheme(themeName, currentMode);
@@ -244,7 +239,7 @@ export class AppController {
    * Open theme browser modal
    */
   private openThemeBrowserModal(): void {
-    componentLogger.info('🔍 Opening theme browser modal');
+    (themeLogger|fontLogger|componentLogger|logError|logSuccess).info();
     
     // Close dropdown by clicking outside or using existing method
     const dropdownButton = document.getElementById('theme-button');
@@ -253,16 +248,13 @@ export class AppController {
     }
     
     // Open theme installer modal directly (no button needed)
-    console.log('AppController: Opening ThemeInstaller modal directly');
     if (this.themeInstaller) {
       // Use a small delay to ensure dropdown closes first
       setTimeout(() => {
-        console.log('AppController: Calling themeInstaller openModal');
         // Access the installer modal using the proper method
         this.themeInstaller.openModal();
       }, 100);
     } else {
-      console.error('AppController: themeInstaller is null');
     }
   }
 
@@ -270,7 +262,7 @@ export class AppController {
    * Open theme management modal
    */
   private openThemeManagementModal(): void {
-    componentLogger.info('⚙️ Opening theme management modal');
+    (themeLogger|fontLogger|componentLogger|logError|logSuccess).info();
     
     // Close dropdown by clicking the button again
     const dropdownButton = document.getElementById('theme-button');
@@ -289,7 +281,6 @@ export class AppController {
     try {
       // Open the modal first, then load themes
       await this.themeManagementModal.openModal();
-      console.log('Theme management modal should be shown here');
     } catch (error) {
       logError('Failed to load installed themes', error as Error);
     }
@@ -371,6 +362,5 @@ export class AppController {
     if (this.themeDropdown) {
       this.themeDropdown.destroy();
     }
-    console.log('🗑️ AppController destroyed');
   }
 }
