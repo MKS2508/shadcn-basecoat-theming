@@ -1,6 +1,7 @@
 import { ModalComponent } from '../utils/base-component';
 import { ThemePreview } from './theme-preview';
 import { ThemeRegistryList } from './theme-registry-list';
+import { ThemeManager } from '../theme-manager';
 import themeInstallerTemplate from '../templates/modals/theme-installer-modal.html?raw';
 
 export class ThemeInstallerModal extends ModalComponent {
@@ -11,9 +12,11 @@ export class ThemeInstallerModal extends ModalComponent {
   private registryList: ThemeRegistryList | null = null;
   private validationTimeout: NodeJS.Timeout | null = null;
   private onThemeInstalled?: () => void;
+  private themeManager: ThemeManager;
 
-  constructor() {
+  constructor(themeManager: ThemeManager) {
     super(themeInstallerTemplate);
+    this.themeManager = themeManager;
   }
 
   override async init(): Promise<void> {
@@ -204,9 +207,10 @@ export class ThemeInstallerModal extends ModalComponent {
       const response = await fetch(url);
       const themeData = await response.json();
 
-      // Install theme using theme manager
-      // This would need to be injected or accessed from the parent
-      console.log('Installing theme:', themeData.name, 'from URL:', url);
+      // Install theme using theme manager (NOW CONNECTED!)
+      console.log('🎨 Installing theme:', themeData.name, 'from URL:', url);
+      await this.themeManager.installTheme(themeData, url);
+      console.log('✅ Theme installed successfully via ThemeManager');
       
       // Close modal and notify parent
       this.close();
@@ -215,7 +219,7 @@ export class ThemeInstallerModal extends ModalComponent {
       }
 
     } catch (error) {
-      console.error('Installation error:', error);
+      console.error('❌ Installation error:', error);
       alert('Failed to install theme. Please try again.');
     } finally {
       this.installButton.disabled = false;
@@ -323,8 +327,10 @@ export class ThemeInstallerModal extends ModalComponent {
       const response = await fetch(themeUrl);
       const themeData = await response.json();
 
-      // Install theme using theme manager
-      console.log('Installing theme:', themeData.name, 'from URL:', themeUrl);
+      // Install theme using theme manager (NOW CONNECTED!)
+      console.log('🎨 Installing theme from registry:', themeData.name, 'from URL:', themeUrl);
+      await this.themeManager.installTheme(themeData, themeUrl);
+      console.log('✅ Registry theme installed successfully via ThemeManager');
       
       // Close modal and notify parent
       this.close();
@@ -333,7 +339,7 @@ export class ThemeInstallerModal extends ModalComponent {
       }
 
     } catch (error) {
-      console.error('Registry installation error:', error);
+      console.error('❌ Registry installation error:', error);
       alert('Failed to install theme. Please try again.');
     } finally {
       this.installButton.disabled = false;

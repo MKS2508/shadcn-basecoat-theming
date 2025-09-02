@@ -2,7 +2,6 @@ import { ModalComponent } from '../utils/base-component';
 import { FontManager } from '../font-manager';
 import { FontOptionsGrid } from './font-options-grid';
 import { fontLogger } from '../utils/logger';
-import { getFontsByCategory } from '../font-catalog';
 import fontSelectorTemplate from '../templates/modals/font-selector-modal.html?raw';
 
 export class FontSelectorModal extends ModalComponent {
@@ -131,20 +130,8 @@ export class FontSelectorModal extends ModalComponent {
   }
 
   private async initializeComponents(): Promise<void> {
-    // Initialize the FontOptionsGrid component
-    if (this.contentContainer) {
-      this.optionsGrid = new FontOptionsGrid('font-options-container');
-      await this.optionsGrid.init();
-      
-      // Set up font selection callback
-      this.optionsGrid.setOnFontSelect((category, fontId) => {
-        fontLogger.debug(`Font selected: ${category} -> ${fontId}`);
-        // Apply the font selection through FontManager
-        this.fontManager.setFontOverride(category, fontId);
-      });
-      
-      fontLogger.debug('FontOptionsGrid initialized successfully');
-    }
+    // FontOptionsGrid will be initialized in updateUI() when needed
+    fontLogger.debug('Components initialization ready');
   }
 
   private async updateUI(): Promise<void> {
@@ -159,51 +146,8 @@ export class FontSelectorModal extends ModalComponent {
     }
 
     if (this.isOverrideEnabled) {
-      // Use FontOptionsGrid component instead of HTML selects
-      if (this.optionsGrid) {
-        // Set up container for the FontOptionsGrid
-        this.contentContainer.innerHTML = `
-          <div class="space-y-4">
-            <div class="border-b border-border">
-              <div class="flex space-x-1" role="tablist">
-                <button class="tab-button active px-3 py-2 text-sm font-medium rounded-t-md border-b-2 border-primary text-primary" data-category="sans">Sans Serif</button>
-                <button class="tab-button px-3 py-2 text-sm font-medium rounded-t-md border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border" data-category="serif">Serif</button>
-                <button class="tab-button px-3 py-2 text-sm font-medium rounded-t-md border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border" data-category="mono">Monospace</button>
-              </div>
-            </div>
-            <div id="font-options-container" class="min-h-[300px]"></div>
-          </div>
-        `;
-        
-        // Set up tab switching
-        const tabButtons = this.contentContainer.querySelectorAll('.tab-button');
-        tabButtons.forEach(button => {
-          button.addEventListener('click', (e) => {
-            const target = e.target as HTMLElement;
-            const category = target.getAttribute('data-category');
-            
-            // Update tab appearance
-            tabButtons.forEach(btn => {
-              btn.classList.remove('active', 'border-primary', 'text-primary');
-              btn.classList.add('border-transparent', 'text-muted-foreground');
-            });
-            target.classList.add('active', 'border-primary', 'text-primary');
-            target.classList.remove('border-transparent', 'text-muted-foreground');
-            
-            // Update FontOptionsGrid category
-            if (category && this.optionsGrid) {
-              this.optionsGrid.setCategory(category as any);
-            }
-          });
-        });
-        
-        // Load current font selections
-        const config = this.fontManager.getOverrideConfiguration();
-        this.optionsGrid.setSelectedFonts(config.fonts);
-        
-        // Start with sans category
-        this.optionsGrid.setCategory('sans');
-      }
+      // Initialize and use FontOptionsGrid component with proper grids system
+      await this.setupFontOptionsGrid();
     } else {
       // Show disabled state
       this.contentContainer.innerHTML = `
@@ -216,7 +160,79 @@ export class FontSelectorModal extends ModalComponent {
           </div>
         </div>
       `;
+      // Clean up existing FontOptionsGrid
+      if (this.optionsGrid) {
+        this.optionsGrid.unmount();
+        this.optionsGrid = null;
+      }
     }
+  }
+
+  private async setupFontOptionsGrid(): Promise<void> {
+    if (!this.contentContainer) return;
+
+    // Set up container for the FontOptionsGrid with tabs
+    this.contentContainer.innerHTML = `
+      <div class="space-y-4">
+        <div class="border-b border-border">
+          <div class="flex space-x-1" role="tablist">
+            <button class="tab-button active px-3 py-2 text-sm font-medium rounded-t-md border-b-2 border-primary text-primary" data-category="sans">Sans Serif</button>
+            <button class="tab-button px-3 py-2 text-sm font-medium rounded-t-md border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border" data-category="serif">Serif</button>
+            <button class="tab-button px-3 py-2 text-sm font-medium rounded-t-md border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border" data-category="mono">Monospace</button>
+          </div>
+        </div>
+        <div id="font-options-container" class="min-h-[300px]"></div>
+      </div>
+    `;
+
+    // Initialize FontOptionsGrid AFTER container is created
+    this.optionsGrid = new FontOptionsGrid('font-options-container');
+    await this.optionsGrid.init();
+    
+    // Set up font selection callback
+    this.optionsGrid.setOnFontSelect((category, fontId) => {
+      fontLogger.debug(`Font selected: ${category} -> ${fontId}`);
+      // Apply the font selection through FontManager
+      this.fontManager.setFontOverride(category, fontId);
+      // Update UI to reflect changes
+      this.updateFontSelectorButton();
+    });
+    
+    // Set up tab switching AFTER FontOptionsGrid is initialized
+    const tabButtons = this.contentContainer.querySelectorAll('.tab-button');
+    tabButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const category = target.getAttribute('data-category');
+        
+        // Update tab appearance
+        tabButtons.forEach(btn => {
+          btn.classList.remove('active', 'border-primary', 'text-primary');
+          btn.classList.add('border-transparent', 'text-muted-foreground');
+        });
+        target.classList.add('active', 'border-primary', 'text-primary');
+        target.classList.remove('border-transparent', 'text-muted-foreground');
+        
+        // Update FontOptionsGrid category
+        if (category && this.optionsGrid) {
+          this.optionsGrid.setCategory(category as any);
+        }
+      });
+    });
+    
+    // Load current font selections
+    const config = this.fontManager.getOverrideConfiguration();
+    const fonts = {
+      sans: config.fonts.sans || null,
+      serif: config.fonts.serif || null,
+      mono: config.fonts.mono || null
+    };
+    this.optionsGrid.setSelectedFonts(fonts);
+    
+    // Start with sans category and render the grid
+    this.optionsGrid.setCategory('sans');
+    
+    fontLogger.debug('✅ FontOptionsGrid setup completed with grids system');
   }
 
 

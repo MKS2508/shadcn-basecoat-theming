@@ -75,7 +75,14 @@ export class ThemePreview extends BaseComponent {
 
   showLoading(message: string = 'Validating...'): void {
     if (this.element) {
-      this.element.innerHTML = `<div class="text-muted-foreground text-sm">${message}</div>`;
+      this.element.innerHTML = `
+        <div class="flex items-center justify-center py-8">
+          <div class="text-center space-y-3">
+            <div class="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
+            <div class="text-muted-foreground text-sm">${message}</div>
+          </div>
+        </div>
+      `;
     }
   }
 
@@ -171,19 +178,49 @@ export class ThemePreview extends BaseComponent {
   private extractPreviewColors(cssVars?: Record<string, string>): ColorInfo[] {
     if (!cssVars) return [];
 
-    const colorKeys = ['--background', '--foreground', '--primary', '--secondary', '--accent', '--destructive'];
+    const colorKeys = ['--background', '--foreground', '--primary', '--secondary', '--accent', '--muted', '--destructive'];
     const colors: ColorInfo[] = [];
 
     for (const key of colorKeys) {
       if (cssVars[key]) {
-        const name = key.replace('--', '');
-        colors.push({
-          name: name,
-          value: `hsl(${cssVars[key]})`
-        });
+        const name = key.replace('--', '').replace('-', ' ');
+        let value = cssVars[key];
+        
+        // Handle different color formats
+        if (value.includes('hsl')) {
+          // Already HSL format
+          colors.push({ name, value });
+        } else if (value.includes('oklch')) {
+          // OKLCH format - approximate conversion for preview
+          colors.push({ 
+            name, 
+            value: `hsl(${this.oklchToHslApprox(value)})`
+          });
+        } else if (value.includes('rgb')) {
+          // RGB format
+          colors.push({ name, value });
+        } else {
+          // Assume it's HSL values without wrapper
+          colors.push({ 
+            name, 
+            value: `hsl(${value})` 
+          });
+        }
       }
     }
 
     return colors;
+  }
+
+  private oklchToHslApprox(oklchValue: string): string {
+    // Simple approximation for preview purposes
+    const match = oklchValue.match(/oklch\(([\d.]+)\s+([\d.]+)\s+([\d.]+)\)/);
+    if (match) {
+      const l = parseFloat(match[1]) * 100;
+      const c = parseFloat(match[2]) * 100;  
+      const h = parseFloat(match[3]);
+      return `${h}, ${c}%, ${l}%`;
+    }
+    return '0, 0%, 50%'; // fallback
   }
 }

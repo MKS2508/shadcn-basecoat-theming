@@ -20,8 +20,10 @@ export class ThemeInstaller {
   private themeListFetcher: ThemeListFetcher;
   private installerModal: ThemeInstallerModal | null = null;
   private onThemeInstalled?: () => void;
+  private themeManager: ThemeManager;
 
-  constructor(_themeManager: ThemeManager) {
+  constructor(themeManager: ThemeManager) {
+    this.themeManager = themeManager;
     this.storageManager = new StorageManager();
     this.themeListFetcher = new ThemeListFetcher();
   }
@@ -40,8 +42,8 @@ export class ThemeInstaller {
     await this.storageManager.init();
     await this.themeListFetcher.init();
     
-    // Initialize modal component
-    this.installerModal = new ThemeInstallerModal();
+    // Initialize modal component with ThemeManager
+    this.installerModal = new ThemeInstallerModal(this.themeManager);
     await this.installerModal.init();
     
     // Set up callbacks
