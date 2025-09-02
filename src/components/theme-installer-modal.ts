@@ -31,13 +31,6 @@ export class ThemeInstallerModal extends ModalComponent {
     this.installButton = this.query('#theme-install-submit') as HTMLButtonElement;
     
     // Debug: check if elements were found
-    console.log('🔍 ThemeInstallerModal elements found:', {
-      modal: !!this.modal,
-      backdrop: !!this.backdrop,
-      form: !!this.form,
-      urlInput: !!this.urlInput,
-      installButton: !!this.installButton
-    });
     
     // STEP 3: NOW call bindEvents (urlInput exists!)
     this.bindEvents();
@@ -64,20 +57,16 @@ export class ThemeInstallerModal extends ModalComponent {
 
   protected bindEvents(): void {
     // URL input validation - use bindEvent for cleanup tracking
-    console.log('🔧 ThemeInstallerModal: Binding events, urlInput exists:', !!this.urlInput);
     if (this.urlInput) {
       this.bindEvent(this.urlInput, 'input', (_e) => {
-        console.log('📝 URL input changed:', this.urlInput?.value);
         if (this.validationTimeout) {
           clearTimeout(this.validationTimeout);
         }
         
         this.validationTimeout = setTimeout(() => {
-          console.log('⏰ Triggering validation after timeout');
           this.validateAndPreview();
         }, 800);
       });
-      console.log('✅ URL input event listener bound');
     } else {
       console.error('❌ URL input not found during event binding');
     }
@@ -208,9 +197,7 @@ export class ThemeInstallerModal extends ModalComponent {
       const themeData = await response.json();
 
       // Install theme using theme manager (NOW CONNECTED!)
-      console.log('🎨 Installing theme:', themeData.name, 'from URL:', url);
       await this.themeManager.installTheme(themeData, url);
-      console.log('✅ Theme installed successfully via ThemeManager');
       
       // Close modal and notify parent
       this.close();
@@ -236,11 +223,9 @@ export class ThemeInstallerModal extends ModalComponent {
     // Replace preview with registry list
     const previewContainer = this.query('#theme-preview');
     if (previewContainer) {
-      console.log('🎨 showRegistryList: Setting loading message...');
       previewContainer.innerHTML = '<div class="text-muted-foreground text-sm">Loading themes...</div>';
       
       try {
-        console.log('🎨 showRegistryList: Setting up event handlers...');
         // Set up event handlers before loading
         this.registryList.setOnThemePreview((themeName: string) => {
           this.previewThemeFromRegistry(themeName);
@@ -250,16 +235,11 @@ export class ThemeInstallerModal extends ModalComponent {
           this.installThemeFromRegistry(themeName);
         });
 
-        console.log('🎨 showRegistryList: Calling loadThemes()...');
         await this.registryList.loadThemes();
-        console.log('🎨 showRegistryList: loadThemes() completed, getting element...');
         const registryElement = this.registryList.getElement();
-        console.log('🎨 showRegistryList: registryElement found:', !!registryElement);
         if (registryElement) {
-          console.log('🎨 showRegistryList: Replacing content with registry element...');
           previewContainer.innerHTML = '';
           previewContainer.appendChild(registryElement);
-          console.log('🎨 showRegistryList: Registry element appended successfully');
         } else {
           console.error('❌ ThemeRegistryList element not found after loadThemes()')
         }
@@ -328,9 +308,7 @@ export class ThemeInstallerModal extends ModalComponent {
       const themeData = await response.json();
 
       // Install theme using theme manager (NOW CONNECTED!)
-      console.log('🎨 Installing theme from registry:', themeData.name, 'from URL:', themeUrl);
       await this.themeManager.installTheme(themeData, themeUrl);
-      console.log('✅ Registry theme installed successfully via ThemeManager');
       
       // Close modal and notify parent
       this.close();

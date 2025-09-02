@@ -16,7 +16,6 @@ class PerformanceMonitor {
     const startTime = this.metrics.get(label);
     if (startTime) {
       const duration = performance.now() - startTime;
-      console.log(`📊 Performance [${label}]: ${duration.toFixed(1)}ms`);
       this.metrics.delete(label);
       return duration;
     }
@@ -25,10 +24,8 @@ class PerformanceMonitor {
   
   static measureThemeSwitch(themeName: string, mode: string, duration: number): void {
     const target = duration < 16 ? '🚀' : duration < 50 ? '⚡' : '📈';
-    console.log(`${target} Theme Switch [${themeName}-${mode}]: ${duration.toFixed(1)}ms`);
     
     if (duration > 50) {
-      console.warn(`⚠️ Theme switch exceeded 50ms target: ${duration.toFixed(1)}ms`);
     }
   }
 }
@@ -72,7 +69,6 @@ export class ThemeManager {
   async init(): Promise<void> {
     try {
       PerformanceMonitor.startTimer('theme-manager-init');
-      console.log('🎨 ThemeManager: Initializing...');
       
       // Initialize theme registry first
       await this.themeRegistry.init();
@@ -89,7 +85,6 @@ export class ThemeManager {
       this.currentTheme = themeExists ? savedTheme : 'default';
       this.currentMode = savedMode;
       
-      console.log(`🎨 ThemeManager: Applying theme: ${this.currentTheme}, mode: ${this.currentMode}`);
       
       // Apply initial theme
       await this.applyTheme(this.currentTheme, this.currentMode);
@@ -99,7 +94,6 @@ export class ThemeManager {
       
       // End initialization timer
       PerformanceMonitor.endTimer('theme-manager-init');
-      console.log('✅ ThemeManager: Initialized successfully');
       
     } catch (error) {
       console.error('❌ ThemeManager: Failed to initialize:', error);
@@ -109,7 +103,6 @@ export class ThemeManager {
       this.currentMode = 'auto';
       
       // Try to apply default theme without registry
-      console.log('🔄 ThemeManager: Attempting fallback initialization...');
     }
   }
 
@@ -131,7 +124,6 @@ export class ThemeManager {
     // Debounced storage save (non-blocking)
     this.saveThemeSettings(theme, newMode);
 
-    console.log(`🔄 Setting theme: ${theme}, mode: ${newMode}`);
     await this.applyTheme(theme, newMode);
     
     // End performance timer and log metrics
@@ -151,7 +143,6 @@ export class ThemeManager {
       }
     });
     
-    console.log(`🚀 ThemeManager: Prefetching ${this.BUILTIN_THEMES.length} built-in themes`);
   }
 
   /**
@@ -179,12 +170,10 @@ export class ThemeManager {
       
       link.onload = () => {
         this.prefetchedThemes.add(prefetchKey);
-        console.log(`⚡ ThemeManager: Prefetched ${prefetchKey}`);
         resolve();
       };
       
       link.onerror = () => {
-        console.warn(`⚠️ ThemeManager: Failed to prefetch ${prefetchKey}`);
         resolve();
       };
       
@@ -198,12 +187,10 @@ export class ThemeManager {
    * Apply a specific theme using direct CSS variable updates (optimized)
    */
   private async applyTheme(themeName: string, mode: 'light' | 'dark' | 'auto'): Promise<void> {
-    console.log(`🎨 Applying theme: ${themeName}, mode: ${mode}`);
     
     // Get theme config from registry
     const themeConfig = this.themeRegistry.getTheme(themeName);
     if (!themeConfig) {
-      console.warn(`Theme "${themeName}" not found in registry, falling back to default`);
       themeName = 'default';
       const fallbackTheme = this.themeRegistry.getTheme('default');
       if (!fallbackTheme) {
@@ -216,7 +203,6 @@ export class ThemeManager {
     if (mode === 'auto') {
       const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       resolvedMode = systemPrefersDark ? 'dark' : 'light';
-      console.log(`🔍 Auto mode resolved to: ${resolvedMode}`);
     } else {
       resolvedMode = mode;
     }
@@ -229,20 +215,17 @@ export class ThemeManager {
       const finalThemeConfig = this.themeRegistry.getTheme(themeName)!;
       const cssPath = finalThemeConfig.modes[resolvedMode];
       
-      console.log(`🔄 Loading CSS variables from: ${cssPath}`);
       
       // Fetch CSS content and extract variables
       let cssVariables: Record<string, string> = {};
       
       if (cssPath.startsWith('blob:')) {
         // Handle blob URLs (installed themes)
-        console.log(`💫 Loading blob theme: ${themeName}`);
         const response = await fetch(cssPath);
         const cssContent = await response.text();
         cssVariables = this.extractCSSVariables(cssContent);
       } else {
         // Handle static file themes
-        console.log(`📁 Loading static theme: ${cssPath}`);
         const response = await fetch(cssPath);
         if (!response.ok) {
           throw new Error(`Failed to fetch CSS: ${response.status}`);
@@ -255,7 +238,6 @@ export class ThemeManager {
       const startTime = performance.now();
       this.applyCSSVariables(cssVariables);
       const applyTime = performance.now() - startTime;
-      console.log(`⚡ CSS variables applied: ${applyTime.toFixed(1)}ms`);
       
       // Remove any previous theme CSS link
       if (this.currentStyleElement) {
@@ -266,13 +248,11 @@ export class ThemeManager {
       // Set data attributes for debugging
       document.documentElement.setAttribute('data-theme', themeName);
       document.documentElement.setAttribute('data-mode', resolvedMode);
-      console.log(`📝 Set data-theme: ${themeName}, data-mode: ${resolvedMode}`);
       
       // Load fonts for this theme if available
       try {
         const themeConfig = this.themeRegistry.getTheme(themeName);
         if (themeConfig && themeConfig.fonts) {
-          console.log(`🔤 Loading fonts for theme: ${themeName}`);
           
           // Load external fonts if defined
           if (themeConfig.externalFonts && themeConfig.externalFonts.length > 0) {
@@ -286,7 +266,6 @@ export class ThemeManager {
           }
         }
       } catch (fontError) {
-        console.warn('⚠️ Font loading failed, but theme applied successfully:', fontError);
       }
       
       // Trigger transition animation
@@ -315,7 +294,6 @@ export class ThemeManager {
     // Match :root { ... } block
     const rootMatch = cssContent.match(/:root\s*{([^}]+)}/);
     if (!rootMatch) {
-      console.warn('No :root block found in CSS content');
       return variables;
     }
     
@@ -332,7 +310,6 @@ export class ThemeManager {
       });
     }
     
-    console.log(`🔍 Extracted ${Object.keys(variables).length} CSS variables`);
     return variables;
   }
 
@@ -347,7 +324,6 @@ export class ThemeManager {
       root.style.setProperty(property, value);
     });
     
-    console.log(`✅ Applied ${Object.keys(variables).length} CSS variables to document root`);
   }
 
   /**
@@ -371,7 +347,6 @@ export class ThemeManager {
     try {
       return this.themeRegistry.getAvailableThemes();
     } catch (error) {
-      console.warn('⚠️ ThemeRegistry not initialized, returning empty themes list');
       return [];
     }
   }
@@ -381,12 +356,10 @@ export class ThemeManager {
    */
   async installTheme(themeData: { name: string; cssVars: any }, sourceUrl?: string): Promise<void> {
     try {
-      console.log(`🎨 Installing theme: ${themeData.name}`);
       
       // Use theme registry to install and manage the theme
       const installedTheme = await this.themeRegistry.installTheme(themeData, sourceUrl || '');
       
-      console.log(`✅ Theme installed via registry: ${themeData.name}`);
       
       // Trigger regeneration of theme dropdown
       this.onThemeInstalled?.(installedTheme);
@@ -474,7 +447,6 @@ export class ThemeManager {
         localStorage.setItem(this.MODE_STORAGE_KEY, mode);
       }
       
-      console.log(`💾 ThemeManager: Settings saved (optimized): ${theme || 'current'}, ${mode || 'current'}`);
       
       // Clear pending saves
       this.themeStorage.pending = {};

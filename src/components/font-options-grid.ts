@@ -60,9 +60,7 @@ export class FontOptionsGrid extends BaseComponent {
   }
 
   setSelectedFonts(selections: Record<FontCategory, string | null>): void {
-    console.log('🔤 FontOptionsGrid: setSelectedFonts called with:', selections);
     this.selectedFontIds = { ...selections };
-    console.log('🔤 FontOptionsGrid: selectedFontIds updated to:', this.selectedFontIds);
     // Trigger re-render to update UI
     this.render();
   }
@@ -71,9 +69,6 @@ export class FontOptionsGrid extends BaseComponent {
     const fonts = getFontsByCategory(this.currentCategory);
     const selectedFontId = this.selectedFontIds[this.currentCategory];
     
-    console.log(`🔤 FontOptionsGrid: Rendering category: ${this.currentCategory}`);
-    console.log(`🔤 FontOptionsGrid: Selected font ID: ${selectedFontId}`);
-    console.log(`🔤 FontOptionsGrid: Available fonts:`, fonts.map(f => f.id));
     
     // Separate system and Google fonts
     const systemFonts = fonts.filter(font => font.category === 'system');
@@ -94,8 +89,6 @@ export class FontOptionsGrid extends BaseComponent {
       currentCategory: this.currentCategory // Add category to each font for template access
     }));
 
-    console.log(`🔤 FontOptionsGrid: Enriched system fonts:`, enrichedSystemFonts.map(f => ({id: f.id, isSelected: f.isSelected})));
-    console.log(`🔤 FontOptionsGrid: Enriched google fonts:`, enrichedGoogleFonts.map(f => ({id: f.id, isSelected: f.isSelected})));
 
     this.setData({
       categoryName: this.getCategoryDisplayName(this.currentCategory),
@@ -107,7 +100,6 @@ export class FontOptionsGrid extends BaseComponent {
     });
 
     await super.render();
-    console.log(`🔤 FontOptionsGrid: Render completed for ${this.currentCategory}`);
   }
 
   private getCategoryDisplayName(category: FontCategory): string {

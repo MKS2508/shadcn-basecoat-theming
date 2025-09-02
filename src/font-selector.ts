@@ -17,14 +17,12 @@ export class FontSelector {
    * Initialize font selector
    */
   async init(): Promise<void> {
-    fontLogger.info('Init starting');
     
     // Initialize modal component
     this.selectorModal = new FontSelectorModal(this.fontManager);
     
     try {
       await this.selectorModal.init();
-      fontLogger.info('Modal init completed');
     } catch (error) {
       fontLogger.error('Modal init failed:', error);
     }
@@ -49,7 +47,6 @@ export class FontSelector {
       });
       
       const clickHandler = (event: Event) => {
-        fontLogger.debug('Button clicked');
         event.preventDefault();
         event.stopPropagation();
         this.openModal();
@@ -101,7 +98,6 @@ export class FontSelector {
     try {
       // Apply temporary font preview
       await this.fontManager.previewFont(category, fontId);
-      fontLogger.debug(`Previewing ${category} font: ${fontId}`);
     } catch (error) {
       fontLogger.error('Font preview error:', error);
     }
@@ -177,6 +173,5 @@ export class FontSelector {
     if (this.selectorModal) {
       this.selectorModal.unmount();
     }
-    fontLogger.debug('FontSelector destroyed');
   }
 }

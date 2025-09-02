@@ -54,7 +54,6 @@ export class ThemeInstaller {
     });
 
     this.setupEventListeners();
-    console.log('🎨 ThemeInstaller initialized with modular components');
   }
 
   /**
@@ -65,7 +64,6 @@ export class ThemeInstaller {
     const installBtn = document.getElementById('install-theme-btn');
     if (installBtn) {
       installBtn.addEventListener('click', () => {
-        console.log('🎯 Install button clicked, opening modal');
         this.openModal();
       });
     }
@@ -85,7 +83,6 @@ export class ThemeInstaller {
    */
   async installThemeFromUrl(url: string): Promise<void> {
     try {
-      console.log(`🎨 Installing theme from URL: ${url}`);
       
       const response = await fetch(url);
       if (!response.ok) {
@@ -110,7 +107,6 @@ export class ThemeInstaller {
    */
   async installThemeFromRegistry(themeName: string): Promise<void> {
     try {
-      console.log(`🎨 Installing theme from registry: ${themeName}`);
       
       const registryUrl = 'https://tweakcn.com/r/registry.json';
       const response = await fetch(registryUrl);
@@ -143,7 +139,6 @@ export class ThemeInstaller {
 
     // Storage handled elsewhere
     
-    console.log(`✅ Theme ${themeData.name} installed successfully`);
   }
 
 
@@ -183,6 +178,5 @@ export class ThemeInstaller {
     if (this.installerModal) {
       this.installerModal.unmount();
     }
-    console.log('🗑️ ThemeInstaller destroyed');
   }
 }

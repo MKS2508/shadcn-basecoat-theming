@@ -24,10 +24,6 @@ export class ThemeDropdown {
     this.themeManager = themeManager;
     this.closeOnSelect = closeOnSelect;
     
-    console.log('ThemeDropdown constructor:');
-    console.log('- Selector:', dropdownMenuSelector);
-    console.log('- Found element:', this.dropdownMenu);
-    console.log('- Element HTML before:', this.dropdownMenu?.innerHTML);
   }
 
   /**
@@ -35,12 +31,10 @@ export class ThemeDropdown {
    */
   init(): void {
     if (!this.dropdownMenu) {
-      console.warn('Theme dropdown menu not found');
       return;
     }
 
     // Don't bind events here - they will be bound after rendering
-    console.log('ThemeDropdown initialized, events will be bound after render');
   }
 
   private eventsBound: boolean = false;
@@ -53,11 +47,9 @@ export class ThemeDropdown {
 
     // Prevent multiple event bindings
     if (this.eventsBound) {
-      console.log('bindEvents: Events already bound, skipping');
       return;
     }
 
-    console.log('bindEvents: Starting event binding...');
     
     // Use event delegation for dynamically generated content
     const clickHandler = (e: Event) => {
@@ -99,7 +91,6 @@ export class ThemeDropdown {
 
     this.dropdownMenu.addEventListener('click', clickHandler);
     this.eventsBound = true;
-    console.log('bindEvents: Click event listener added to dropdown menu');
   }
 
   setOnThemeSelect(callback: (themeName: string) => void): void {
@@ -118,8 +109,6 @@ export class ThemeDropdown {
    * Generate and render dropdown content
    */
   async render(): Promise<void> {
-    console.log('ThemeDropdown.render() called');
-    console.log('- dropdownMenu exists:', !!this.dropdownMenu);
     
     if (!this.dropdownMenu) {
       console.error('No dropdown menu element found!');
@@ -130,8 +119,6 @@ export class ThemeDropdown {
       const themes = this.themeManager.getAvailableThemes();
       const currentTheme = this.themeManager.getCurrentTheme();
       
-      console.log('- Available themes:', themes);
-      console.log('- Current theme:', currentTheme);
 
       const themeOptions: ThemeOption[] = themes.map((config) => ({
         name: config.name,
@@ -140,7 +127,6 @@ export class ThemeDropdown {
         isActive: currentTheme === config.name
       }));
 
-      console.log('- Theme options:', themeOptions);
 
       // Use proper template engine rendering (restored)
       await this.renderWithTemplateEngine(themeOptions);
@@ -162,7 +148,6 @@ export class ThemeDropdown {
 
     // For now, use the same HTML generation but with proper structure
     // TODO: Create actual template file if needed
-    console.log('renderWithTemplateEngine: Starting proper template rendering');
     
     let html = '';
 
@@ -212,17 +197,13 @@ export class ThemeDropdown {
       </div>
     `;
 
-    console.log('renderWithTemplateEngine: Generated HTML length:', html.length);
-    console.log('renderWithTemplateEngine: Setting innerHTML...');
     
     this.dropdownMenu.innerHTML = html;
     
-    console.log('renderWithTemplateEngine: innerHTML set, now binding events...');
     
     // Bind events AFTER setting innerHTML
     this.bindEvents();
     
-    console.log('renderWithTemplateEngine: Events bound successfully');
   }
 
   /**
@@ -234,12 +215,9 @@ export class ThemeDropdown {
       return;
     }
 
-    console.log('renderFallback: Starting fallback rendering');
     const themes = this.themeManager.getAvailableThemes();
     const currentTheme = this.themeManager.getCurrentTheme();
 
-    console.log('renderFallback: themes:', themes);
-    console.log('renderFallback: currentTheme:', currentTheme);
 
     let html = '';
 
@@ -248,7 +226,6 @@ export class ThemeDropdown {
       const icon = this.getThemeIcon(theme.name);
       const isActive = currentTheme === theme.name;
       
-      console.log(`renderFallback: Processing theme ${theme.name}, active: ${isActive}`);
       
       html += `
         <button 
@@ -294,17 +271,13 @@ export class ThemeDropdown {
       </div>
     `;
 
-    console.log('renderFallback: Generated HTML length:', html.length);
-    console.log('renderFallback: Setting innerHTML...');
     
     this.dropdownMenu.innerHTML = html;
     
-    console.log('renderFallback: innerHTML set, now binding events...');
     
     // Bind events AFTER setting innerHTML
     this.bindEvents();
     
-    console.log('renderFallback: Events bound successfully');
   }
 
   /**
@@ -342,7 +315,6 @@ export class ThemeDropdown {
    */
   setCloseOnSelect(closeOnSelect: boolean): void {
     this.closeOnSelect = closeOnSelect;
-    console.log('ThemeDropdown: closeOnSelect set to', closeOnSelect);
   }
 
   /**
@@ -350,6 +322,5 @@ export class ThemeDropdown {
    */
   destroy(): void {
     // Cleanup resources if needed
-    console.log('🗑️ ThemeDropdown destroyed');
   }
 }

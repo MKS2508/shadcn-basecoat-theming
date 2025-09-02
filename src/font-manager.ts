@@ -44,7 +44,6 @@ export class FontManager {
    * Initialize font manager
    */
   async init(): Promise<void> {
-    console.log('🔤 FontManager: Initializing...');
     
     // Load saved font override configuration
     this.loadOverrideConfiguration();
@@ -54,7 +53,6 @@ export class FontManager {
       await this.applyFontOverrides();
     }
     
-    console.log('✅ FontManager: Initialized', this.currentOverride);
     
     // Clean up any debug test containers
     this.cleanupDebugElements();
@@ -68,10 +66,8 @@ export class FontManager {
       const saved = localStorage.getItem(this.STORAGE_KEY);
       if (saved) {
         this.currentOverride = JSON.parse(saved);
-        console.log('📂 FontManager: Loaded configuration from storage');
       }
     } catch (error) {
-      console.warn('⚠️ FontManager: Failed to load configuration, using defaults', error);
       this.currentOverride = { enabled: false, fonts: {} };
     }
   }
@@ -121,7 +117,6 @@ export class FontManager {
     
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.pendingConfig));
-      console.log('💾 FontManager: Configuration saved (optimized)');
       this.pendingConfig = null;
     } catch (error) {
       console.error('❌ FontManager: Failed to save configuration', error);
@@ -146,7 +141,6 @@ export class FontManager {
    * Enable font overrides
    */
   async enableOverride(): Promise<void> {
-    console.log('🔤 FontManager: Enabling font override');
     
     this.currentOverride.enabled = true;
     this.saveOverrideConfiguration();
@@ -158,7 +152,6 @@ export class FontManager {
    * Disable font overrides (revert to theme fonts)
    */
   async disableOverride(): Promise<void> {
-    console.log('🔤 FontManager: Disabling font override');
     
     this.currentOverride.enabled = false;
     this.saveOverrideConfiguration();
@@ -170,7 +163,6 @@ export class FontManager {
    * Set font override for specific category
    */
   async setFontOverride(category: 'sans' | 'serif' | 'mono', fontId: string): Promise<void> {
-    console.log(`🔤 FontManager: Setting ${category} override to ${fontId}`);
     
     // Validate font exists
     const font = getFontById(fontId);
@@ -197,7 +189,6 @@ export class FontManager {
    * Remove font override for specific category
    */
   async removeFontOverride(category: 'sans' | 'serif' | 'mono'): Promise<void> {
-    console.log(`🔤 FontManager: Removing ${category} override`);
     
     delete this.currentOverride.fonts[category];
     this.saveOverrideConfiguration();
@@ -222,7 +213,6 @@ export class FontManager {
    * Apply font overrides by injecting CSS
    */
   private async applyFontOverrides(): Promise<void> {
-    console.log('🎨 FontManager: Applying font overrides');
     
     // Load all required Google Fonts
     await this.loadRequiredFonts();
@@ -252,9 +242,7 @@ export class FontManager {
     
     try {
       await Promise.all(loadPromises);
-      console.log('✅ FontManager: All override fonts loaded');
     } catch (error) {
-      console.warn('⚠️ FontManager: Some override fonts failed to load', error);
     }
   }
 
@@ -263,7 +251,6 @@ export class FontManager {
    */
   private async loadFontIfNeeded(font: FontOption): Promise<void> {
     if (needsGoogleFontsLoad(font)) {
-      console.log(`🔤 FontManager: Loading Google Font: ${font.family}`);
       await this.loadGoogleFontDirectly(font);
     }
   }
@@ -281,7 +268,6 @@ export class FontManager {
     
     // Return immediately if already loaded
     if (this.loadedGoogleFonts.has(fontKey)) {
-      console.log(`⚡ FontManager: Font cached: ${font.family}`);
       return Promise.resolve();
     }
 
@@ -319,7 +305,6 @@ export class FontManager {
     const fontsToLoad = Array.from(this.pendingFontLoads);
     this.pendingFontLoads.clear();
     
-    console.log(`🔤 FontManager: Batch loading ${fontsToLoad.length} fonts`);
 
     // Build combined Google Fonts URL
     const families: string[] = [];
@@ -334,13 +319,11 @@ export class FontManager {
 
     const batchUrl = `https://fonts.googleapis.com/css2?${families.join('&')}&display=optional`;
     
-    console.log(`🔗 FontManager: Batch URL: ${batchUrl}`);
     
     return new Promise((resolve, reject) => {
       // Check if similar batch already loaded
       const existingLink = document.querySelector(`link[href*="fonts.googleapis.com"][data-batch="true"]`);
       if (existingLink) {
-        console.log('⚡ FontManager: Using existing batch');
         resolve();
         return;
       }
@@ -353,7 +336,6 @@ export class FontManager {
       link.id = `font-batch-${Date.now()}`;
 
       link.onload = () => {
-        console.log(`✅ FontManager: Batch loaded ${fontsToLoad.length} fonts`);
         // Mark all fonts as loaded
         fontsToLoad.forEach(fontKey => {
           this.loadedGoogleFonts.add(fontKey);
@@ -428,7 +410,6 @@ body, .font-sans {
     this.styleElement.textContent = baseCSS;
     document.head.appendChild(this.styleElement);
     
-    console.log('✅ FontManager: Base override styles initialized');
   }
 
   /**
@@ -450,13 +431,11 @@ body, .font-sans {
           if (font) {
             const fontFamily = buildFontFamily(font);
             root.style.setProperty(`--font-${category}-selected`, fontFamily);
-            console.log(`🔤 FontManager: Updated --font-${category}-selected: ${fontFamily}`);
           }
         }
       });
     }
     
-    console.log('⚡ FontManager: Font variables updated (optimized)');
   }
 
   /**
@@ -466,7 +445,6 @@ body, .font-sans {
     const testContainer = document.getElementById('font-test-container');
     if (testContainer) {
       testContainer.remove();
-      console.log('🧹 FontManager: Cleaned up debug test container');
     }
   }
 
@@ -480,7 +458,6 @@ body, .font-sans {
     root.style.removeProperty('--font-serif-selected'); 
     root.style.removeProperty('--font-mono-selected');
     
-    console.log('⚡ FontManager: Override variables cleared');
   }
 
   /**
@@ -491,7 +468,6 @@ body, .font-sans {
    * Preview font temporarily without saving
    */
   async previewFont(category: 'sans' | 'serif' | 'mono', fontId: string): Promise<void> {
-    console.log(`👁️ FontManager: Previewing ${category}: ${fontId}`);
     
     const font = getFontById(fontId);
     if (!font) {
@@ -516,7 +492,6 @@ body, .font-sans {
    * Stop font preview (revert to current configuration)
    */
   stopPreview(): void {
-    console.log('👁️ FontManager: Stopping preview');
     
     // Reapply current configuration
     if (this.currentOverride.enabled) {
@@ -559,7 +534,6 @@ body, .font-sans {
    * Reset all font overrides
    */
   async resetOverrides(): Promise<void> {
-    console.log('🔄 FontManager: Resetting all overrides');
     
     this.currentOverride = {
       enabled: false,

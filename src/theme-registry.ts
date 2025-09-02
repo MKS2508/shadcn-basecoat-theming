@@ -71,7 +71,6 @@ export class ThemeRegistry {
     if (this.isInitialized) return;
 
     try {
-      console.log('🎨 ThemeRegistry: Initializing...');
       
       // Initialize storage
       await this.storageManager.init();
@@ -86,7 +85,6 @@ export class ThemeRegistry {
       this.buildUnifiedRegistry();
       
       this.isInitialized = true;
-      console.log(`✅ ThemeRegistry: Initialized with ${this.allThemes.size} themes`);
       
     } catch (error) {
       console.error('❌ ThemeRegistry: Failed to initialize:', error);
@@ -99,7 +97,6 @@ export class ThemeRegistry {
    */
   private async loadBuiltInThemes(): Promise<void> {
     try {
-      console.log('📂 ThemeRegistry: Loading built-in themes...');
       
       const response = await fetch('/themes/registry.json');
       if (!response.ok) {
@@ -119,7 +116,6 @@ export class ThemeRegistry {
         source: 'local' as const
       }));
 
-      console.log(`✅ ThemeRegistry: Loaded ${this.builtInThemes.length} built-in themes`);
       
     } catch (error) {
       console.error('❌ ThemeRegistry: Failed to load built-in themes:', error);
@@ -133,14 +129,11 @@ export class ThemeRegistry {
    */
   private async loadInstalledThemes(): Promise<void> {
     try {
-      console.log('💾 ThemeRegistry: Loading installed themes...');
       
       const cachedThemes = await this.storageManager.getAllThemes();
       
       // Debug: Log all cached themes
-      console.log(`📊 ThemeRegistry: Found ${cachedThemes.length} total cached themes`);
       cachedThemes.forEach(cached => {
-        console.log(`  - ${cached.name}: installed=${cached.installed}, url=${cached.url}`);
       });
 
       // Convert cached themes to theme config format
@@ -148,7 +141,6 @@ export class ThemeRegistry {
         .filter(cached => cached.installed)
         .map(cached => this.convertCachedToThemeConfig(cached));
 
-      console.log(`✅ ThemeRegistry: Loaded ${this.installedThemes.length} installed themes from ${cachedThemes.length} cached`);
       
     } catch (error) {
       console.error('❌ ThemeRegistry: Failed to load installed themes:', error);
@@ -211,7 +203,6 @@ export class ThemeRegistry {
       this.allThemes.set(theme.id, theme);
     });
 
-    console.log(`🔄 ThemeRegistry: Built unified registry with ${this.allThemes.size} themes`);
   }
 
   /**
@@ -247,7 +238,6 @@ export class ThemeRegistry {
     const lightURL = URL.createObjectURL(lightBlob);
     const darkURL = URL.createObjectURL(darkBlob);
     
-    console.log(`🔗 Generated blob URLs for ${cached.name}: ${lightURL.substring(0, 50)}...`);
     
     return {
       light: lightURL,
@@ -294,7 +284,6 @@ export class ThemeRegistry {
     this.ensureInitialized();
     
     try {
-      console.log(`🎨 ThemeRegistry: Installing theme: ${themeData.name}`);
       
       // Cache in storage manager
       const cachedTheme: CachedTheme = {
@@ -320,7 +309,6 @@ export class ThemeRegistry {
       
       this.allThemes.set(themeConfig.id, themeConfig);
       
-      console.log(`✅ ThemeRegistry: Theme installed: ${themeData.name}`);
       return themeConfig;
       
     } catch (error) {
@@ -341,7 +329,6 @@ export class ThemeRegistry {
     }
 
     try {
-      console.log(`🗑️ ThemeRegistry: Uninstalling theme: ${themeId}`);
       
       // Remove from storage
       await this.storageManager.deleteTheme(themeId);
@@ -352,7 +339,6 @@ export class ThemeRegistry {
       // Remove from unified registry
       this.allThemes.delete(themeId);
       
-      console.log(`✅ ThemeRegistry: Theme uninstalled: ${themeId}`);
       
     } catch (error) {
       console.error(`❌ ThemeRegistry: Failed to uninstall theme ${themeId}:`, error);

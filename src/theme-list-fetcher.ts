@@ -61,7 +61,6 @@ export class ThemeListFetcher {
       if (!force && this.isCacheValid()) {
         const cached = this.getCachedThemeNames();
         if (cached.length > 0) {
-          console.log(`🎨 ThemeListFetcher: Using cached theme names (${cached.length} themes)`);
           
           // Populate this.cache for fetchAvailableThemes() compatibility
           if (!this.cache) {
@@ -70,14 +69,12 @@ export class ThemeListFetcher {
               homepage: 'https://tweakcn.com',
               items: cached.map(name => ({ name }))
             };
-            console.log(`🎨 ThemeListFetcher: Populated cache.items with ${this.cache.items.length} themes`);
           }
           
           return cached;
         }
       }
 
-      console.log(`🌐 ThemeListFetcher: Fetching theme registry from ${this.REGISTRY_URL}...`);
 
       // Direct fetch to TweakCN registry
       const response = await fetch(this.REGISTRY_URL, {
@@ -108,7 +105,6 @@ export class ThemeListFetcher {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(themeNames));
       localStorage.setItem(this.LAST_FETCH_KEY, Date.now().toString());
 
-      console.log(`✅ ThemeListFetcher: Cached ${themeNames.length} theme names`);
       return themeNames;
 
     } catch (error) {
@@ -117,7 +113,6 @@ export class ThemeListFetcher {
       // Return cached data if available
       const cached = this.getCachedThemeNames();
       if (cached.length > 0) {
-        console.warn('⚠️ ThemeListFetcher: Using cached data due to fetch error');
         return cached;
       }
 
@@ -138,12 +133,10 @@ export class ThemeListFetcher {
   async fetchAvailableThemes(): Promise<ExternalThemeItem[]> {
     // If we have cache, use it
     if (this.cache && this.cache.items) {
-      console.log(`🎨 ThemeListFetcher: Using existing cache (${this.cache.items.length} themes)`);
       return this.cache.items;
     }
 
     // Otherwise, fetch and populate cache
-    console.log('🎨 ThemeListFetcher: No cache available, fetching from server...');
     await this.fetchAndCacheThemeNames();
     
     if (!this.cache || !this.cache.items) {
@@ -151,7 +144,6 @@ export class ThemeListFetcher {
       return [];
     }
     
-    console.log(`✅ ThemeListFetcher: Cache populated with ${this.cache.items.length} themes`);
     return this.cache.items;
   }
 
@@ -226,10 +218,8 @@ export class ThemeListFetcher {
    */
   async fetchThemeList(forceRefresh: boolean = false): Promise<ExternalThemeItem[]> {
     if (!forceRefresh && this.cache && this.cache.items) {
-      console.log(`🎨 ThemeListFetcher: Using cache.items (${this.cache.items.length} themes)`);
       return this.cache.items;
     }
-    console.log('🎨 ThemeListFetcher: Cache empty or force refresh, calling fetchAvailableThemes()');
     return await this.fetchAvailableThemes();
   }
 }

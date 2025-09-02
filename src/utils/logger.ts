@@ -32,7 +32,6 @@ export const performanceLogger = createScopedLogger('📊 Performance');
 
 // Helper functions for common logging patterns
 export const logPerformance = (operation: string, duration: number) => {
-  performanceLogger.info(`${operation}: ${duration.toFixed(1)}ms`);
 };
 
 export const logError = (context: string, errorMsg: Error | string) => {

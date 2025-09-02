@@ -50,7 +50,6 @@ export abstract class BaseComponent {
         this.element = wrapper.firstElementChild as HTMLElement;
       }
       
-      console.log(`🎨 BaseComponent: Rendered ${this.constructor.name}`);
     } catch (error) {
       console.error(`❌ BaseComponent: Failed to render ${this.constructor.name}:`, error);
       throw error;
@@ -206,7 +205,6 @@ export abstract class BaseComponent {
   protected destroy(): void {
     this.cleanupEvents();
     // Override in subclasses for additional cleanup
-    console.log(`🗑️ BaseComponent: Destroying ${this.constructor.name}`);
   }
 }
 
@@ -229,7 +227,6 @@ export abstract class ModalComponent extends BaseComponent {
    * Open modal with proper z-index stacking
    */
   open(): void {
-    console.log('🔤 MODAL: open() called, modal exists:', !!this.modal);
     if (this.modal) {
       // Calculate z-index based on active modal count
       this.zIndex = ModalComponent.baseZIndex + (ModalComponent.activeModals.size * 10);
@@ -238,9 +235,7 @@ export abstract class ModalComponent extends BaseComponent {
       // Add to active modals tracking
       ModalComponent.activeModals.add(this);
       
-      console.log('🔤 MODAL: classes before remove:', this.modal.className);
       this.modal.classList.remove('hidden');
-      console.log('🔤 MODAL: classes after remove:', this.modal.className, 'z-index:', this.zIndex);
       
       // Only set body overflow hidden for the first modal
       if (ModalComponent.activeModals.size === 1) {
