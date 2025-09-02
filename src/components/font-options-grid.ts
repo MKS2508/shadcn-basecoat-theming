@@ -97,6 +97,7 @@ export class FontOptionsGrid extends BaseComponent {
 
     this.setData({
       categoryName: this.getCategoryDisplayName(this.currentCategory),
+      currentCategory: this.currentCategory, // Add the actual category key for data attributes
       hasSystemFonts: systemFonts.length > 0,
       systemFonts: enrichedSystemFonts,
       hasGoogleFonts: googleFonts.length > 0,

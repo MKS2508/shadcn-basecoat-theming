@@ -198,12 +198,14 @@ export class FontSelectorModal extends ModalComponent {
       // CRITICAL: Update the FontOptionsGrid internal state to match FontManager
       // This ensures visual selection state stays in sync
       const updatedConfig = this.fontManager.getOverrideConfiguration();
+      
       if (this.optionsGrid) {
-        this.optionsGrid.setSelectedFonts({
+        const fontsForGrid = {
           sans: updatedConfig.fonts.sans || null,
           serif: updatedConfig.fonts.serif || null,
           mono: updatedConfig.fonts.mono || null
-        });
+        };
+        this.optionsGrid.setSelectedFonts(fontsForGrid);
       }
       
       // Update UI to reflect changes
