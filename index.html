@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vite Theme Switching Demo</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Critical CSS - Eliminates flash by applying theme immediately -->
+  <style>
+    /* Default theme variables (light mode) */
+    :root {
+      --background: oklch(1.0000 0 0);
+      --foreground: oklch(0.1448 0 0);
+      --card: oklch(1.0000 0 0);
+      --card-foreground: oklch(0.1448 0 0);
+      --popover: oklch(1.0000 0 0);
+      --popover-foreground: oklch(0.1448 0 0);
+      --primary: oklch(0.3527 0.1722 263.94);
+      --primary-foreground: oklch(0.9851 0 0);
+      --secondary: oklch(0.9702 0 0);
+      --secondary-foreground: oklch(0.2046 0 0);
+      --muted: oklch(0.9702 0 0);
+      --muted-foreground: oklch(0.5486 0 0);
+      --accent: oklch(0.9702 0 0);
+      --accent-foreground: oklch(0.2046 0 0);
+      --destructive: oklch(0.5830 0.2387 28.4765);
+      --destructive-foreground: oklch(0.9702 0 0);
+      --border: oklch(0.9219 0 0);
+      --input: oklch(0.9219 0 0);
+      --ring: oklch(0.7090 0 0);
+      --radius: 0.5rem;
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+      --font-serif: Georgia, Cambria, "Times New Roman", Times, serif;
+      --font-mono: "Fira Code", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    
+    /* Critical selectors for immediate render */
+    body {
+      background-color: var(--background);
+      color: var(--foreground);
+      font-family: var(--font-sans);
+      margin: 0;
+      padding: 0;
+    }
+    * {
+      border-color: var(--border);
+    }
+    .theme-loading {
+      /* No opacity changes during initial load */
+    }
+  </style>
+  
+  <!-- Smart theme detection and immediate CSS application -->
+  <script>
+    (function() {
+      try {
+        // Detect saved theme and mode immediately
+        const savedTheme = localStorage.getItem('theme') || 'default';
+        const savedMode = localStorage.getItem('theme-mode') || 'auto';
+        
+        // Resolve mode
+        let resolvedMode = savedMode;
+        if (savedMode === 'auto') {
+          resolvedMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        
+        // Apply theme-specific variables immediately (before any render)
+        if (savedTheme === 'supabase') {
+          if (resolvedMode === 'light') {
+            document.documentElement.style.setProperty('--primary', 'oklch(0.4902 0.2157 158.72)');
+            document.documentElement.style.setProperty('--ring', 'oklch(0.4902 0.2157 158.72)');
+          } else {
+            document.documentElement.style.setProperty('--background', 'oklch(0.1448 0 0)');
+            document.documentElement.style.setProperty('--foreground', 'oklch(0.9851 0 0)');
+            document.documentElement.style.setProperty('--card', 'oklch(0.1448 0 0)');
+            document.documentElement.style.setProperty('--card-foreground', 'oklch(0.9851 0 0)');
+            document.documentElement.style.setProperty('--primary', 'oklch(0.5569 0.2157 158.72)');
+            document.documentElement.style.setProperty('--secondary', 'oklch(0.1961 0 0)');
+            document.documentElement.style.setProperty('--muted', 'oklch(0.1961 0 0)');
+            document.documentElement.style.setProperty('--border', 'oklch(0.1961 0 0)');
+            document.documentElement.style.setProperty('--input', 'oklch(0.1961 0 0)');
+          }
+        } else if (savedTheme === 'default' && resolvedMode === 'dark') {
+          document.documentElement.style.setProperty('--background', 'oklch(0.1448 0 0)');
+          document.documentElement.style.setProperty('--foreground', 'oklch(0.9851 0 0)');
+          document.documentElement.style.setProperty('--card', 'oklch(0.1448 0 0)');
+          document.documentElement.style.setProperty('--card-foreground', 'oklch(0.9851 0 0)');
+          document.documentElement.style.setProperty('--primary', 'oklch(0.7090 0.1722 263.94)');
+          document.documentElement.style.setProperty('--secondary', 'oklch(0.1961 0 0)');
+          document.documentElement.style.setProperty('--muted', 'oklch(0.1961 0 0)');
+          document.documentElement.style.setProperty('--border', 'oklch(0.1961 0 0)');
+          document.documentElement.style.setProperty('--input', 'oklch(0.1961 0 0)');
+        }
+        
+        // Set theme attributes for debugging
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.documentElement.setAttribute('data-mode', resolvedMode);
+        document.documentElement.classList.add('theme-loading');
+        
+        // Show subtle loading only for external themes
+        if (savedTheme !== 'default' && savedTheme !== 'supabase') {
+          document.addEventListener('DOMContentLoaded', function() {
+            const loading = document.getElementById('loading-overlay');
+            if (loading) loading.style.opacity = '1';
+          });
+        }
+        
+        console.log(`🚀 Inline CSS: ${savedTheme} ${resolvedMode} applied before render`);
+      } catch (error) {
+        console.warn('Theme detection failed, using defaults:', error);
+      }
+    })();
+  </script>
+</head>
+<body class="antialiased">
+  <div id="app">
+    <!-- Subtle loading indicator (top corner) -->
+    <div id="loading-overlay" class="fixed top-4 right-4 z-50 transition-opacity duration-300 opacity-0">
+      <div class="flex items-center space-x-2 bg-background/90 border rounded-lg px-3 py-2 shadow-lg backdrop-blur-sm">
+        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+        <p class="text-muted-foreground text-xs">Loading theme...</p>
+      </div>
+    </div>
+
+    <!-- Main application content (always visible) -->
+    <div id="main-content">
+      <!-- Header with theme selector -->
+      <header class="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div class="container mx-auto px-4 flex h-16 items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <h1 class="text-xl font-bold text-foreground">Theme Demo</h1>
+            <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full font-medium">
+              Tailwind v4 + Basecoat
+            </span>
+          </div>
+          
+          <!-- Theme Controls -->
+          <div class="flex items-center space-x-3">
+            <!-- Theme selector dropdown -->
+            <div class="relative" data-dropdown>
+              <button 
+                type="button"
+                id="theme-button"
+                class="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-label="Select theme"
+              >
+                <span id="current-theme-label">Default</span>
+                <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+              
+              <div 
+                class="absolute right-0 z-50 mt-2 w-40 rounded-md border bg-popover p-1 shadow-lg animate-fade-in hidden"
+                role="menu"
+                aria-orientation="vertical"
+                aria-labelledby="theme-button"
+              >
+                <!-- Theme options will be generated by JavaScript -->
+              </div>
+            </div>
+
+            <!-- Mode toggle button -->
+            <button 
+              type="button"
+              id="mode-toggle"
+              class="inline-flex items-center justify-center rounded-md border border-input bg-background w-10 h-10 text-sm ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              aria-label="Toggle light/dark mode"
+              title="Toggle light/dark mode"
+            >
+              <svg id="light-icon" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+              </svg>
+              <svg id="dark-icon" class="h-4 w-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+              </svg>
+              <svg id="auto-icon" class="h-4 w-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+              </svg>
+            </button>
+
+            <!-- Font selector button -->
+            <button 
+              type="button"
+              id="font-selector-btn"
+              class="inline-flex items-center justify-center rounded-md border border-input bg-background w-10 h-10 text-sm ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              aria-label="Configure fonts"
+              title="Configure fonts"
+            >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z M16 21v-7a1 1 0 00-1-1H9a1 1 0 00-1 1v7"></path>
+              </svg>
+            </button>
+
+            <!-- Install theme button -->
+            <button 
+              type="button"
+              id="install-theme-btn"
+              class="inline-flex items-center justify-center rounded-md border border-input bg-background w-10 h-10 text-sm ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              aria-label="Install new theme"
+              title="Install new theme"
+            >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main content area -->
+      <main class="container mx-auto px-4 py-8">
+        <!-- Hero section -->
+        <section class="text-center mb-12">
+          <h2 class="text-4xl font-bold text-foreground mb-4">
+            Modern Theme Switching
+          </h2>
+          <p class="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Experience seamless theme transitions with Tailwind CSS v4, Basecoat UI, and TweakCN-compatible themes. 
+            Built for performance and accessibility.
+          </p>
+          
+          <!-- Theme preview cards -->
+          <div class="grid md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-card border rounded-lg p-6 hover:shadow-lg transition-shadow">
+              <div class="w-12 h-12 bg-primary rounded-lg mb-4 mx-auto"></div>
+              <h3 class="text-lg font-semibold text-card-foreground mb-2">Primary Colors</h3>
+              <p class="text-muted-foreground text-sm">Dynamic color adaptation across all themes</p>
+            </div>
+            
+            <div class="bg-card border rounded-lg p-6 hover:shadow-lg transition-shadow">
+              <div class="w-12 h-12 bg-accent rounded-lg mb-4 mx-auto"></div>
+              <h3 class="text-lg font-semibold text-card-foreground mb-2">Accent System</h3>
+              <p class="text-muted-foreground text-sm">Cohesive accent colors for interactive elements</p>
+            </div>
+            
+            <div class="bg-card border rounded-lg p-6 hover:shadow-lg transition-shadow">
+              <div class="w-12 h-12 bg-secondary rounded-lg mb-4 mx-auto"></div>
+              <h3 class="text-lg font-semibold text-card-foreground mb-2">Secondary Tones</h3>
+              <p class="text-muted-foreground text-sm">Balanced secondary colors for content hierarchy</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Interactive components showcase -->
+        <section class="grid lg:grid-cols-2 gap-8 mb-12">
+          <!-- Form components -->
+          <div class="bg-card border rounded-lg p-6">
+            <h3 class="text-xl font-semibold text-card-foreground mb-4">Form Components</h3>
+            <div class="space-y-4">
+              <div>
+                <label for="sample-input" class="block text-sm font-medium text-foreground mb-2">
+                  Sample Input
+                </label>
+                <input 
+                  type="text" 
+                  id="sample-input"
+                  placeholder="Enter some text..."
+                  class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                />
+              </div>
+              
+              <div class="flex space-x-2">
+                <button type="button" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                  Primary Button
+                </button>
+                <button type="button" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                  Secondary
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status indicators -->
+          <div class="bg-card border rounded-lg p-6">
+            <h3 class="text-xl font-semibold text-card-foreground mb-4">Status Indicators</h3>
+            <div class="space-y-3">
+              <div class="flex items-center space-x-3 p-3 bg-accent/10 rounded-md">
+                <div class="w-2 h-2 bg-accent rounded-full"></div>
+                <span class="text-accent-foreground">Accent state indicator</span>
+              </div>
+              
+              <div class="flex items-center space-x-3 p-3 bg-destructive/10 rounded-md">
+                <div class="w-2 h-2 bg-destructive rounded-full"></div>
+                <span class="text-destructive-foreground">Error state indicator</span>
+              </div>
+              
+              <div class="flex items-center space-x-3 p-3 bg-muted rounded-md">
+                <div class="w-2 h-2 bg-muted-foreground rounded-full"></div>
+                <span class="text-muted-foreground">Muted state indicator</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Technical information -->
+        <section class="bg-muted/30 rounded-lg p-8">
+          <div class="max-w-4xl mx-auto">
+            <h3 class="text-2xl font-bold text-foreground mb-6">Technical Implementation</h3>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <h4 class="text-lg font-semibold text-foreground mb-3">Key Features</h4>
+                <ul class="space-y-2 text-muted-foreground">
+                  <li class="flex items-center space-x-2">
+                    <div class="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                    <span>Lazy-loaded theme CSS files</span>
+                  </li>
+                  <li class="flex items-center space-x-2">
+                    <div class="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                    <span>FOUC prevention system</span>
+                  </li>
+                  <li class="flex items-center space-x-2">
+                    <div class="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                    <span>localStorage persistence</span>
+                  </li>
+                  <li class="flex items-center space-x-2">
+                    <div class="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                    <span>System preference detection</span>
+                  </li>
+                  <li class="flex items-center space-x-2">
+                    <div class="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                    <span>TweakCN-compatible structure</span>
+                  </li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 class="text-lg font-semibold text-foreground mb-3">Tech Stack</h4>
+                <ul class="space-y-2 text-muted-foreground">
+                  <li class="flex items-center space-x-2">
+                    <div class="w-1.5 h-1.5 bg-accent rounded-full"></div>
+                    <span>Vite + TypeScript</span>
+                  </li>
+                  <li class="flex items-center space-x-2">
+                    <div class="w-1.5 h-1.5 bg-accent rounded-full"></div>
+                    <span>Tailwind CSS v4</span>
+                  </li>
+                  <li class="flex items-center space-x-2">
+                    <div class="w-1.5 h-1.5 bg-accent rounded-full"></div>
+                    <span>Basecoat UI Components</span>
+                  </li>
+                  <li class="flex items-center space-x-2">
+                    <div class="w-1.5 h-1.5 bg-accent rounded-full"></div>
+                    <span>CSS Custom Properties</span>
+                  </li>
+                  <li class="flex items-center space-x-2">
+                    <div class="w-1.5 h-1.5 bg-accent rounded-full"></div>
+                    <span>Performance Optimized</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Footer -->
+      <footer class="border-t bg-background py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+          <p class="text-muted-foreground text-sm">
+            Built with 
+            <a href="https://vitejs.dev" class="text-primary hover:underline">Vite</a>,
+            <a href="https://tailwindcss.com" class="text-primary hover:underline">Tailwind CSS v4</a>,
+            and <a href="https://basecoat.design" class="text-primary hover:underline">Basecoat UI</a>
+          </p>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Theme Install Modal -->
+  <div id="theme-install-modal" class="fixed inset-0 z-50 hidden">
+    <!-- Backdrop -->
+    <div id="theme-modal-backdrop" class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+    
+    <!-- Modal Container -->
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+      <div class="relative w-full max-w-md bg-background rounded-lg border shadow-lg animate-fade-in">
+        <!-- Header -->
+        <div class="flex items-center justify-between p-6 pb-4">
+          <h2 class="text-lg font-semibold text-foreground">Install Theme</h2>
+          <button 
+            type="button" 
+            id="theme-modal-close"
+            class="inline-flex items-center justify-center w-8 h-8 rounded-md hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            aria-label="Close modal"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Content -->
+        <form id="theme-install-form" class="px-6 pb-6 space-y-4">
+          <!-- URL Input -->
+          <div class="space-y-2">
+            <label for="theme-url-input" class="block text-sm font-medium text-foreground">
+              Theme URL
+            </label>
+            <input 
+              type="url"
+              id="theme-url-input"
+              placeholder="https://tweakcn.com/r/themes/example.json"
+              class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              required
+            />
+            <p class="text-xs text-muted-foreground">
+              Enter a TweakCN-compatible theme URL or JSON endpoint
+            </p>
+          </div>
+
+          <!-- Preview Container -->
+          <div id="theme-preview" class="min-h-[60px] flex items-center justify-center text-muted-foreground text-sm">
+            Enter a URL to preview the theme
+          </div>
+
+          <!-- Actions -->
+          <div class="flex justify-end space-x-2 pt-4">
+            <button 
+              type="button" 
+              id="theme-modal-cancel"
+              class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit"
+              id="theme-install-submit"
+              class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+              disabled
+            >
+              Install Theme
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Font Selector Modal -->
+  <div 
+    id="font-selector-modal"
+    class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 hidden"
+    aria-labelledby="font-modal-title"
+    role="dialog"
+    aria-modal="true"
+  >
+    <!-- Backdrop -->
+    <div 
+      id="font-modal-backdrop" 
+      class="fixed inset-0"
+      aria-hidden="true"
+    ></div>
+
+    <!-- Modal content -->
+    <div class="fixed left-[50%] top-[50%] z-50 w-full max-w-2xl translate-x-[-50%] translate-y-[-50%] border bg-background p-0 shadow-lg duration-200 sm:rounded-lg">
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b px-6 py-4">
+        <div>
+          <h2 id="font-modal-title" class="text-lg font-semibold text-foreground">
+            Font Configuration
+          </h2>
+          <p class="text-sm text-muted-foreground">
+            Customize typography independently of your theme
+          </p>
+        </div>
+        <button 
+          type="button"
+          id="font-modal-close"
+          class="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 p-1"
+          aria-label="Close modal"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Content -->
+      <div class="px-6 py-6 space-y-6">
+        <!-- Override toggle -->
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-medium text-foreground">Font Override</h3>
+            <p class="text-xs text-muted-foreground">Use custom fonts instead of theme fonts</p>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="font-override-toggle" class="sr-only peer">
+            <div class="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+          </label>
+        </div>
+
+        <!-- Font categories and options -->
+        <div id="font-categories-content" class="space-y-4 max-h-[400px] overflow-y-auto">
+          <!-- Content will be generated by JavaScript -->
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-between pt-4 border-t">
+          <button 
+            type="button" 
+            id="font-reset-btn"
+            class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground h-10 px-4 py-2"
+          >
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Reset Fonts
+          </button>
+          <div class="flex space-x-2">
+            <button 
+              type="button" 
+              id="font-modal-cancel"
+              class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
