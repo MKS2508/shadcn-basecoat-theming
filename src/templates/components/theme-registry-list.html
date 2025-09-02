@@ -1,0 +1,64 @@
+<div class="space-y-4">
+  <div class="flex items-center justify-between mb-3 pb-2 border-b">
+    <h4 class="text-sm font-medium text-foreground">
+      Available Themes {{#isFresh}}({{totalCount}} themes){{/isFresh}}{{^isFresh}}(cached){{/isFresh}}
+    </h4>
+    <button 
+      id="refresh-theme-list-btn"
+      class="text-xs text-primary hover:underline px-2 py-1"
+      type="button"
+    >
+      Refresh List
+    </button>
+  </div>
+
+  <!-- Search Input -->
+  <div class="mb-2">
+    <input
+      type="text" 
+      id="theme-search-input"
+      placeholder="Search themes..."
+      class="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+    />
+  </div>
+
+  <!-- Themes Grid -->
+  <div class="themes-container flex-1 overflow-y-auto overflow-x-hidden">
+    <div id="themes-grid" class="grid grid-cols-2 gap-2">
+      {{#themes}}
+      <div class="theme-name-item border rounded-md p-2 hover:bg-accent/5 hover:border-accent transition-all" data-theme-name="{{name}}">
+        <div class="flex flex-col">
+          <div class="text-sm font-medium text-foreground truncate" title="{{name}}">{{displayName}}</div>
+          <div class="text-xs text-muted-foreground font-mono truncate">{{name}}</div>
+          <div class="flex gap-1 mt-2">
+            <button
+              class="preview-theme-btn flex-1 text-xs border border-input bg-background hover:bg-accent hover:text-accent-foreground px-1 py-1 rounded transition-colors"
+              data-theme-name="{{name}}"
+              type="button"
+            >
+              Preview
+            </button>
+            <button
+              class="install-theme-btn flex-1 text-xs bg-primary text-primary-foreground px-1 py-1 rounded hover:bg-primary/90 transition-colors"
+              data-theme-name="{{name}}"
+              type="button"
+            >
+              Install
+            </button>
+          </div>
+        </div>
+      </div>
+      {{/themes}}
+    </div>
+  </div>
+
+  <div class="text-xs text-muted-foreground mt-2 pt-2 border-t flex items-center justify-between">
+    <span>From TweakCN Registry</span>
+    {{#isFresh}}
+    <span class="text-green-600">Fresh</span>
+    {{/isFresh}}
+    {{^isFresh}}
+    <span class="text-orange-600">Cached</span>
+    {{/isFresh}}
+  </div>
+</div>

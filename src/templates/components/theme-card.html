@@ -1,0 +1,54 @@
+<div class="theme-card border rounded-lg p-4 hover:bg-accent/5 transition-colors" data-theme-name="{{themeName}}">
+  <div class="flex items-start justify-between">
+    <div class="flex-1">
+      <div class="flex items-center space-x-2 mb-2">
+        <h3 class="font-medium text-foreground">{{themeName}}</h3>
+        <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+          Installed
+        </span>
+      </div>
+      
+      <div class="space-y-1 text-sm text-muted-foreground">
+        <div class="flex items-center space-x-4">
+          <span>📅 {{installDate}}</span>
+          <span>🌐 {{hostname}}</span>
+          <span>💾 {{size}}</span>
+        </div>
+      </div>
+
+      <!-- Theme variants -->
+      <div class="flex items-center space-x-2 mt-3">
+        {{#variants}}
+        <span class="text-xs px-2 py-1 bg-secondary rounded">{{name}}</span>
+        {{/variants}}
+      </div>
+    </div>
+
+    <div class="flex items-center space-x-2">
+      <!-- Apply button -->
+      <button 
+        type="button"
+        class="apply-theme-btn inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3"
+        data-theme-name="{{themeName}}"
+        title="Apply this theme"
+      >
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+        </svg>
+        Apply
+      </button>
+
+      <!-- Delete button -->
+      <button 
+        type="button"
+        class="delete-theme-btn inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground h-8 w-8"
+        data-theme-name="{{themeName}}"
+        title="Delete this theme"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>

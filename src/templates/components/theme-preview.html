@@ -1,0 +1,82 @@
+<div class="border rounded-lg p-4 space-y-4">
+  <div class="flex items-center justify-between">
+    <h3 class="font-semibold text-foreground">{{themeName}}</h3>
+    <div class="flex items-center space-x-2 text-xs text-muted-foreground">
+      {{#variants}}
+      <span class="px-2 py-1 bg-secondary rounded">{{name}}</span>
+      {{/variants}}
+    </div>
+  </div>
+  
+  <div class="text-sm text-muted-foreground">
+    <div>URL: <code class="text-xs bg-muted px-1 rounded">{{url}}</code></div>
+  </div>
+  
+  {{#hasFonts}}
+  <div>
+    <div class="text-sm font-medium mb-2">Typography:</div>
+    <div class="space-y-2">
+      {{#fonts}}
+      <div class="flex items-center space-x-3">
+        <span class="text-xs px-2 py-1 bg-secondary rounded font-mono">{{type}}</span>
+        <span class="text-sm" style="font-family: {{value}}">{{family}}</span>
+        {{#isExternal}}<span class="text-xs text-blue-600">•</span>{{/isExternal}}
+      </div>
+      {{/fonts}}
+    </div>
+    <div class="text-xs text-muted-foreground mt-2">
+      <span class="text-blue-600">•</span> External font (will be loaded)
+    </div>
+  </div>
+  {{/hasFonts}}
+
+  {{#typographyPreview}}
+  <div>
+    <div class="text-sm font-medium mb-3">Typography Preview:</div>
+    <div class="space-y-2 p-3 bg-muted/20 rounded">
+      {{#sans}}
+      <div style="font-family: {{value}}">
+        <div class="text-lg font-semibold">Heading Text</div>
+        <div class="text-sm text-muted-foreground">Sans-serif • {{family}}</div>
+      </div>
+      {{/sans}}
+      
+      {{#serif}}
+      <div style="font-family: {{value}}" class="pt-2">
+        <div class="text-base">Body text in serif font for reading</div>
+        <div class="text-xs text-muted-foreground">Serif • {{family}}</div>
+      </div>
+      {{/serif}}
+      
+      {{#mono}}
+      <div style="font-family: {{value}}" class="pt-2">
+        <div class="text-sm bg-muted px-2 py-1 rounded">const code = "example";</div>
+        <div class="text-xs text-muted-foreground">Monospace • {{family}}</div>
+      </div>
+      {{/mono}}
+    </div>
+  </div>
+  {{/typographyPreview}}
+  
+  {{#lightColors}}
+  <div>
+    <div class="text-sm font-medium mb-2">Light Mode Colors:</div>
+    <div class="flex space-x-2">
+      {{#colors}}
+      <div class="w-6 h-6 rounded border" style="background-color: {{value}}" title="{{name}}"></div>
+      {{/colors}}
+    </div>
+  </div>
+  {{/lightColors}}
+  
+  {{#darkColors}}
+  <div>
+    <div class="text-sm font-medium mb-2">Dark Mode Colors:</div>
+    <div class="flex space-x-2">
+      {{#colors}}
+      <div class="w-6 h-6 rounded border" style="background-color: {{value}}" title="{{name}}"></div>
+      {{/colors}}
+    </div>
+  </div>
+  {{/darkColors}}
+</div>

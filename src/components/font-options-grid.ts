@@ -1,0 +1,131 @@
+import { BaseComponent } from '../utils/base-component';
+import { getFontsByCategory, getFontById, FontOption } from '../font-catalog';
+import type { FontCategory } from './font-category-tabs';
+
+interface FontOptionData extends FontOption {
+  isSelected: boolean;
+  previewText: string;
+}
+
+export class FontOptionsGrid extends BaseComponent {
+  private currentCategory: FontCategory = 'sans';
+  private selectedFontIds: Record<FontCategory, string | null> = {
+    sans: null,
+    serif: null,
+    mono: null
+  };
+  private onFontSelect?: (category: FontCategory, fontId: string) => void;
+
+  constructor(containerId: string) {
+    super('/templates/components/font-options-grid.html');
+    this.element = document.getElementById(containerId);
+  }
+
+  protected bindEvents(): void {
+    // Font option clicks
+    if (this.element) {
+      this.element.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const fontOption = target.closest('.font-option');
+        
+        if (fontOption) {
+          const fontId = fontOption.getAttribute('data-font-id');
+          const category = fontOption.getAttribute('data-category') as FontCategory;
+          
+          if (fontId && category) {
+            this.selectFont(category, fontId);
+          }
+        }
+      });
+    }
+  }
+
+  setOnFontSelect(callback: (category: FontCategory, fontId: string) => void): void {
+    this.onFontSelect = callback;
+  }
+
+  setCategory(category: FontCategory): void {
+    this.currentCategory = category;
+    this.render();
+  }
+
+  selectFont(category: FontCategory, fontId: string): void {
+    this.selectedFontIds[category] = fontId;
+    this.render(); // Re-render to update selection state
+    
+    if (this.onFontSelect) {
+      this.onFontSelect(category, fontId);
+    }
+  }
+
+  getSelectedFont(category: FontCategory): string | null {
+    return this.selectedFontIds[category];
+  }
+
+  setSelectedFonts(selections: Record<FontCategory, string | null>): void {
+    this.selectedFontIds = { ...selections };
+  }
+
+  async render(): Promise<void> {
+    const fonts = getFontsByCategory(this.currentCategory);
+    const selectedFontId = this.selectedFontIds[this.currentCategory];
+    
+    // Separate system and Google fonts
+    const systemFonts = fonts.filter(font => font.category === 'system');
+    const googleFonts = fonts.filter(font => font.category === 'google');
+
+    // Add selection state and preview text
+    const enrichedSystemFonts = systemFonts.map(font => ({
+      ...font,
+      isSelected: font.id === selectedFontId,
+      previewText: this.getPreviewText(this.currentCategory)
+    }));
+
+    const enrichedGoogleFonts = googleFonts.map(font => ({
+      ...font,
+      isSelected: font.id === selectedFontId,
+      previewText: this.getPreviewText(this.currentCategory)
+    }));
+
+    this.setData({
+      categoryName: this.getCategoryDisplayName(this.currentCategory),
+      hasSystemFonts: systemFonts.length > 0,
+      systemFonts: enrichedSystemFonts,
+      hasGoogleFonts: googleFonts.length > 0,
+      googleFonts: enrichedGoogleFonts
+    });
+
+    await super.render();
+  }
+
+  private getCategoryDisplayName(category: FontCategory): string {
+    switch (category) {
+      case 'sans': return 'sans-serif';
+      case 'serif': return 'serif';
+      case 'mono': return 'monospace';
+      default: return category;
+    }
+  }
+
+  private getPreviewText(category: FontCategory): string {
+    switch (category) {
+      case 'sans':
+        return 'The quick brown fox jumps over the lazy dog';
+      case 'serif':
+        return 'Typography is the art of arranging type';
+      case 'mono':
+        return 'const code = "example"; // 123';
+      default:
+        return 'Sample text preview';
+    }
+  }
+
+  reset(): void {
+    this.selectedFontIds = {
+      sans: null,
+      serif: null,
+      mono: null
+    };
+    this.render();
+  }
+}

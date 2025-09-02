@@ -137,12 +137,18 @@ export class ThemeRegistry {
       
       const cachedThemes = await this.storageManager.getAllThemes();
       
+      // Debug: Log all cached themes
+      console.log(`📊 ThemeRegistry: Found ${cachedThemes.length} total cached themes`);
+      cachedThemes.forEach(cached => {
+        console.log(`  - ${cached.name}: installed=${cached.installed}, url=${cached.url}`);
+      });
+
       // Convert cached themes to theme config format
       this.installedThemes = cachedThemes
         .filter(cached => cached.installed)
         .map(cached => this.convertCachedToThemeConfig(cached));
 
-      console.log(`✅ ThemeRegistry: Loaded ${this.installedThemes.length} installed themes`);
+      console.log(`✅ ThemeRegistry: Loaded ${this.installedThemes.length} installed themes from ${cachedThemes.length} cached`);
       
     } catch (error) {
       console.error('❌ ThemeRegistry: Failed to load installed themes:', error);

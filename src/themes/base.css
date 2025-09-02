@@ -10,7 +10,6 @@
 }
 
 /* Theme transition classes */
-.theme-loading *,
 .theme-switching * {
   transition: none !important;
   animation: none !important;

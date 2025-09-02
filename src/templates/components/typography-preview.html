@@ -1,0 +1,23 @@
+<div class="text-sm font-medium mb-3">Typography Preview:</div>
+<div class="space-y-2 p-3 bg-muted/20 rounded">
+  {{#hasSansFont}}
+  <div style="font-family: {{sansFont.value}}" class="border-b border-border/30 pb-2">
+    <div class="text-lg font-semibold">Heading Text</div>
+    <div class="text-sm text-muted-foreground">Sans-serif • {{sansFont.family}}</div>
+  </div>
+  {{/hasSansFont}}
+  
+  {{#hasSerifFont}}
+  <div style="font-family: {{serifFont.value}}" class="pt-2">
+    <div class="text-base">Body text in serif font for reading</div>
+    <div class="text-xs text-muted-foreground">Serif • {{serifFont.family}}</div>
+  </div>
+  {{/hasSerifFont}}
+  
+  {{#hasMonoFont}}
+  <div style="font-family: {{monoFont.value}}" class="pt-2">
+    <div class="text-sm bg-muted px-2 py-1 rounded">const code = "example";</div>
+    <div class="text-xs text-muted-foreground">Monospace • {{monoFont.family}}</div>
+  </div>
+  {{/hasMonoFont}}
+</div>

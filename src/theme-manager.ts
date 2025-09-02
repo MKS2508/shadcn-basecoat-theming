@@ -198,7 +198,7 @@ export class ThemeManager {
   }
 
   /**
-   * Apply a specific theme using CSS file loading (optimized)
+   * Apply a specific theme using direct CSS variable updates (optimized)
    */
   private async applyTheme(themeName: string, mode: 'light' | 'dark' | 'auto'): Promise<void> {
     console.log(`🎨 Applying theme: ${themeName}, mode: ${mode}`);
@@ -228,79 +228,42 @@ export class ThemeManager {
       // Add loading class for smooth transition
       document.documentElement.classList.add('theme-switching');
       
-      // Get CSS file path from theme config
+      // Get final theme config
       const finalThemeConfig = this.themeRegistry.getTheme(themeName)!;
       const cssPath = finalThemeConfig.modes[resolvedMode];
-      const preloadKey = `${themeName}-${resolvedMode}`;
       
-      // Remove previous theme CSS
-      if (this.currentStyleElement) {
-        console.log(`🗑️ Removing previous theme CSS`);
-        this.currentStyleElement.remove();
+      console.log(`🔄 Loading CSS variables from: ${cssPath}`);
+      
+      // Fetch CSS content and extract variables
+      let cssVariables: Record<string, string> = {};
+      
+      if (cssPath.startsWith('blob:')) {
+        // Handle blob URLs (installed themes)
+        console.log(`💫 Loading blob theme: ${themeName}`);
+        const response = await fetch(cssPath);
+        const cssContent = await response.text();
+        cssVariables = this.extractCSSVariables(cssContent);
+      } else {
+        // Handle static file themes
+        console.log(`📁 Loading static theme: ${cssPath}`);
+        const response = await fetch(cssPath);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch CSS: ${response.status}`);
+        }
+        const cssContent = await response.text();
+        cssVariables = this.extractCSSVariables(cssContent);
       }
       
-      // Check if theme is prefetched for fast switching
-      const prefetchKey = `${themeName}-${resolvedMode}`;
-      const isPrefetched = this.prefetchedThemes.has(prefetchKey);
+      // Apply CSS variables directly to document root
+      const startTime = performance.now();
+      this.applyCSSVariables(cssVariables);
+      const applyTime = performance.now() - startTime;
+      console.log(`⚡ CSS variables applied: ${applyTime.toFixed(1)}ms`);
       
-      if (isPrefetched) {
-        // Fast theme switch: browser cache hit from prefetch
-        console.log(`⚡ Using prefetched theme: ${prefetchKey}`);
-        const linkElement = document.createElement('link');
-        linkElement.rel = 'stylesheet'; 
-        linkElement.href = cssPath;
-        linkElement.id = 'theme-css';
-        
-        // Should be near-instant due to prefetch cache
-        await new Promise((resolve, reject) => {
-          const startTime = performance.now();
-          linkElement.onload = () => {
-            const loadTime = performance.now() - startTime;
-            console.log(`⚡ Prefetched theme loaded: ${loadTime.toFixed(1)}ms`);
-            resolve(void 0);
-          };
-          linkElement.onerror = () => {
-            console.error(`❌ Failed to load prefetched CSS: ${cssPath}`);
-            reject(new Error(`Failed to load theme CSS: ${cssPath}`));
-          };
-          document.head.appendChild(linkElement);
-        });
-        
-        this.currentStyleElement = linkElement;
-      } else {
-        // Cold load: Direct theme loading + prefetch for next time
-        console.log(`📁 Loading theme CSS (cold): ${cssPath}`);
-        const linkElement = document.createElement('link');
-        linkElement.rel = 'stylesheet';
-        linkElement.href = cssPath;
-        linkElement.id = 'theme-css';
-        
-        // Wait for CSS to load
-        await new Promise((resolve, reject) => {
-          const startTime = performance.now();
-          linkElement.onload = () => {
-            const loadTime = performance.now() - startTime;
-            console.log(`✅ Theme loaded (cold): ${loadTime.toFixed(1)}ms`);
-            resolve(void 0);
-          };
-          linkElement.onerror = () => {
-            // Special handling for blob URLs (installed themes)
-            if (cssPath.startsWith('blob:')) {
-              console.warn(`⚠️ Blob theme fallback for: ${themeName}`);
-              // Use critical CSS as fallback for blob themes
-              resolve(void 0);
-            } else {
-              console.error(`❌ Failed to load CSS: ${cssPath}`);
-              reject(new Error(`Failed to load theme CSS: ${cssPath}`));
-            }
-          };
-          document.head.appendChild(linkElement);
-        });
-        
-        this.currentStyleElement = linkElement;
-        
-        // Prefetch for next time
-        setTimeout(() => this.prefetchTheme(themeName, resolvedMode), 100);
+      // Remove any previous theme CSS link
+      if (this.currentStyleElement) {
+        this.currentStyleElement.remove();
+        this.currentStyleElement = null;
       }
       
       // Set data attributes for debugging
@@ -344,6 +307,50 @@ export class ThemeManager {
       document.documentElement.classList.remove('theme-switching');
       throw error;
     }
+  }
+
+  /**
+   * Extract CSS variables from CSS content
+   */
+  private extractCSSVariables(cssContent: string): Record<string, string> {
+    const variables: Record<string, string> = {};
+    
+    // Match :root { ... } block
+    const rootMatch = cssContent.match(/:root\s*{([^}]+)}/);
+    if (!rootMatch) {
+      console.warn('No :root block found in CSS content');
+      return variables;
+    }
+    
+    const rootContent = rootMatch[1];
+    
+    // Extract CSS variable declarations
+    const variableMatches = rootContent.match(/--[\w-]+:\s*[^;]+/g);
+    if (variableMatches) {
+      variableMatches.forEach(match => {
+        const [property, value] = match.split(':').map(s => s.trim());
+        if (property && value) {
+          variables[property] = value;
+        }
+      });
+    }
+    
+    console.log(`🔍 Extracted ${Object.keys(variables).length} CSS variables`);
+    return variables;
+  }
+
+  /**
+   * Apply CSS variables directly to document root
+   */
+  private applyCSSVariables(variables: Record<string, string>): void {
+    const root = document.documentElement;
+    
+    // Apply each variable
+    Object.entries(variables).forEach(([property, value]) => {
+      root.style.setProperty(property, value);
+    });
+    
+    console.log(`✅ Applied ${Object.keys(variables).length} CSS variables to document root`);
   }
 
   /**

@@ -1,0 +1,17 @@
+<!-- Category tabs -->
+<div class="flex space-x-1 border-b border-border mb-4">
+  {{#categories}}
+  <button 
+    type="button"
+    class="font-category-tab px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors {{#isActive}}border-primary text-primary{{/isActive}}{{^isActive}}border-transparent text-muted-foreground hover:text-foreground{{/isActive}}"
+    data-category="{{name}}"
+  >
+    {{label}}
+  </button>
+  {{/categories}}
+</div>
+
+<!-- Font options container -->
+<div id="font-options-container" class="max-h-[350px] overflow-y-auto pr-2">
+  {{{fontOptions}}}
+</div>

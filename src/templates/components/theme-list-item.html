@@ -1,0 +1,22 @@
+<div class="theme-name-item border rounded-md p-2 hover:bg-accent/5 hover:border-accent transition-all" data-theme-name="{{themeName}}">
+  <div class="flex flex-col">
+    <div class="text-sm font-medium text-foreground truncate" title="{{themeName}}">{{displayName}}</div>
+    <div class="text-xs text-muted-foreground font-mono truncate">{{themeName}}</div>
+    <div class="flex gap-1 mt-2">
+      <button 
+        class="preview-theme-btn flex-1 text-xs border border-input bg-background hover:bg-accent hover:text-accent-foreground px-1 py-1 rounded transition-colors"
+        data-theme-name="{{themeName}}"
+        title="Preview theme"
+      >
+        👁️
+      </button>
+      <button 
+        class="install-theme-btn flex-1 text-xs bg-primary text-primary-foreground px-1 py-1 rounded hover:bg-primary/90 transition-colors"
+        data-theme-name="{{themeName}}"
+        title="Install theme"
+      >
+        Install
+      </button>
+    </div>
+  </div>
+</div>

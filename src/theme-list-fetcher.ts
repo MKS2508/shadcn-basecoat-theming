@@ -2,6 +2,8 @@
  * Theme List Fetcher - Integrates with TweakCN registry for theme discovery
  */
 
+import { StorageManager } from './storage-manager';
+
 export interface ExternalThemeItem {
   name: string;
   description?: string;
@@ -19,10 +21,23 @@ export interface ExternalRegistry {
 }
 
 export class ThemeListFetcher {
-  private readonly REGISTRY_URL = 'https://raw.githubusercontent.com/Decentralised-AI/tweakcn-A-visual-no-code-theme-editor-for-shadcn-ui-components/refs/heads/main/public/r/registry.json';
+  private readonly REGISTRY_URL = 'https://tweakcn.com/r/registry.json';
   private readonly STORAGE_KEY = 'tweakcn-theme-names';
   private readonly LAST_FETCH_KEY = 'tweakcn-theme-fetch-timestamp';
   private readonly CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+  private cache: ExternalRegistry | null = null;
+  private storageManager: StorageManager;
+
+  constructor() {
+    this.storageManager = new StorageManager();
+  }
+
+  /**
+   * Initialize the fetcher
+   */
+  async init(): Promise<void> {
+    await this.storageManager.init();
+  }
 
   /**
    * Get cached theme names from localStorage
@@ -51,13 +66,14 @@ export class ThemeListFetcher {
         }
       }
 
-      console.log(`🌐 ThemeListFetcher: Fetching theme registry...`);
+      console.log(`🌐 ThemeListFetcher: Fetching theme registry from ${this.REGISTRY_URL}...`);
 
+      // Direct fetch to TweakCN registry
       const response = await fetch(this.REGISTRY_URL, {
         method: 'GET',
+        mode: 'cors',
         headers: {
           'Accept': 'application/json',
-          'Cache-Control': force ? 'no-cache' : 'default'
         }
       });
 
@@ -71,7 +87,10 @@ export class ThemeListFetcher {
         throw new Error('Invalid registry format: missing items array');
       }
 
-      // Extract only theme names and basic info
+      // Cache full registry for advanced methods
+      this.cache = registry;
+
+      // Extract only theme names and basic info for storage
       const themeNames = registry.items.map(item => item.name);
 
       // Store in localStorage
@@ -96,10 +115,24 @@ export class ThemeListFetcher {
   }
 
   /**
-   * Get theme install URL by name
+   * Get theme install URL by name (direct to TweakCN)
    */
   getThemeInstallUrl(themeName: string): string {
-    return `https://raw.githubusercontent.com/Decentralised-AI/tweakcn-A-visual-no-code-theme-editor-for-shadcn-ui-components/refs/heads/main/public/r/themes/${themeName}.json`;
+    return `https://tweakcn.com/r/themes/${themeName}.json`;
+  }
+
+  /**
+   * Fetch available themes with full metadata (for advanced operations)
+   */
+  async fetchAvailableThemes(): Promise<ExternalThemeItem[]> {
+    // If we have cache, use it
+    if (this.cache && this.cache.items) {
+      return this.cache.items;
+    }
+
+    // Otherwise, fetch and populate cache
+    await this.fetchAndCacheThemeNames();
+    return this.cache?.items || [];
   }
 
   /**

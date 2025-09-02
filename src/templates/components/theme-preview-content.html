@@ -1,0 +1,64 @@
+<div class="border rounded-lg p-4 space-y-4">
+  <div class="flex items-center justify-between">
+    <h3 class="font-semibold text-foreground">{{themeName}}</h3>
+    <div class="flex items-center space-x-2 text-xs text-muted-foreground">
+      {{#variants}}
+      <span class="px-2 py-1 bg-secondary rounded">{{name}}</span>
+      {{/variants}}
+    </div>
+  </div>
+  
+  <div class="text-sm text-muted-foreground">
+    <div>URL: <code class="text-xs bg-muted px-1 rounded">{{url}}</code></div>
+  </div>
+
+  {{#hasTypography}}
+  <div class="space-y-2">
+    <div class="text-sm font-medium mb-2">Typography:</div>
+    <div class="space-y-2">
+      {{#fonts}}
+      <div class="flex items-center space-x-3">
+        <span class="text-xs px-2 py-1 bg-secondary rounded font-mono">{{type}}</span>
+        <span class="text-sm" style="font-family: {{value}}">{{family}}</span>
+        {{#isExternal}}
+        <span class="text-xs text-blue-600">•</span>
+        {{/isExternal}}
+      </div>
+      {{/fonts}}
+    </div>
+    {{#hasExternalFonts}}
+    <div class="text-xs text-muted-foreground mt-2">
+      <span class="text-blue-600">•</span> External font (will be loaded)
+    </div>
+    {{/hasExternalFonts}}
+  </div>
+  {{/hasTypography}}
+
+  {{#hasTypographyPreview}}
+  <div class="space-y-3">
+    {{{typographyPreview}}}
+  </div>
+  {{/hasTypographyPreview}}
+
+  {{#hasLightColors}}
+  <div class="space-y-2">
+    <div class="text-sm font-medium mb-2">Light Mode Colors:</div>
+    <div class="flex space-x-2">
+      {{#lightColors}}
+      <div class="w-6 h-6 rounded border" style="background-color: {{value}}" title="{{name}}"></div>
+      {{/lightColors}}
+    </div>
+  </div>
+  {{/hasLightColors}}
+
+  {{#hasDarkColors}}
+  <div class="space-y-2">
+    <div class="text-sm font-medium mb-2">Dark Mode Colors:</div>
+    <div class="flex space-x-2">
+      {{#darkColors}}
+      <div class="w-6 h-6 rounded border" style="background-color: {{value}}" title="{{name}}"></div>
+      {{/darkColors}}
+    </div>
+  </div>
+  {{/hasDarkColors}}
+</div>
