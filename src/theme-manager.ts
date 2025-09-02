@@ -50,7 +50,7 @@ export class ThemeManager {
   
   // Performance optimizations  
   private prefetchedThemes: Set<string> = new Set(); // Single-request prefetch tracking
-  private readonly POPULAR_THEMES = ['default', 'supabase']; // Themes to preload
+  private readonly BUILTIN_THEMES = ['default', 'supabase']; // Built-in themes for preloading
   private readonly MAX_CACHED_THEMES = 3; // LRU cache limit
   private prefetchPromises: Map<string, Promise<void>> = new Map();
   
@@ -67,67 +67,6 @@ export class ThemeManager {
     this.fontLoader = new FontLoader();
   }
 
-
-  /**
-   * Get critical CSS for specific theme (legacy function kept for compatibility)
-   */
-  private injectCriticalCSS(): void {
-    const criticalCSS = `
-/* Critical CSS - Inline for 0ms cold start */
-:root {
-  --background: oklch(1.0000 0 0);
-  --foreground: oklch(0.1448 0 0);
-  --card: oklch(1.0000 0 0);
-  --card-foreground: oklch(0.1448 0 0);
-  --popover: oklch(1.0000 0 0);
-  --popover-foreground: oklch(0.1448 0 0);
-  --primary: oklch(0.3527 0.1722 263.94);
-  --primary-foreground: oklch(0.9851 0 0);
-  --secondary: oklch(0.9702 0 0);
-  --secondary-foreground: oklch(0.2046 0 0);
-  --muted: oklch(0.9702 0 0);
-  --muted-foreground: oklch(0.5486 0 0);
-  --accent: oklch(0.9702 0 0);
-  --accent-foreground: oklch(0.2046 0 0);
-  --destructive: oklch(0.5830 0.2387 28.4765);
-  --destructive-foreground: oklch(0.9702 0 0);
-  --border: oklch(0.9219 0 0);
-  --input: oklch(0.9219 0 0);
-  --ring: oklch(0.7090 0 0);
-  --radius: 0.5rem;
-  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-  --font-serif: Georgia, Cambria, "Times New Roman", Times, serif;
-  --font-mono: "Fira Code", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-}
-
-/* Critical selectors for immediate render */
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
-  margin: 0;
-  padding: 0;
-}
-
-* {
-  border-color: var(--border);
-}
-`.trim();
-
-    const style = document.createElement('style');
-    style.id = 'critical-css';
-    style.textContent = criticalCSS;
-    
-    // Insert at the very beginning for maximum priority
-    const firstChild = document.head.firstChild;
-    if (firstChild) {
-      document.head.insertBefore(style, firstChild);
-    } else {
-      document.head.appendChild(style);
-    }
-    
-    console.log('⚡ ThemeManager: Critical CSS injected (0ms cold start)');
-  }
 
 
   /**
@@ -158,8 +97,8 @@ body {
       // Apply initial theme
       await this.applyTheme(this.currentTheme, this.currentMode);
       
-      // Preload popular themes in background (non-blocking)
-      this.preloadPopularThemes();
+      // Preload built-in themes in background (non-blocking)
+      this.preloadBuiltinThemes();
       
       // End initialization timer
       PerformanceMonitor.endTimer('theme-manager-init');
@@ -204,10 +143,10 @@ body {
   }
 
   /**
-   * Prefetch popular themes for instant switching (single-request)
+   * Prefetch built-in themes for instant switching
    */
-  private preloadPopularThemes(): void {
-    this.POPULAR_THEMES.forEach(themeName => {
+  private preloadBuiltinThemes(): void {
+    this.BUILTIN_THEMES.forEach(themeName => {
       if (themeName !== this.currentTheme) {
         // Prefetch both light and dark modes (background, single request each)
         this.prefetchTheme(themeName, 'light');
@@ -215,7 +154,7 @@ body {
       }
     });
     
-    console.log(`🚀 ThemeManager: Prefetching ${this.POPULAR_THEMES.length} popular themes`);
+    console.log(`🚀 ThemeManager: Prefetching ${this.BUILTIN_THEMES.length} built-in themes`);
   }
 
   /**

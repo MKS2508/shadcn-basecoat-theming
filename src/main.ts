@@ -263,37 +263,6 @@ class App {
     }
   }
 
-  /**
-   * Show main content immediately (instant, no loading)
-   */
-  private showMainContentImmediate(): void {
-    const loadingOverlay = document.getElementById('loading-overlay');
-    const mainContent = document.getElementById('main-content');
-    
-    if (loadingOverlay && mainContent) {
-      // Remove theme loading class immediately
-      document.documentElement.classList.remove('theme-loading');
-      
-      // Hide loading and show content instantly (no fade)
-      loadingOverlay.style.display = 'none';
-      mainContent.style.opacity = '1';
-      
-      console.log('⚡ Main content shown immediately (0ms)');
-    }
-  }
-
-  /**
-   * Finalize UI after initialization
-   */
-  private finalizeUI(): void {
-    // Just ensure everything is visible (already handled in immediate show)
-    const mainContent = document.getElementById('main-content');
-    if (mainContent) {
-      mainContent.style.opacity = '1';
-    }
-    
-    console.log('✅ UI finalized');
-  }
 
   /**
    * Show main content and hide loading overlay

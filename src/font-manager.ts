@@ -41,31 +41,8 @@ export class FontManager {
       enabled: false,
       fonts: {}
     };
-    
-    // Add Google Fonts preconnects for better performance
-    this.addGoogleFontsPreconnects();
   }
 
-  /**
-   * Add preconnect links for Google Fonts
-   */
-  private addGoogleFontsPreconnects(): void {
-    const preconnects = [
-      'https://fonts.googleapis.com',
-      'https://fonts.gstatic.com'
-    ];
-
-    preconnects.forEach(href => {
-      const existingLink = document.querySelector(`link[href="${href}"]`);
-      if (!existingLink) {
-        const link = document.createElement('link');
-        link.rel = 'preconnect';
-        link.href = href;
-        link.crossOrigin = 'anonymous';
-        document.head.appendChild(link);
-      }
-    });
-  }
 
   /**
    * Initialize font manager
