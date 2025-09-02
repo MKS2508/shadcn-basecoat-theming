@@ -1,5 +1,6 @@
 import './style.css';
 import { AppController } from './components/app-controller';
+import { logger, logSuccess, logError } from './utils/logger';
 
 /**
  * Application entry point
@@ -7,22 +8,22 @@ import { AppController } from './components/app-controller';
  */
 async function initializeApp(): Promise<void> {
   try {
-    console.log('🚀 Starting Theme Manager Application');
+    logger.info('🚀 Starting Theme Manager Application');
     
     // Create and initialize application controller
     const app = new AppController();
     await app.init();
     
-    console.log('✅ Application initialized successfully');
+    logSuccess('Application initialized successfully');
     
     // Store app instance globally for debugging (development only)
     if (import.meta.env?.DEV) {
       (window as any).__app = app;
-      console.log('🔧 App instance available at window.__app');
+      logger.debug('🔧 App instance available at window.__app');
     }
     
   } catch (error) {
-    console.error('❌ Failed to initialize application:', error);
+    logError('Failed to initialize application', error as Error);
     
     // Show fallback error UI
     showFallbackError(error as Error);
@@ -79,12 +80,12 @@ ${error.stack || error.message}
 function setupErrorHandling(): void {
   // Global error handler
   window.addEventListener('error', (event) => {
-    console.error('❌ Global error:', event.error);
+    logError('Global error', event.error);
   });
 
   // Unhandled promise rejections
   window.addEventListener('unhandledrejection', (event) => {
-    console.error('❌ Unhandled promise rejection:', event.reason);
+    logError('Unhandled promise rejection', event.reason);
   });
 }
 

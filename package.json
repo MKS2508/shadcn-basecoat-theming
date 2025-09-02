@@ -11,6 +11,7 @@
     "install-theme": "tsx scripts/install-theme.ts"
   },
   "dependencies": {
+    "@mks2508/better-logger": "^0.3.0",
     "@radix-ui/react-slot": "^1.2.3",
     "basecoat-css": "^0.3.0",
     "class-variance-authority": "^0.7.1",

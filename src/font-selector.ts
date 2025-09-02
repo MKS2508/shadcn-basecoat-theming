@@ -38,10 +38,7 @@ export class FontSelector {
       });
     }
 
-    // Listen for font manager changes to update button
-    this.fontManager.onFontChange(() => {
-      this.updateFontSelectorButton();
-    });
+    // Font manager doesn't have onFontChange event, we'll update manually after operations
   }
 
   /**
@@ -60,17 +57,16 @@ export class FontSelector {
     const fontButton = document.getElementById('font-selector-btn');
     if (!fontButton) return;
 
-    // Check if there are any font overrides
-    const hasOverrides = this.fontManager.hasAnyOverrides();
-    const buttonText = hasOverrides ? 'Fonts*' : 'Fonts';
-    
-    fontButton.textContent = buttonText;
+    // Check if font override is enabled (simplified check)
+    const hasOverrides = this.fontManager.isOverrideEnabled();
     
     // Visual indication of active overrides
     if (hasOverrides) {
       fontButton.classList.add('text-primary', 'font-medium');
+      fontButton.setAttribute('title', 'Font overrides active - Click to configure');
     } else {
       fontButton.classList.remove('text-primary', 'font-medium');
+      fontButton.setAttribute('title', 'Configure fonts');
     }
   }
 
@@ -95,10 +91,11 @@ export class FontSelector {
     serif: string | null;
     mono: string | null;
   }> {
+    const config = this.fontManager.getOverrideConfiguration();
     return {
-      sans: await this.fontManager.getCurrentFontOverride('sans'),
-      serif: await this.fontManager.getCurrentFontOverride('serif'),
-      mono: await this.fontManager.getCurrentFontOverride('mono')
+      sans: config.fonts.sans || null,
+      serif: config.fonts.serif || null,
+      mono: config.fonts.mono || null
     };
   }
 
@@ -113,7 +110,11 @@ export class FontSelector {
    * Enable/disable font overrides
    */
   async setOverrideEnabled(enabled: boolean): Promise<void> {
-    await this.fontManager.setOverrideEnabled(enabled);
+    if (enabled) {
+      await this.fontManager.enableOverride();
+    } else {
+      await this.fontManager.disableOverride();
+    }
     this.updateFontSelectorButton();
   }
 
@@ -121,7 +122,10 @@ export class FontSelector {
    * Reset all font overrides
    */
   async resetAllFonts(): Promise<void> {
-    await this.fontManager.resetAllFonts();
+    // Remove individual font overrides
+    await this.fontManager.removeFontOverride('sans');
+    await this.fontManager.removeFontOverride('serif');
+    await this.fontManager.removeFontOverride('mono');
     this.updateFontSelectorButton();
     console.log('🔤 All fonts reset to theme defaults');
   }
