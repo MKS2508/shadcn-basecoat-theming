@@ -1,5 +1,6 @@
 import { BaseComponent } from '../utils/base-component';
 import { TemplateEngine } from '../utils/template-engine';
+import { ThemeManager } from '../theme-manager';
 import themePreviewTemplate from '../templates/components/theme-preview-content.html?raw';
 
 interface ThemeData {
@@ -24,10 +25,12 @@ interface ColorInfo {
 }
 
 export class ThemePreview extends BaseComponent {
+  private themeManager: ThemeManager;
 
-  constructor(containerId: string) {
+  constructor(containerId: string, themeManager: ThemeManager) {
     super(themePreviewTemplate);
     this.element = document.getElementById(containerId);
+    this.themeManager = themeManager;
   }
 
   protected bindEvents(): void {
@@ -40,6 +43,15 @@ export class ThemePreview extends BaseComponent {
     const lightColors = this.extractPreviewColors(themeData.cssVars.light);
     const darkColors = this.extractPreviewColors(themeData.cssVars.dark);
     const variants = this.createVariants(themeData);
+    
+    // Get current mode from theme manager to show correct colors
+    const currentMode = this.themeManager.getCurrentMode();
+    const resolvedMode = currentMode === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : currentMode;
+    
+    // Extract specific theme colors for inline usage based on current mode (to show PREVIEW theme, not current theme)
+    const modeVars = resolvedMode === 'dark' ? themeData.cssVars.dark : themeData.cssVars.light;
+    console.log(`🎨 ThemePreview: Using ${resolvedMode} mode for theme preview`, { currentMode, resolvedMode, hasLightVars: !!themeData.cssVars.light, hasDarkVars: !!themeData.cssVars.dark });
+    const previewColors = this.extractInlineColors(modeVars || themeData.cssVars.theme || {});
 
     const templateData = {
       themeName: themeData.name,
@@ -53,7 +65,9 @@ export class ThemePreview extends BaseComponent {
       hasLightColors: lightColors.length > 0,
       lightColors: lightColors,
       hasDarkColors: darkColors.length > 0,
-      darkColors: darkColors
+      darkColors: darkColors,
+      // Add inline colors for preview components
+      previewColors: previewColors
     };
 
     this.setData(templateData);
@@ -222,5 +236,85 @@ export class ThemePreview extends BaseComponent {
       return `${h}, ${c}%, ${l}%`;
     }
     return '0, 0%, 50%'; // fallback
+  }
+
+  /**
+   * Extract colors as inline CSS values for preview components
+   */
+  private extractInlineColors(cssVars: Record<string, string>): Record<string, string> {
+    console.log('🔍 ThemePreview: cssVars received:', Object.keys(cssVars), cssVars);
+    const colors: Record<string, string> = {};
+    
+    // Define mappings for preview components (cssVars come without -- prefix)
+    const colorMappings = {
+      primary: 'primary',
+      primaryForeground: 'primary-foreground', 
+      secondary: 'secondary',
+      secondaryForeground: 'secondary-foreground',
+      background: 'background',
+      foreground: 'foreground',
+      card: 'card',
+      cardForeground: 'card-foreground',
+      muted: 'muted',
+      mutedForeground: 'muted-foreground',
+      border: 'border',
+      input: 'input'
+    };
+
+    // Extract and convert each color
+    let foundCount = 0;
+    let fallbackCount = 0;
+    for (const [key, cssVar] of Object.entries(colorMappings)) {
+      const rawValue = cssVars[cssVar];
+      if (rawValue) {
+        colors[key] = this.convertToInlineColor(rawValue);
+        foundCount++;
+      } else {
+        // Fallback colors if not found
+        colors[key] = this.getDefaultColor(key);
+        fallbackCount++;
+      }
+    }
+    console.log(`🔍 ThemePreview: Found ${foundCount} theme colors, used ${fallbackCount} fallbacks`);
+
+    console.log('🎨 ThemePreview: Extracted inline colors:', colors);
+    return colors;
+  }
+
+  /**
+   * Convert CSS variable value to inline color
+   */
+  private convertToInlineColor(value: string): string {
+    if (value.includes('hsl')) {
+      return value; // Already HSL format
+    } else if (value.includes('oklch')) {
+      return `hsl(${this.oklchToHslApprox(value)})`;
+    } else if (value.includes('rgb')) {
+      return value; // RGB format
+    } else {
+      // Assume it's HSL values without wrapper
+      return `hsl(${value})`;
+    }
+  }
+
+  /**
+   * Get fallback colors for preview
+   */
+  private getDefaultColor(colorKey: string): string {
+    const defaults: Record<string, string> = {
+      primary: 'hsl(221.2, 83.2%, 53.3%)',
+      primaryForeground: 'hsl(210, 40%, 98%)',
+      secondary: 'hsl(210, 40%, 96%)',
+      secondaryForeground: 'hsl(222.2, 84%, 4.9%)',
+      background: 'hsl(0, 0%, 100%)',
+      foreground: 'hsl(222.2, 84%, 4.9%)',
+      card: 'hsl(0, 0%, 100%)',
+      cardForeground: 'hsl(222.2, 84%, 4.9%)',
+      muted: 'hsl(210, 40%, 96%)',
+      mutedForeground: 'hsl(215.4, 16.3%, 46.9%)',
+      border: 'hsl(214.3, 31.8%, 91.4%)',
+      input: 'hsl(214.3, 31.8%, 91.4%)'
+    };
+    return defaults[colorKey] || 'hsl(0, 0%, 50%)';
   }
 }

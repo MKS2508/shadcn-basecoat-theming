@@ -52,7 +52,7 @@ export class ThemeInstallerModal extends ModalComponent {
     }
 
     // Initialize components
-    this.themePreview = new ThemePreview('theme-preview');
+    this.themePreview = new ThemePreview('theme-preview', this.themeManager);
     await this.themePreview.init();
 
     this.registryList = new ThemeRegistryList();
