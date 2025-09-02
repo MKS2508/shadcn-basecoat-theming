@@ -80,13 +80,14 @@ export class AppController {
    * Initialize theme dropdown component
    */
   private async initializeThemeDropdown(): Promise<void> {
-    // Find the dropdown menu (it should be a [role="menu"] inside the dropdown)
-    const dropdownMenu = document.querySelector('[data-dropdown] [role="menu"]') as HTMLElement;
+    // Find the dropdown menu using the specific ID
+    const dropdownMenu = document.getElementById('theme-menu');
     if (!dropdownMenu) {
       throw new Error('Theme dropdown menu element not found');
     }
 
-    this.themeDropdown = new ThemeDropdown('[role="menu"]', this.themeManager);
+    componentLogger.debug('Found dropdown menu element:', dropdownMenu);
+    this.themeDropdown = new ThemeDropdown('#theme-menu', this.themeManager);
     
     // Set up dropdown callbacks
     this.themeDropdown.setOnThemeSelect(async (themeName) => {
@@ -142,9 +143,26 @@ export class AppController {
    */
   private setupModeToggle(): void {
     const modeToggle = document.getElementById('mode-toggle');
-    if (!modeToggle) return;
+    console.log('setupModeToggle: Looking for mode-toggle button...');
+    console.log('setupModeToggle: Found button:', !!modeToggle, modeToggle);
+    
+    if (!modeToggle) {
+      console.error('setupModeToggle: mode-toggle button not found!');
+      return;
+    }
 
-    modeToggle.addEventListener('click', async () => {
+    // Add pointer-events to ensure SVG children don't block clicks
+    modeToggle.style.pointerEvents = 'auto';
+    const svgs = modeToggle.querySelectorAll('svg');
+    svgs.forEach(svg => {
+      svg.style.pointerEvents = 'none';
+    });
+
+    const clickHandler = async (event: Event) => {
+      console.log('setupModeToggle: Mode toggle button clicked!', event.target);
+      event.preventDefault();
+      event.stopPropagation();
+      
       const currentMode = this.themeManager.getCurrentMode();
       let newMode: 'light' | 'dark' | 'auto';
 
@@ -171,7 +189,10 @@ export class AppController {
       } catch (error) {
         logError('Failed to switch mode', error as Error);
       }
-    });
+    };
+
+    modeToggle.addEventListener('click', clickHandler);
+    console.log('setupModeToggle: Click event listener added to mode toggle button');
   }
 
   /**
@@ -231,10 +252,23 @@ export class AppController {
       dropdownButton.click(); // This will close the dropdown
     }
     
-    // Open theme installer modal which handles browsing functionality
-    const installBtn = document.getElementById('install-theme-btn');
-    if (installBtn) {
-      installBtn.click();
+    // Open theme installer modal directly (no button needed)
+    console.log('AppController: Opening ThemeInstaller modal directly');
+    if (this.themeInstaller) {
+      // Use a small delay to ensure dropdown closes first
+      setTimeout(() => {
+        console.log('AppController: Calling themeInstaller openModal');
+        // We need to access the installer modal directly
+        // The ThemeInstaller has an installerModal property
+        const installerModal = (this.themeInstaller as any).installerModal;
+        if (installerModal && installerModal.openModal) {
+          installerModal.openModal();
+        } else {
+          console.error('AppController: installerModal not found or no openModal method');
+        }
+      }, 100);
+    } else {
+      console.error('AppController: themeInstaller is null');
     }
   }
 

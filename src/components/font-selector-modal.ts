@@ -68,9 +68,14 @@ export class FontSelectorModal extends ModalComponent {
   }
 
   async openModal(): Promise<void> {
+    console.log('FontSelectorModal: openModal() called');
+    console.log('FontSelectorModal: modal element exists:', !!this.modal);
+    
     // Refresh state before opening
     this.isOverrideEnabled = this.fontManager.isOverrideEnabled();
     await this.updateUI();
+    
+    console.log('FontSelectorModal: Calling this.open()');
     this.open();
   }
 

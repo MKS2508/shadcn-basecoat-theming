@@ -32,10 +32,28 @@ export class FontSelector {
   private setupEventListeners(): void {
     // Font selector button
     const fontButton = document.getElementById('font-selector-btn');
+    console.log('FontSelector: Looking for font-selector-btn...');
+    console.log('FontSelector: Found button:', !!fontButton, fontButton);
+    
     if (fontButton) {
-      fontButton.addEventListener('click', () => {
-        this.openModal();
+      // Add pointer-events to ensure SVG children don't block clicks
+      fontButton.style.pointerEvents = 'auto';
+      const svgs = fontButton.querySelectorAll('svg');
+      svgs.forEach(svg => {
+        svg.style.pointerEvents = 'none';
       });
+      
+      const clickHandler = (event: Event) => {
+        console.log('FontSelector: Font selector button clicked!', event.target);
+        event.preventDefault();
+        event.stopPropagation();
+        this.openModal();
+      };
+      
+      fontButton.addEventListener('click', clickHandler);
+      console.log('FontSelector: Click event listener added to font selector button');
+    } else {
+      console.error('FontSelector: font-selector-btn not found!');
     }
 
     // Font manager doesn't have onFontChange event, we'll update manually after operations
@@ -45,8 +63,14 @@ export class FontSelector {
    * Open font selector modal
    */
   private openModal(): void {
+    console.log('FontSelector: openModal() called');
+    console.log('FontSelector: selectorModal exists:', !!this.selectorModal);
+    
     if (this.selectorModal) {
+      console.log('FontSelector: Calling selectorModal.openModal()');
       this.selectorModal.openModal();
+    } else {
+      console.error('FontSelector: selectorModal is null!');
     }
   }
 

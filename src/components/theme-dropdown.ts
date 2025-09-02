@@ -18,14 +18,21 @@ export class ThemeDropdown {
   private onThemeSelect?: (themeName: string) => void;
   private onBrowseMore?: () => void;
   private onSettings?: () => void;
+  private closeOnSelect: boolean = false; // Default: keep dropdown open
 
-  constructor(dropdownMenuSelector: string, themeManager: ThemeManager) {
+  constructor(dropdownMenuSelector: string, themeManager: ThemeManager, closeOnSelect: boolean = false) {
     this.dropdownMenu = document.querySelector(dropdownMenuSelector);
     this.themeManager = themeManager;
+    this.closeOnSelect = closeOnSelect;
+    
+    console.log('ThemeDropdown constructor:');
+    console.log('- Selector:', dropdownMenuSelector);
+    console.log('- Found element:', this.dropdownMenu);
+    console.log('- Element HTML before:', this.dropdownMenu?.innerHTML);
   }
 
   /**
-   * Initialize event listeners for dropdown content
+   * Initialize dropdown component
    */
   init(): void {
     if (!this.dropdownMenu) {
@@ -33,27 +40,55 @@ export class ThemeDropdown {
       return;
     }
 
-    this.bindEvents();
+    // Don't bind events here - they will be bound after rendering
+    console.log('ThemeDropdown initialized, events will be bound after render');
   }
 
   private bindEvents(): void {
-    if (!this.dropdownMenu) return;
+    if (!this.dropdownMenu) {
+      console.error('bindEvents: No dropdown menu element!');
+      return;
+    }
+
+    console.log('bindEvents: Starting event binding...');
+    console.log('bindEvents: dropdownMenu element:', this.dropdownMenu);
+    
+    // Check if we have theme options in the DOM
+    const themeOptions = this.dropdownMenu.querySelectorAll('.theme-option');
+    console.log('bindEvents: Found theme options:', themeOptions.length);
+    
+    const browseButton = this.dropdownMenu.querySelector('#browse-more-themes');
+    const settingsButton = this.dropdownMenu.querySelector('#theme-settings-btn');
+    console.log('bindEvents: Found browse button:', !!browseButton);
+    console.log('bindEvents: Found settings button:', !!settingsButton);
 
     // Use event delegation for dynamically generated content
-    this.dropdownMenu.addEventListener('click', (e) => {
+    const clickHandler = (e: Event) => {
+      console.log('bindEvents: Click detected on dropdown!', e.target);
       const target = e.target as HTMLElement;
       const themeOption = target.closest('.theme-option');
       
       if (themeOption) {
         const themeName = themeOption.getAttribute('data-theme');
+        console.log('bindEvents: Theme option clicked:', themeName);
         if (themeName && this.onThemeSelect) {
+          console.log('bindEvents: Calling onThemeSelect callback');
           this.onThemeSelect(themeName);
+          
+          // Only close dropdown if closeOnSelect is enabled
+          if (this.closeOnSelect) {
+            console.log('bindEvents: Closing dropdown (closeOnSelect=true)');
+            this.closeDropdown();
+          } else {
+            console.log('bindEvents: Keeping dropdown open (closeOnSelect=false)');
+          }
         }
         return;
       }
 
       // Browse more button
       if (target.closest('#browse-more-themes')) {
+        console.log('bindEvents: Browse more button clicked');
         if (this.onBrowseMore) {
           this.onBrowseMore();
         }
@@ -62,12 +97,18 @@ export class ThemeDropdown {
 
       // Settings button
       if (target.closest('#theme-settings-btn')) {
+        console.log('bindEvents: Settings button clicked');
         if (this.onSettings) {
           this.onSettings();
         }
         return;
       }
-    });
+      
+      console.log('bindEvents: Click on unhandled element:', target);
+    };
+
+    this.dropdownMenu.addEventListener('click', clickHandler);
+    console.log('bindEvents: Click event listener added to dropdown menu');
   }
 
   setOnThemeSelect(callback: (themeName: string) => void): void {
@@ -86,11 +127,20 @@ export class ThemeDropdown {
    * Generate and render dropdown content
    */
   async render(): Promise<void> {
-    if (!this.dropdownMenu) return;
+    console.log('ThemeDropdown.render() called');
+    console.log('- dropdownMenu exists:', !!this.dropdownMenu);
+    
+    if (!this.dropdownMenu) {
+      console.error('No dropdown menu element found!');
+      return;
+    }
 
     try {
       const themes = this.themeManager.getAvailableThemes();
       const currentTheme = this.themeManager.getCurrentTheme();
+      
+      console.log('- Available themes:', themes);
+      console.log('- Current theme:', currentTheme);
 
       const themeOptions: ThemeOption[] = themes.map((config) => ({
         name: config.name,
@@ -99,17 +149,14 @@ export class ThemeDropdown {
         isActive: currentTheme === config.name
       }));
 
-      // Render using template engine
-      const html = await templateEngine.renderTemplate('/templates/components/theme-dropdown-menu.html', {
-        themes: themeOptions
-      });
+      console.log('- Theme options:', themeOptions);
 
-      this.dropdownMenu.innerHTML = html;
+      // Temporarily skip template engine and use fallback directly
+      console.log('Using fallback rendering (template engine disabled temporarily)');
+      this.renderFallback();
       
     } catch (error) {
       console.error('Failed to render theme dropdown:', error);
-      
-      // Fallback to direct HTML generation
       this.renderFallback();
     }
   }
@@ -118,10 +165,17 @@ export class ThemeDropdown {
    * Fallback rendering without templates
    */
   private renderFallback(): void {
-    if (!this.dropdownMenu) return;
+    if (!this.dropdownMenu) {
+      console.error('renderFallback: No dropdown menu element');
+      return;
+    }
 
+    console.log('renderFallback: Starting fallback rendering');
     const themes = this.themeManager.getAvailableThemes();
     const currentTheme = this.themeManager.getCurrentTheme();
+
+    console.log('renderFallback: themes:', themes);
+    console.log('renderFallback: currentTheme:', currentTheme);
 
     let html = '';
 
@@ -129,6 +183,8 @@ export class ThemeDropdown {
     themes.forEach(theme => {
       const icon = this.getThemeIcon(theme.name);
       const isActive = currentTheme === theme.name;
+      
+      console.log(`renderFallback: Processing theme ${theme.name}, active: ${isActive}`);
       
       html += `
         <button 
@@ -174,7 +230,17 @@ export class ThemeDropdown {
       </div>
     `;
 
+    console.log('renderFallback: Generated HTML length:', html.length);
+    console.log('renderFallback: Setting innerHTML...');
+    
     this.dropdownMenu.innerHTML = html;
+    
+    console.log('renderFallback: innerHTML set, now binding events...');
+    
+    // Bind events AFTER setting innerHTML
+    this.bindEvents();
+    
+    console.log('renderFallback: Events bound successfully');
   }
 
   /**
@@ -195,5 +261,23 @@ export class ThemeDropdown {
     };
 
     return iconMap[themeName] || iconMap.default;
+  }
+
+  /**
+   * Close the dropdown by clicking the theme button
+   */
+  private closeDropdown(): void {
+    const themeButton = document.getElementById('theme-button');
+    if (themeButton) {
+      themeButton.click();
+    }
+  }
+
+  /**
+   * Set whether dropdown should close when selecting a theme
+   */
+  setCloseOnSelect(closeOnSelect: boolean): void {
+    this.closeOnSelect = closeOnSelect;
+    console.log('ThemeDropdown: closeOnSelect set to', closeOnSelect);
   }
 }
