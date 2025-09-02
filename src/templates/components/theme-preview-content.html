@@ -1,64 +1,80 @@
-<div class="border rounded-lg p-4 space-y-4">
-  <div class="flex items-center justify-between">
-    <h3 class="font-semibold text-foreground">{{themeName}}</h3>
-    <div class="flex items-center space-x-2 text-xs text-muted-foreground">
-      {{#variants}}
-      <span class="px-2 py-1 bg-secondary rounded">{{name}}</span>
-      {{/variants}}
-    </div>
-  </div>
-  
-  <div class="text-sm text-muted-foreground">
-    <div>URL: <code class="text-xs bg-muted px-1 rounded">{{url}}</code></div>
-  </div>
-
-  {{#hasTypography}}
-  <div class="space-y-2">
-    <div class="text-sm font-medium mb-2">Typography:</div>
-    <div class="space-y-2">
-      {{#fonts}}
-      <div class="flex items-center space-x-3">
-        <span class="text-xs px-2 py-1 bg-secondary rounded font-mono">{{type}}</span>
-        <span class="text-sm" style="font-family: {{value}}">{{family}}</span>
-        {{#isExternal}}
-        <span class="text-xs text-blue-600">•</span>
-        {{/isExternal}}
+<div class="border rounded-lg overflow-hidden">
+  <!-- Header with theme info -->
+  <div class="bg-muted/30 px-4 py-3 border-b">
+    <div class="flex items-center justify-between">
+      <h3 class="font-semibold text-foreground">{{themeName}}</h3>
+      <div class="flex items-center space-x-2 text-xs">
+        {{#variants}}
+        <span class="px-2 py-1 bg-background border rounded text-muted-foreground">{{name}}</span>
+        {{/variants}}
       </div>
-      {{/fonts}}
     </div>
-    {{#hasExternalFonts}}
-    <div class="text-xs text-muted-foreground mt-2">
-      <span class="text-blue-600">•</span> External font (will be loaded)
-    </div>
-    {{/hasExternalFonts}}
   </div>
-  {{/hasTypography}}
 
-  {{#hasTypographyPreview}}
-  <div class="space-y-3">
-    {{{typographyPreview}}}
-  </div>
-  {{/hasTypographyPreview}}
+  <!-- Visual Theme Demo -->
+  <div class="p-4 space-y-4 bg-background">
+    <!-- Demo UI Components -->
+    <div class="space-y-3">
+      <div class="text-xs font-medium text-muted-foreground mb-2">PREVIEW</div>
+      
+      <!-- Simulated App Header -->
+      <div class="bg-card border rounded-lg p-3">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-sm font-medium text-card-foreground">Dashboard</div>
+          <div class="w-6 h-6 bg-primary rounded-full"></div>
+        </div>
+        <div class="text-xs text-muted-foreground">Welcome back to your workspace</div>
+      </div>
 
-  {{#hasLightColors}}
-  <div class="space-y-2">
-    <div class="text-sm font-medium mb-2">Light Mode Colors:</div>
-    <div class="flex space-x-2">
-      {{#lightColors}}
-      <div class="w-6 h-6 rounded border" style="background-color: {{value}}" title="{{name}}"></div>
-      {{/lightColors}}
+      <!-- Simulated Button Group -->
+      <div class="flex space-x-2">
+        <div class="px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-medium">Primary</div>
+        <div class="px-3 py-1.5 bg-secondary text-secondary-foreground rounded text-xs">Secondary</div>
+        <div class="px-3 py-1.5 border border-border rounded text-xs text-foreground">Outline</div>
+      </div>
+
+      <!-- Simulated Input -->
+      <div class="space-y-1">
+        <div class="text-xs text-muted-foreground">Search</div>
+        <div class="w-full px-2 py-1 bg-background border border-input rounded text-xs text-foreground">Type something...</div>
+      </div>
+    </div>
+
+    <!-- Color Palette -->
+    {{#hasLightColors}}
+    <div class="space-y-2">
+      <div class="text-xs font-medium text-muted-foreground">COLORS</div>
+      <div class="grid grid-cols-4 gap-1">
+        {{#lightColors}}
+        <div class="flex flex-col items-center space-y-1">
+          <div class="w-8 h-8 rounded-lg border shadow-sm" style="background-color: {{value}}" title="{{name}}"></div>
+          <div class="text-xs text-muted-foreground capitalize">{{name}}</div>
+        </div>
+        {{/lightColors}}
+      </div>
+    </div>
+    {{/hasLightColors}}
+
+    <!-- Typography Sample -->
+    {{#hasTypography}}
+    <div class="space-y-2">
+      <div class="text-xs font-medium text-muted-foreground">TYPOGRAPHY</div>
+      <div class="space-y-2">
+        {{#fonts}}
+        <div class="p-2 bg-muted/20 rounded">
+          <div class="text-xs text-muted-foreground mb-1">{{type}} • {{family}}</div>
+          <div class="text-sm" style="font-family: {{value}}">The quick brown fox jumps over the lazy dog</div>
+        </div>
+        {{/fonts}}
+      </div>
+    </div>
+    {{/hasTypography}}
+
+    <!-- Source Info -->
+    <div class="pt-2 border-t">
+      <div class="text-xs text-muted-foreground">
+        <span class="font-mono">{{url}}</span>
+      </div>
     </div>
   </div>
-  {{/hasLightColors}}
-
-  {{#hasDarkColors}}
-  <div class="space-y-2">
-    <div class="text-sm font-medium mb-2">Dark Mode Colors:</div>
-    <div class="flex space-x-2">
-      {{#darkColors}}
-      <div class="w-6 h-6 rounded border" style="background-color: {{value}}" title="{{name}}"></div>
-      {{/darkColors}}
-    </div>
-  </div>
-  {{/hasDarkColors}}
 </div>
