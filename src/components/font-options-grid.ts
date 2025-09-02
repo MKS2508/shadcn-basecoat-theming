@@ -83,13 +83,15 @@ export class FontOptionsGrid extends BaseComponent {
     const enrichedSystemFonts = systemFonts.map(font => ({
       ...font,
       isSelected: font.id === selectedFontId,
-      previewText: this.getPreviewText(this.currentCategory)
+      previewText: this.getPreviewText(this.currentCategory),
+      currentCategory: this.currentCategory // Add category to each font for template access
     }));
 
     const enrichedGoogleFonts = googleFonts.map(font => ({
       ...font,
       isSelected: font.id === selectedFontId,
-      previewText: this.getPreviewText(this.currentCategory)
+      previewText: this.getPreviewText(this.currentCategory),
+      currentCategory: this.currentCategory // Add category to each font for template access
     }));
 
     console.log(`🔤 FontOptionsGrid: Enriched system fonts:`, enrichedSystemFonts.map(f => ({id: f.id, isSelected: f.isSelected})));
