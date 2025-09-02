@@ -1,8 +1,10 @@
 import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
+import BrowserLoggerPlugin from './vite-plugin-browser-logger.js';
 
 export default defineConfig({
-  plugins: [tailwindcss()],
+  plugins: [tailwindcss(), BrowserLoggerPlugin()],
+  assetsInclude: ['**/*.html'], // Enable .html file imports with ?raw
   css: {
     devSourcemap: true,
   },

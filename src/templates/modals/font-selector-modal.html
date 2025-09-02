@@ -1,12 +1,12 @@
-<div class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden" id="font-selector-modal">
+<div class="fixed inset-0 z-60 flex items-center justify-center p-4 hidden" id="font-selector-modal">
   <div class="fixed inset-0 bg-background/80 backdrop-blur-sm" id="font-modal-backdrop"></div>
-  <div class="relative bg-card border rounded-lg shadow-lg w-full max-w-3xl max-h-[85vh] overflow-hidden">
+  <div class="relative bg-card border rounded-lg shadow-lg w-full max-w-3xl max-h-[85vh] overflow-hidden z-70">
     <div class="flex items-center justify-between p-6 border-b">
       <div class="flex items-center space-x-3">
         <h2 class="text-lg font-semibold text-foreground">Font Settings</h2>
         <div class="flex items-center space-x-2">
           <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="font-override-toggle" class="sr-only peer" {{#isOverrideEnabled}}checked{{/isOverrideEnabled}}>
+            <input type="checkbox" id="font-override-toggle" class="sr-only peer">
             <div class="w-9 h-5 bg-muted peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
           </label>
           <span class="text-sm text-muted-foreground">Override fonts</span>
@@ -46,8 +46,7 @@
         <button
           type="button"
           id="font-reset-btn"
-          class="px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-md transition-colors {{^isOverrideEnabled}}opacity-50 cursor-not-allowed{{/isOverrideEnabled}}"
-          {{^isOverrideEnabled}}disabled{{/isOverrideEnabled}}
+          class="px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-md transition-colors"
         >
           Reset All
         </button>

@@ -1,11 +1,8 @@
 import { BaseComponent } from '../utils/base-component';
-import { getFontsByCategory, getFontById, FontOption } from '../font-catalog';
+import { getFontsByCategory } from '../font-catalog';
 import type { FontCategory } from './font-category-tabs';
+import fontOptionsGridTemplate from '../templates/components/font-options-grid.html?raw';
 
-interface FontOptionData extends FontOption {
-  isSelected: boolean;
-  previewText: string;
-}
 
 export class FontOptionsGrid extends BaseComponent {
   private currentCategory: FontCategory = 'sans';
@@ -17,7 +14,7 @@ export class FontOptionsGrid extends BaseComponent {
   private onFontSelect?: (category: FontCategory, fontId: string) => void;
 
   constructor(containerId: string) {
-    super('/templates/components/font-options-grid.html');
+    super(fontOptionsGridTemplate);
     this.element = document.getElementById(containerId);
   }
 
@@ -66,13 +63,13 @@ export class FontOptionsGrid extends BaseComponent {
     this.selectedFontIds = { ...selections };
   }
 
-  async render(): Promise<void> {
+  override async render(): Promise<void> {
     const fonts = getFontsByCategory(this.currentCategory);
     const selectedFontId = this.selectedFontIds[this.currentCategory];
     
     // Separate system and Google fonts
     const systemFonts = fonts.filter(font => font.category === 'system');
-    const googleFonts = fonts.filter(font => font.category === 'google');
+    const googleFonts = fonts.filter(font => font.category === 'google-fonts');
 
     // Add selection state and preview text
     const enrichedSystemFonts = systemFonts.map(font => ({

@@ -1,19 +1,21 @@
-import { StorageManager, CachedTheme } from './storage-manager';
-import { ThemeManager } from './theme-manager';
+import { ModalComponent } from '../utils/base-component';
+import { StorageManager, CachedTheme } from '../storage-manager';
+import { ThemeManager } from '../theme-manager';
+import themeManagementTemplate from '../templates/modals/theme-management-modal.html?raw';
 
 /**
  * Theme Management Modal - Handle installed themes CRUD operations
  */
-export class ThemeManagementModal {
+export class ThemeManagementModal extends ModalComponent {
   private storageManager: StorageManager;
   private themeManager: ThemeManager;
-  private modal: HTMLElement | null = null;
   private themesList: HTMLElement | null = null;
   private installedCount: HTMLElement | null = null;
   private storageUsed: HTMLElement | null = null;
   private onThemeDeleted?: () => void;
 
   constructor(themeManager: ThemeManager) {
+    super(themeManagementTemplate);
     this.storageManager = new StorageManager();
     this.themeManager = themeManager;
   }
@@ -21,9 +23,26 @@ export class ThemeManagementModal {
   /**
    * Initialize the theme management modal
    */
-  async init(): Promise<void> {
+  override async init(): Promise<void> {
+    await super.init();
+    
+    // Initialize modal elements
+    this.modal = this.element; // The element IS the modal itself!
+    this.backdrop = this.query('#theme-mgmt-modal-backdrop');
+    this.themesList = this.query('#installed-themes-list');
+    this.installedCount = this.query('#installed-themes-count');
+    this.storageUsed = this.query('#storage-used');
+
+    // Force append modal to body (remove from any existing parent)
+    if (this.modal) {
+      if (this.modal.parentElement) {
+        this.modal.parentElement.removeChild(this.modal);
+      }
+      document.body.appendChild(this.modal);
+    }
+    
     await this.storageManager.init();
-    this.setupEventListeners();
+    this.setupModalEvents();
     console.log('⚙️ ThemeManagementModal initialized');
   }
 
@@ -34,54 +53,37 @@ export class ThemeManagementModal {
     this.onThemeDeleted = callback;
   }
 
-  /**
-   * Setup event listeners
-   */
-  private setupEventListeners(): void {
-    // Get modal elements
-    this.modal = document.getElementById('theme-management-modal');
-    this.themesList = document.getElementById('installed-themes-list');
-    this.installedCount = document.getElementById('installed-themes-count');
-    this.storageUsed = document.getElementById('storage-used');
-
-    if (!this.modal || !this.themesList) {
-      console.error('🚨 ThemeManagementModal: Required DOM elements not found');
-      return;
+  protected bindEvents(): void {
+    // Close buttons - use bindEvent for cleanup tracking
+    const closeButton = this.query('#theme-mgmt-modal-close');
+    if (closeButton) {
+      this.bindEvent(closeButton, 'click', () => this.close());
     }
-
-    // Close modal listeners
-    const closeBtn = document.getElementById('theme-mgmt-modal-close');
-    const closeBtn2 = document.getElementById('theme-mgmt-close');
-    const backdrop = document.getElementById('theme-mgmt-modal-backdrop');
-
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => this.closeModal());
-    }
-    if (closeBtn2) {
-      closeBtn2.addEventListener('click', () => this.closeModal());
-    }
-    if (backdrop) {
-      backdrop.addEventListener('click', () => this.closeModal());
+    
+    const closeButton2 = this.query('#theme-mgmt-close');
+    if (closeButton2) {
+      this.bindEvent(closeButton2, 'click', () => this.close());
     }
 
     // Refresh button
-    const refreshBtn = document.getElementById('theme-mgmt-refresh-btn');
+    const refreshBtn = this.query('#theme-mgmt-refresh-btn');
     if (refreshBtn) {
-      refreshBtn.addEventListener('click', () => this.loadInstalledThemes());
+      this.bindEvent(refreshBtn, 'click', () => this.loadInstalledThemes());
     }
 
     // Clear all button
-    const clearAllBtn = document.getElementById('clear-all-themes-btn');
+    const clearAllBtn = this.query('#clear-all-themes-btn');
     if (clearAllBtn) {
-      clearAllBtn.addEventListener('click', () => this.clearAllThemes());
+      this.bindEvent(clearAllBtn, 'click', () => this.clearAllThemes());
     }
+  }
 
-    // Escape key to close
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.modal && !this.modal.classList.contains('hidden')) {
-        this.closeModal();
-      }
-    });
+  /**
+   * Open modal and load themes
+   */
+  async openModal(): Promise<void> {
+    this.open();
+    await this.loadInstalledThemes();
   }
 
   /**
@@ -213,9 +215,9 @@ export class ThemeManagementModal {
    */
   private setupThemeCardListeners(): void {
     // Apply theme buttons
-    const applyButtons = document.querySelectorAll('.apply-theme-btn');
+    const applyButtons = this.queryAll('.apply-theme-btn');
     applyButtons.forEach(button => {
-      button.addEventListener('click', async (e) => {
+      this.bindEvent(button, 'click', async (e) => {
         const themeName = (e.target as HTMLElement).getAttribute('data-theme-name') || 
                          (e.target as HTMLElement).closest('.apply-theme-btn')?.getAttribute('data-theme-name');
         if (themeName) {
@@ -225,9 +227,9 @@ export class ThemeManagementModal {
     });
 
     // Delete theme buttons
-    const deleteButtons = document.querySelectorAll('.delete-theme-btn');
+    const deleteButtons = this.queryAll('.delete-theme-btn');
     deleteButtons.forEach(button => {
-      button.addEventListener('click', async (e) => {
+      this.bindEvent(button, 'click', async (e) => {
         const themeName = (e.target as HTMLElement).getAttribute('data-theme-name') || 
                          (e.target as HTMLElement).closest('.delete-theme-btn')?.getAttribute('data-theme-name');
         if (themeName) {
@@ -403,15 +405,5 @@ export class ThemeManagementModal {
    */
   private getThemeBytes(theme: CachedTheme): number {
     return JSON.stringify(theme).length * 2; // Rough estimation
-  }
-
-  /**
-   * Close modal
-   */
-  private closeModal(): void {
-    if (this.modal) {
-      this.modal.classList.add('hidden');
-      document.body.style.overflow = '';
-    }
   }
 }

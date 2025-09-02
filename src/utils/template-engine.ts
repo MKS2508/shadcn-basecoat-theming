@@ -75,7 +75,7 @@ export class TemplateEngine {
   private processSections(template: string, data: TemplateData): string {
     const sectionRegex = /\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g;
     
-    return template.replace(sectionRegex, (match, key, content) => {
+    return template.replace(sectionRegex, (_match, key, content) => {
       const value = this.getNestedValue(data, key);
       
       if (!value) {
@@ -104,7 +104,7 @@ export class TemplateEngine {
   private processInvertedSections(template: string, data: TemplateData): string {
     const invertedSectionRegex = /\{\{\^(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g;
     
-    return template.replace(invertedSectionRegex, (match, key, content) => {
+    return template.replace(invertedSectionRegex, (_match, key, content) => {
       const value = this.getNestedValue(data, key);
       
       if (!value || (Array.isArray(value) && value.length === 0)) {
@@ -120,13 +120,13 @@ export class TemplateEngine {
    */
   private processVariables(template: string, data: TemplateData): string {
     // First process raw variables {{{variable}}} (no escaping)
-    template = template.replace(/\{\{\{(\w+(?:\.\w+)*)\}\}\}/g, (match, key) => {
+    template = template.replace(/\{\{\{(\w+(?:\.\w+)*)\}\}\}/g, (_match, key) => {
       const value = this.getNestedValue(data, key);
       return value !== undefined ? String(value) : '';
     });
 
     // Then process escaped variables {{variable}}
-    template = template.replace(/\{\{(\w+(?:\.\w+)*)\}\}/g, (match, key) => {
+    template = template.replace(/\{\{(\w+(?:\.\w+)*)\}\}/g, (_match, key) => {
       const value = this.getNestedValue(data, key);
       return value !== undefined ? this.escapeHtml(String(value)) : '';
     });

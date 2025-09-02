@@ -8,7 +8,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
-    "install-theme": "tsx scripts/install-theme.ts"
+    "install-theme": "tsx scripts/install-theme.ts",
+    "dev:logger": "node logger-server.js"
   },
   "dependencies": {
     "@mks2508/better-logger": "^0.3.0",
@@ -17,7 +18,8 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.542.0",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0-alpha.26",

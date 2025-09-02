@@ -1,4 +1,5 @@
 import { BaseComponent } from '../utils/base-component';
+import loadingOverlayTemplate from '../templates/widgets/loading-overlay.html?raw';
 
 interface LoadingState {
   isError: boolean;
@@ -12,7 +13,7 @@ export class LoadingOverlay extends BaseComponent {
   };
 
   constructor(containerId: string) {
-    super('/templates/widgets/loading-overlay.html');
+    super(loadingOverlayTemplate);
     this.element = document.getElementById(containerId);
   }
 
@@ -40,7 +41,7 @@ export class LoadingOverlay extends BaseComponent {
     this.updateDisplay();
   }
 
-  hide(): void {
+  override hide(): void {
     this.element?.classList.add('hidden');
   }
 

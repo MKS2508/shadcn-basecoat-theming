@@ -1,5 +1,6 @@
 import { BaseComponent } from '../utils/base-component';
 import { TemplateEngine } from '../utils/template-engine';
+import themePreviewTemplate from '../templates/components/theme-preview-content.html?raw';
 
 interface ThemeData {
   name: string;
@@ -23,11 +24,9 @@ interface ColorInfo {
 }
 
 export class ThemePreview extends BaseComponent {
-  private currentThemeData: ThemeData | null = null;
-  private currentUrl: string = '';
 
   constructor(containerId: string) {
-    super('/templates/components/theme-preview-content.html');
+    super(themePreviewTemplate);
     this.element = document.getElementById(containerId);
   }
 
@@ -35,9 +34,7 @@ export class ThemePreview extends BaseComponent {
     // No events needed for preview component
   }
 
-  async showTheme(themeData: ThemeData, url: string): Promise<void> {
-    this.currentThemeData = themeData;
-    this.currentUrl = url;
+  async showTheme(themeData: ThemeData, _url: string): Promise<void> {
 
     const fontInfo = this.extractFontInfo(themeData.cssVars.light || {});
     const lightColors = this.extractPreviewColors(themeData.cssVars.light);
@@ -46,7 +43,7 @@ export class ThemePreview extends BaseComponent {
 
     const templateData = {
       themeName: themeData.name,
-      url: url,
+      url: _url,
       variants: variants,
       hasTypography: fontInfo.length > 0,
       fonts: fontInfo,

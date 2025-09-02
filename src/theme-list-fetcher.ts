@@ -191,7 +191,7 @@ export class ThemeListFetcher {
    * Get registry info
    */
   async getRegistryInfo(): Promise<{ name: string; homepage: string } | null> {
-    const themes = await this.fetchAvailableThemes();
+    // const themes = await this.fetchAvailableThemes();
     if (this.cache) {
       return {
         name: this.cache.name,
@@ -199,5 +199,15 @@ export class ThemeListFetcher {
       };
     }
     return null;
+  }
+
+  /**
+   * Fetch theme list - alias for fetchAvailableThemes
+   */
+  async fetchThemeList(forceRefresh: boolean = false): Promise<ExternalThemeItem[]> {
+    if (!forceRefresh && this.cache) {
+      return this.cache.items;
+    }
+    return await this.fetchAvailableThemes();
   }
 }

@@ -1,4 +1,3 @@
-import { FontLoader } from './font-loader';
 import { getFontById, buildFontFamily, needsGoogleFontsLoad, FontOption } from './font-catalog';
 
 /**
@@ -17,7 +16,6 @@ export interface FontOverride {
  * FontManager - Manages font overrides independent of themes
  */
 export class FontManager {
-  private fontLoader: FontLoader;
   private currentOverride: FontOverride;
   private readonly STORAGE_KEY = 'font-override';
   private styleElement: HTMLStyleElement | null = null;
@@ -30,13 +28,11 @@ export class FontManager {
   private batchTimer: NodeJS.Timeout | null = null;
   
   // Storage optimization
-  private saveQueue: Set<string> = new Set();
   private readonly SAVE_DEBOUNCE_MS = 300;
   private saveTimer: NodeJS.Timeout | null = null;
   private pendingConfig: FontOverride | null = null;
 
   constructor() {
-    this.fontLoader = new FontLoader();
     this.currentOverride = {
       enabled: false,
       fonts: {}
@@ -476,15 +472,6 @@ body, .font-sans {
   /**
    * Completely remove font override system (for cleanup)
    */
-  private cleanupFontOverrides(): void {
-    this.removeFontOverrides();
-    
-    if (this.styleElement) {
-      this.styleElement.remove();
-      this.styleElement = null;
-      console.log('🗑️ FontManager: Override system removed');
-    }
-  }
 
   /**
    * Preview font temporarily without saving

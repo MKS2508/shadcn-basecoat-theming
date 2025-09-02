@@ -2,9 +2,9 @@ import { ThemeManager } from '../theme-manager';
 import { DropdownManager } from '../dropdown-manager';
 import { ThemeInstaller } from '../theme-installer';
 import { FontSelector } from '../font-selector';
-import { ThemeManagementModal } from '../theme-management-modal';
+import { ThemeManagementModal } from './theme-management-modal';
 import { ThemeDropdown } from './theme-dropdown';
-import { logger, componentLogger, logSuccess, logError } from '../utils/logger';
+import { componentLogger, logSuccess, logError } from '../utils/logger';
 
 /**
  * Main application controller
@@ -258,14 +258,8 @@ export class AppController {
       // Use a small delay to ensure dropdown closes first
       setTimeout(() => {
         console.log('AppController: Calling themeInstaller openModal');
-        // We need to access the installer modal directly
-        // The ThemeInstaller has an installerModal property
-        const installerModal = (this.themeInstaller as any).installerModal;
-        if (installerModal && installerModal.openModal) {
-          installerModal.openModal();
-        } else {
-          console.error('AppController: installerModal not found or no openModal method');
-        }
+        // Access the installer modal using the proper method
+        this.themeInstaller.openModal();
       }, 100);
     } else {
       console.error('AppController: themeInstaller is null');
@@ -293,10 +287,8 @@ export class AppController {
    */
   private async loadInstalledThemesForManagement(): Promise<void> {
     try {
-      await this.themeManagementModal.loadInstalledThemes();
-      // Call the method that actually exists in ThemeManagementModal
-      // Since show() doesn't exist, we'll check what methods are available
-      // For now, this might work differently or need adjustment
+      // Open the modal first, then load themes
+      await this.themeManagementModal.openModal();
       console.log('Theme management modal should be shown here');
     } catch (error) {
       logError('Failed to load installed themes', error as Error);
@@ -377,7 +369,7 @@ export class AppController {
     this.themeInstaller.destroy();
     this.fontSelector.destroy();
     if (this.themeDropdown) {
-      this.themeDropdown.unmount();
+      this.themeDropdown.destroy();
     }
     console.log('🗑️ AppController destroyed');
   }

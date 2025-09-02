@@ -1,4 +1,5 @@
 import { BaseComponent } from '../utils/base-component';
+import fontCategoryTabsTemplate from '../templates/components/font-category-tabs.html?raw';
 
 export type FontCategory = 'sans' | 'serif' | 'mono';
 
@@ -13,7 +14,7 @@ export class FontCategoryTabs extends BaseComponent {
   private onCategoryChange?: (category: FontCategory) => void;
 
   constructor(containerId: string) {
-    super('/templates/components/font-category-tabs.html');
+    super(fontCategoryTabsTemplate);
     this.element = document.getElementById(containerId);
   }
 
@@ -53,7 +54,7 @@ export class FontCategoryTabs extends BaseComponent {
     return this.currentCategory;
   }
 
-  async render(): Promise<void> {
+  override async render(): Promise<void> {
     const categories: FontCategoryData[] = [
       { name: 'sans', label: 'Sans-serif', isActive: this.currentCategory === 'sans' },
       { name: 'serif', label: 'Serif', isActive: this.currentCategory === 'serif' },

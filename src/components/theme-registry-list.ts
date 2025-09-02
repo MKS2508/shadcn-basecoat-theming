@@ -1,5 +1,6 @@
 import { BaseComponent } from '../utils/base-component';
 import { ThemeListFetcher } from '../theme-list-fetcher';
+import themeRegistryListTemplate from '../templates/components/theme-registry-list.html?raw';
 
 export class ThemeRegistryList extends BaseComponent {
   private themeListFetcher: ThemeListFetcher;
@@ -10,11 +11,11 @@ export class ThemeRegistryList extends BaseComponent {
   private onThemeInstall?: (themeName: string) => void;
 
   constructor() {
-    super('/templates/components/theme-registry-list.html');
+    super(themeRegistryListTemplate);
     this.themeListFetcher = new ThemeListFetcher();
   }
 
-  async init(): Promise<void> {
+  override async init(): Promise<void> {
     await this.themeListFetcher.init();
     await super.init();
   }
@@ -66,23 +67,29 @@ export class ThemeRegistryList extends BaseComponent {
 
   async loadThemes(forceRefresh: boolean = false): Promise<void> {
     try {
-      const themeNames = await this.themeListFetcher.getThemeNames(forceRefresh);
+      console.log('🎨 ThemeRegistryList: loadThemes() called with forceRefresh:', forceRefresh);
+      const themes = await this.themeListFetcher.fetchThemeList(forceRefresh);
+      console.log('🎨 ThemeRegistryList: fetchThemeList returned:', themes.length, 'themes');
+      const themeNames = themes.map((t: any) => t.name);
       this.allThemes = themeNames;
       
       const templateData = {
-        themes: themeNames.map(name => ({
+        themes: themeNames.map((name: string) => ({
           name: name,
           displayName: this.formatThemeName(name)
         })),
         totalCount: themeNames.length,
-        isFresh: !this.themeListFetcher.isUsingCache()
+        isFresh: true // Always fresh for now
       };
 
+      console.log('🎨 ThemeRegistryList: templateData created:', templateData);
       this.setData(templateData);
+      console.log('🎨 ThemeRegistryList: calling render()...');
       await this.render();
+      console.log('🎨 ThemeRegistryList: render() completed');
 
-      // Re-bind events after render
-      this.bindEvents();
+      // REMOVED: Re-bind events after render (causes infinite loop)
+      // Events are already bound in BaseComponent.init()
 
     } catch (error) {
       console.error('Failed to load themes:', error);

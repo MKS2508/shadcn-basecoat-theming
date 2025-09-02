@@ -1,11 +1,13 @@
 import { ModalComponent } from '../utils/base-component';
 import { FontManager } from '../font-manager';
-import { FontCategoryTabs, FontCategory } from './font-category-tabs';
 import { FontOptionsGrid } from './font-options-grid';
+import { fontLogger } from '../utils/logger';
+import { getFontsByCategory } from '../font-catalog';
+import fontSelectorTemplate from '../templates/modals/font-selector-modal.html?raw';
 
 export class FontSelectorModal extends ModalComponent {
   private fontManager: FontManager;
-  private categoryTabs: FontCategoryTabs | null = null;
+  // private categoryTabs: FontCategoryTabs | null = null;
   private optionsGrid: FontOptionsGrid | null = null;
   private overrideToggle: HTMLInputElement | null = null;
   private contentContainer: HTMLElement | null = null;
@@ -14,28 +16,52 @@ export class FontSelectorModal extends ModalComponent {
   private isOverrideEnabled: boolean = false;
 
   constructor(fontManager: FontManager) {
-    super('/templates/modals/font-selector-modal.html');
+    fontLogger.debug('Constructor - template length:', fontSelectorTemplate?.length);
+    super(fontSelectorTemplate);
     this.fontManager = fontManager;
   }
 
-  async init(): Promise<void> {
-    await super.init();
+  override async init(): Promise<void> {
+    fontLogger.info('Init starting');
     
-    // Initialize modal elements
-    this.modal = this.query('#font-selector-modal');
+    try {
+      await super.init();
+      fontLogger.info('Element created:', !!this.element);
+    } catch (error) {
+      fontLogger.error('Init failed:', error);
+      throw error;
+    }
+    
+    // Initialize modal elements from template
+    this.modal = this.element; // The element IS the modal itself!
     this.backdrop = this.query('#font-modal-backdrop');
     this.overrideToggle = this.query('#font-override-toggle') as HTMLInputElement;
     this.contentContainer = this.query('#font-selector-content');
     this.resetButton = this.query('#font-reset-btn') as HTMLButtonElement;
     this.applyButton = this.query('#font-modal-apply') as HTMLButtonElement;
 
+    fontLogger.info('Modal found:', !!this.modal);
+    fontLogger.debug('Modal elements:', {
+      backdrop: !!this.backdrop,
+      toggle: !!this.overrideToggle,
+      content: !!this.contentContainer,
+      reset: !!this.resetButton,
+      apply: !!this.applyButton
+    });
+
+    // Force append modal to body (remove from any existing parent)
     if (this.modal) {
+      if (this.modal.parentElement) {
+        this.modal.parentElement.removeChild(this.modal);
+      }
       document.body.appendChild(this.modal);
+      fontLogger.info('Modal appended to body with z-index management');
     }
 
-    // Initialize components
-    await this.initializeComponents();
     this.setupModalEvents();
+    
+    // Initialize components after modal setup
+    await this.initializeComponents();
     
     // Load initial state
     this.isOverrideEnabled = this.fontManager.isOverrideEnabled();
@@ -43,68 +69,82 @@ export class FontSelectorModal extends ModalComponent {
   }
 
   protected bindEvents(): void {
-    // Override toggle
+    // Override toggle - use bindEvent for cleanup tracking
     if (this.overrideToggle) {
-      this.overrideToggle.addEventListener('change', async () => {
+      this.bindEvent(this.overrideToggle, 'change', async () => {
         this.isOverrideEnabled = this.overrideToggle!.checked;
-        await this.fontManager.setOverrideEnabled(this.isOverrideEnabled);
+        if (this.isOverrideEnabled) {
+          await this.fontManager.enableOverride();
+        } else {
+          await this.fontManager.disableOverride();
+        }
         this.updateUI();
       });
     }
 
-    // Reset button
+    // Reset button - use bindEvent for cleanup tracking
     if (this.resetButton) {
-      this.resetButton.addEventListener('click', async () => {
+      this.bindEvent(this.resetButton, 'click', async () => {
         await this.resetFonts();
       });
     }
 
-    // Apply button (close modal)
+    // Apply button (close modal) - use bindEvent for cleanup tracking
     if (this.applyButton) {
-      this.applyButton.addEventListener('click', () => {
+      this.bindEvent(this.applyButton, 'click', () => {
+        this.close();
+      });
+    }
+    
+    // Close button - fix missing event binding
+    const closeButton = this.query('#font-modal-close');
+    if (closeButton) {
+      this.bindEvent(closeButton, 'click', () => {
+        this.close();
+      });
+    }
+    
+    // Cancel button - fix missing event binding
+    const cancelButton = this.query('#font-modal-cancel');
+    if (cancelButton) {
+      this.bindEvent(cancelButton, 'click', () => {
         this.close();
       });
     }
   }
 
   async openModal(): Promise<void> {
-    console.log('FontSelectorModal: openModal() called');
-    console.log('FontSelectorModal: modal element exists:', !!this.modal);
+    fontLogger.info('Opening modal, element exists:', !!this.modal);
+    
+    if (!this.modal) {
+      fontLogger.error('FAILED - modal element is null!');
+      return;
+    }
     
     // Refresh state before opening
     this.isOverrideEnabled = this.fontManager.isOverrideEnabled();
     await this.updateUI();
     
-    console.log('FontSelectorModal: Calling this.open()');
+    fontLogger.debug('Modal z-index will be:', this.getZIndex() || 'calculated on open');
     this.open();
+    fontLogger.success('Modal opened successfully');
   }
 
   private async initializeComponents(): Promise<void> {
-    if (!this.contentContainer) return;
-
-    // Create temporary containers for components
-    const tabsContainer = document.createElement('div');
-    const gridContainer = document.createElement('div');
-    
-    this.contentContainer.appendChild(tabsContainer);
-    this.contentContainer.appendChild(gridContainer);
-
-    // Initialize category tabs
-    this.categoryTabs = new FontCategoryTabs(tabsContainer.id || 'font-category-tabs');
-    this.categoryTabs.setOnCategoryChange((category) => {
-      if (this.optionsGrid) {
-        this.optionsGrid.setCategory(category);
-      }
-    });
-
-    // Initialize options grid
-    this.optionsGrid = new FontOptionsGrid(gridContainer.id || 'font-options-grid');
-    this.optionsGrid.setOnFontSelect(async (category, fontId) => {
-      await this.fontManager.setFontOverride(category, fontId);
-      this.updateFontSelectorButton();
-    });
-
-    // Don't call init yet - wait for proper rendering
+    // Initialize the FontOptionsGrid component
+    if (this.contentContainer) {
+      this.optionsGrid = new FontOptionsGrid('font-options-container');
+      await this.optionsGrid.init();
+      
+      // Set up font selection callback
+      this.optionsGrid.setOnFontSelect((category, fontId) => {
+        fontLogger.debug(`Font selected: ${category} -> ${fontId}`);
+        // Apply the font selection through FontManager
+        this.fontManager.setFontOverride(category, fontId);
+      });
+      
+      fontLogger.debug('FontOptionsGrid initialized successfully');
+    }
   }
 
   private async updateUI(): Promise<void> {
@@ -119,8 +159,51 @@ export class FontSelectorModal extends ModalComponent {
     }
 
     if (this.isOverrideEnabled) {
-      // Show font selector components
-      await this.renderFontSelector();
+      // Use FontOptionsGrid component instead of HTML selects
+      if (this.optionsGrid) {
+        // Set up container for the FontOptionsGrid
+        this.contentContainer.innerHTML = `
+          <div class="space-y-4">
+            <div class="border-b border-border">
+              <div class="flex space-x-1" role="tablist">
+                <button class="tab-button active px-3 py-2 text-sm font-medium rounded-t-md border-b-2 border-primary text-primary" data-category="sans">Sans Serif</button>
+                <button class="tab-button px-3 py-2 text-sm font-medium rounded-t-md border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border" data-category="serif">Serif</button>
+                <button class="tab-button px-3 py-2 text-sm font-medium rounded-t-md border-b-2 border-transparent text-muted-foreground hover:text-foreground hover:border-border" data-category="mono">Monospace</button>
+              </div>
+            </div>
+            <div id="font-options-container" class="min-h-[300px]"></div>
+          </div>
+        `;
+        
+        // Set up tab switching
+        const tabButtons = this.contentContainer.querySelectorAll('.tab-button');
+        tabButtons.forEach(button => {
+          button.addEventListener('click', (e) => {
+            const target = e.target as HTMLElement;
+            const category = target.getAttribute('data-category');
+            
+            // Update tab appearance
+            tabButtons.forEach(btn => {
+              btn.classList.remove('active', 'border-primary', 'text-primary');
+              btn.classList.add('border-transparent', 'text-muted-foreground');
+            });
+            target.classList.add('active', 'border-primary', 'text-primary');
+            target.classList.remove('border-transparent', 'text-muted-foreground');
+            
+            // Update FontOptionsGrid category
+            if (category && this.optionsGrid) {
+              this.optionsGrid.setCategory(category as any);
+            }
+          });
+        });
+        
+        // Load current font selections
+        const config = this.fontManager.getOverrideConfiguration();
+        this.optionsGrid.setSelectedFonts(config.fonts);
+        
+        // Start with sans category
+        this.optionsGrid.setCategory('sans');
+      }
     } else {
       // Show disabled state
       this.contentContainer.innerHTML = `
@@ -136,55 +219,21 @@ export class FontSelectorModal extends ModalComponent {
     }
   }
 
-  private async renderFontSelector(): Promise<void> {
-    if (!this.contentContainer || !this.categoryTabs || !this.optionsGrid) return;
-
-    // Clear content
-    this.contentContainer.innerHTML = '';
-
-    // Create containers
-    const tabsContainer = document.createElement('div');
-    const gridContainer = document.createElement('div');
-    
-    this.contentContainer.appendChild(tabsContainer);
-    this.contentContainer.appendChild(gridContainer);
-
-    // Re-initialize components with proper containers
-    this.categoryTabs.element = tabsContainer;
-    this.optionsGrid.element = gridContainer;
-
-    // Load current selections
-    const currentSelections = await this.loadCurrentSelections();
-    this.optionsGrid.setSelectedFonts(currentSelections);
-
-    // Render components
-    await this.categoryTabs.render();
-    await this.optionsGrid.render();
-
-    // Re-bind events
-    this.categoryTabs.bindEvents();
-    this.optionsGrid.bindEvents();
-  }
-
-  private async loadCurrentSelections(): Promise<Record<FontCategory, string | null>> {
-    return {
-      sans: await this.fontManager.getCurrentFontOverride('sans'),
-      serif: await this.fontManager.getCurrentFontOverride('serif'),
-      mono: await this.fontManager.getCurrentFontOverride('mono')
-    };
-  }
 
   private async resetFonts(): Promise<void> {
     if (!this.isOverrideEnabled) return;
 
-    await this.fontManager.resetAllFonts();
+    // Reset all font overrides
+    await this.fontManager.removeFontOverride('sans');
+    await this.fontManager.removeFontOverride('serif');
+    await this.fontManager.removeFontOverride('mono');
     
     if (this.optionsGrid) {
       this.optionsGrid.reset();
     }
     
     this.updateFontSelectorButton();
-    console.log('🔤 All fonts reset to theme defaults');
+    fontLogger.success('All fonts reset to theme defaults');
   }
 
   private updateFontSelectorButton(): void {
@@ -192,7 +241,8 @@ export class FontSelectorModal extends ModalComponent {
     if (!fontButton) return;
 
     // Update button to show current state
-    const hasOverrides = this.fontManager.hasAnyOverrides();
+    const config = this.fontManager.getOverrideConfiguration();
+    const hasOverrides = config.enabled && (!!config.fonts.sans || !!config.fonts.serif || !!config.fonts.mono);
     const buttonText = hasOverrides ? 'Fonts*' : 'Fonts';
     
     fontButton.textContent = buttonText;

@@ -41,8 +41,6 @@ export class ThemeManager {
   private fontManager: FontManager;
   private currentTheme: string = 'default';
   private currentMode: 'light' | 'dark' | 'auto' = 'auto';
-  private loadedThemes: Set<string> = new Set();
-  private themeCache: Map<string, string> = new Map();
   private readonly THEME_STORAGE_KEY = 'theme';
   private readonly MODE_STORAGE_KEY = 'theme-mode';
   private currentStyleElement: HTMLLinkElement | null = null;
@@ -51,7 +49,6 @@ export class ThemeManager {
   // Performance optimizations  
   private prefetchedThemes: Set<string> = new Set(); // Single-request prefetch tracking
   private readonly BUILTIN_THEMES = ['default', 'supabase']; // Built-in themes for preloading
-  private readonly MAX_CACHED_THEMES = 3; // LRU cache limit
   private prefetchPromises: Map<string, Promise<void>> = new Map();
   
   // Storage optimization

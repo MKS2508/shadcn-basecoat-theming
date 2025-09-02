@@ -2,18 +2,26 @@ import { TemplateEngine, templateEngine } from './template-engine';
 
 /**
  * Base Component class for creating reusable UI components
- * Prepares for future Web Components migration
+ * Solid architecture for Vanilla JS + Web Components migration readiness
+ * Zero dependencies - pure DOM APIs
  */
 export abstract class BaseComponent {
   protected element: HTMLElement | null = null;
   protected templateEngine: TemplateEngine;
-  protected templatePath: string;
-  protected data: any = {};
+  protected templateString: string;
+  protected data: Record<string, any> = {};
   protected isRendered: boolean = false;
+  
+  // Event management for cleanup
+  private eventListeners: Array<{
+    element: Element;
+    event: string; 
+    handler: EventListener;
+  }> = [];
 
-  constructor(templatePath: string) {
+  constructor(templateString: string) {
     this.templateEngine = templateEngine;
-    this.templatePath = templatePath;
+    this.templateString = templateString;
   }
 
   /**
@@ -30,7 +38,8 @@ export abstract class BaseComponent {
    */
   async render(): Promise<void> {
     try {
-      const html = await this.templateEngine.renderTemplate(this.templatePath, this.data);
+      // Render template string with data (no async loading needed)
+      const html = this.templateEngine.render(this.templateString, this.data);
       
       if (this.element) {
         this.element.innerHTML = html;
@@ -138,17 +147,38 @@ export abstract class BaseComponent {
    * Get all child elements by selector
    */
   protected queryAll(selector: string): NodeListOf<Element> {
-    return this.element?.querySelectorAll(selector) || document.querySelectorAll('');
+    if (!this.element || !selector) {
+      return document.querySelectorAll('body'); // Safe fallback that won't throw
+    }
+    return this.element.querySelectorAll(selector);
   }
 
   /**
-   * Add event listener to child element
+   * Add event listener with automatic cleanup tracking
+   */
+  protected bindEvent(element: Element, event: string, handler: EventListener): void {
+    element.addEventListener(event, handler);
+    this.eventListeners.push({ element, event, handler });
+  }
+
+  /**
+   * Add event listener to child element(s) with cleanup tracking
    */
   protected on(selector: string, event: string, handler: EventListener): void {
     const elements = this.queryAll(selector);
     elements.forEach(element => {
-      element.addEventListener(event, handler);
+      this.bindEvent(element, event, handler);
     });
+  }
+
+  /**
+   * Clean up all tracked event listeners
+   */
+  private cleanupEvents(): void {
+    this.eventListeners.forEach(({ element, event, handler }) => {
+      element.removeEventListener(event, handler);
+    });
+    this.eventListeners = [];
   }
 
   /**
@@ -174,64 +204,136 @@ export abstract class BaseComponent {
    * Cleanup method - override in subclasses if needed
    */
   protected destroy(): void {
-    // Override in subclasses for cleanup
+    this.cleanupEvents();
+    // Override in subclasses for additional cleanup
     console.log(`🗑️ BaseComponent: Destroying ${this.constructor.name}`);
   }
 }
 
 /**
  * Component with modal functionality
+ * Enhanced with z-index management and modal stacking
  */
 export abstract class ModalComponent extends BaseComponent {
   protected modal: HTMLElement | null = null;
   protected backdrop: HTMLElement | null = null;
+  private static activeModals: Set<ModalComponent> = new Set();
+  private static baseZIndex = 1000;
+  private zIndex: number = 0;
 
-  constructor(templatePath: string, modalSelector: string = '') {
-    super(templatePath);
+  constructor(templateString: string) {
+    super(templateString);
   }
 
   /**
-   * Open modal
+   * Open modal with proper z-index stacking
    */
   open(): void {
+    console.log('🔤 MODAL: open() called, modal exists:', !!this.modal);
     if (this.modal) {
+      // Calculate z-index based on active modal count
+      this.zIndex = ModalComponent.baseZIndex + (ModalComponent.activeModals.size * 10);
+      this.modal.style.zIndex = this.zIndex.toString();
+      
+      // Add to active modals tracking
+      ModalComponent.activeModals.add(this);
+      
+      console.log('🔤 MODAL: classes before remove:', this.modal.className);
       this.modal.classList.remove('hidden');
-      document.body.style.overflow = 'hidden';
+      console.log('🔤 MODAL: classes after remove:', this.modal.className, 'z-index:', this.zIndex);
+      
+      // Only set body overflow hidden for the first modal
+      if (ModalComponent.activeModals.size === 1) {
+        document.body.style.overflow = 'hidden';
+      }
+      
       this.emit('modal:open');
     }
   }
 
   /**
-   * Close modal
+   * Close modal with proper cleanup
    */
   close(): void {
     if (this.modal) {
       this.modal.classList.add('hidden');
-      document.body.style.overflow = '';
+      
+      // Remove from active modals tracking
+      ModalComponent.activeModals.delete(this);
+      
+      // Only restore body overflow when no modals are active
+      if (ModalComponent.activeModals.size === 0) {
+        document.body.style.overflow = '';
+      }
+      
       this.emit('modal:close');
     }
   }
 
   /**
-   * Setup modal event listeners
+   * Setup modal event listeners with proper cleanup tracking
    */
   protected setupModalEvents(): void {
     // Close on backdrop click
     if (this.backdrop) {
-      this.backdrop.addEventListener('click', () => this.close());
+      this.bindEvent(this.backdrop, 'click', () => this.close());
     }
 
-    // Close on escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.isVisible()) {
-        this.close();
-      }
-    });
+    // Close on escape key - use bound method for proper cleanup
+    document.addEventListener('keydown', this.handleEscapeKey);
   }
 
-  protected destroy(): void {
+  protected override destroy(): void {
+    // Clean up modal-specific event listeners
+    document.removeEventListener('keydown', this.handleEscapeKey);
+    
+    // Remove from active modals if present
+    ModalComponent.activeModals.delete(this);
+    
     super.destroy();
-    // Restore body scroll when component is destroyed
-    document.body.style.overflow = '';
+    
+    // Only restore body scroll if no modals are active
+    if (ModalComponent.activeModals.size === 0) {
+      document.body.style.overflow = '';
+    }
+  }
+
+  private handleEscapeKey = (e: KeyboardEvent) => {
+    if (e.key === 'Escape' && this.isVisible() && this.isTopModal()) {
+      this.close();
+    }
+  };
+
+  /**
+   * Check if this modal is the top-most active modal
+   */
+  private isTopModal(): boolean {
+    if (ModalComponent.activeModals.size === 0) return false;
+    
+    let topModal: ModalComponent | null = null;
+    let highestZIndex = 0;
+    
+    for (const modal of ModalComponent.activeModals) {
+      if (modal.zIndex > highestZIndex) {
+        highestZIndex = modal.zIndex;
+        topModal = modal;
+      }
+    }
+    
+    return topModal === this;
+  }
+
+  /**
+   * Get current modal z-index
+   */
+  protected getZIndex(): number {
+    return this.zIndex;
+  }
+
+  /**
+   * Get count of currently active modals
+   */
+  static getActiveModalCount(): number {
+    return ModalComponent.activeModals.size;
   }
 }

@@ -12,7 +12,6 @@ interface FontConfig {
 
 export class FontLoader {
   private loadedFonts: Set<string> = new Set();
-  private fontCache: Map<string, FontFace> = new Map();
 
   /**
    * Extract font families from CSS variables

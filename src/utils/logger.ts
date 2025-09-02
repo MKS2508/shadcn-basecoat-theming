@@ -1,5 +1,4 @@
 import logger, { 
-  Logger,
   createScopedLogger,
   setGlobalPrefix,
   setVerbosity,

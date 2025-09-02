@@ -72,7 +72,7 @@ export class DropdownManager {
   /**
    * Open dropdown
    */
-  private openDropdown(dropdown: Element, button: HTMLElement, menu: HTMLElement): void {
+  private openDropdown(_dropdown: Element, button: HTMLElement, menu: HTMLElement): void {
     // Close any other open dropdowns
     this.closeAllDropdowns();
     
@@ -89,7 +89,7 @@ export class DropdownManager {
   /**
    * Close specific dropdown
    */
-  private closeDropdown(dropdown: Element, button: HTMLElement, menu: HTMLElement, shouldFocus: boolean = false): void {
+  private closeDropdown(_dropdown: Element, button: HTMLElement, menu: HTMLElement, shouldFocus: boolean = false): void {
     button.setAttribute('aria-expanded', 'false');
     menu.classList.add('hidden');
     menu.classList.remove('animate-fade-in');

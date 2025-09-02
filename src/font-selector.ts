@@ -1,5 +1,6 @@
 import { FontManager } from './font-manager';
 import { FontSelectorModal } from './components/font-selector-modal';
+import { fontLogger } from './utils/logger';
 
 /**
  * Refactored FontSelector using modular components
@@ -16,14 +17,20 @@ export class FontSelector {
    * Initialize font selector
    */
   async init(): Promise<void> {
+    fontLogger.info('Init starting');
+    
     // Initialize modal component
     this.selectorModal = new FontSelectorModal(this.fontManager);
-    await this.selectorModal.init();
+    
+    try {
+      await this.selectorModal.init();
+      fontLogger.info('Modal init completed');
+    } catch (error) {
+      fontLogger.error('Modal init failed:', error);
+    }
 
     this.setupEventListeners();
     this.updateFontSelectorButton();
-    
-    console.log('🔤 FontSelector: Initialized with modular components');
   }
 
   /**
@@ -32,8 +39,6 @@ export class FontSelector {
   private setupEventListeners(): void {
     // Font selector button
     const fontButton = document.getElementById('font-selector-btn');
-    console.log('FontSelector: Looking for font-selector-btn...');
-    console.log('FontSelector: Found button:', !!fontButton, fontButton);
     
     if (fontButton) {
       // Add pointer-events to ensure SVG children don't block clicks
@@ -44,16 +49,15 @@ export class FontSelector {
       });
       
       const clickHandler = (event: Event) => {
-        console.log('FontSelector: Font selector button clicked!', event.target);
+        fontLogger.debug('Button clicked');
         event.preventDefault();
         event.stopPropagation();
         this.openModal();
       };
       
       fontButton.addEventListener('click', clickHandler);
-      console.log('FontSelector: Click event listener added to font selector button');
     } else {
-      console.error('FontSelector: font-selector-btn not found!');
+      fontLogger.error('font-selector-btn not found!');
     }
 
     // Font manager doesn't have onFontChange event, we'll update manually after operations
@@ -63,14 +67,10 @@ export class FontSelector {
    * Open font selector modal
    */
   private openModal(): void {
-    console.log('FontSelector: openModal() called');
-    console.log('FontSelector: selectorModal exists:', !!this.selectorModal);
-    
     if (this.selectorModal) {
-      console.log('FontSelector: Calling selectorModal.openModal()');
       this.selectorModal.openModal();
     } else {
-      console.error('FontSelector: selectorModal is null!');
+      fontLogger.error('selectorModal is null!');
     }
   }
 
@@ -101,9 +101,9 @@ export class FontSelector {
     try {
       // Apply temporary font preview
       await this.fontManager.previewFont(category, fontId);
-      console.log(`🔤 Previewing ${category} font: ${fontId}`);
+      fontLogger.debug(`Previewing ${category} font: ${fontId}`);
     } catch (error) {
-      console.error('❌ Font preview error:', error);
+      fontLogger.error('Font preview error:', error);
     }
   }
 
@@ -151,7 +151,7 @@ export class FontSelector {
     await this.fontManager.removeFontOverride('serif');
     await this.fontManager.removeFontOverride('mono');
     this.updateFontSelectorButton();
-    console.log('🔤 All fonts reset to theme defaults');
+    fontLogger.success('All fonts reset to theme defaults');
   }
 
   /**
@@ -177,6 +177,6 @@ export class FontSelector {
     if (this.selectorModal) {
       this.selectorModal.unmount();
     }
-    console.log('🗑️ FontSelector destroyed');
+    fontLogger.debug('FontSelector destroyed');
   }
 }

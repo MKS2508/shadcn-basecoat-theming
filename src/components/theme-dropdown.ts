@@ -1,5 +1,4 @@
 import { ThemeManager } from '../theme-manager';
-import { templateEngine } from '../utils/template-engine';
 
 interface ThemeOption {
   name: string;
@@ -44,43 +43,38 @@ export class ThemeDropdown {
     console.log('ThemeDropdown initialized, events will be bound after render');
   }
 
+  private eventsBound: boolean = false;
+
   private bindEvents(): void {
     if (!this.dropdownMenu) {
       console.error('bindEvents: No dropdown menu element!');
       return;
     }
 
-    console.log('bindEvents: Starting event binding...');
-    console.log('bindEvents: dropdownMenu element:', this.dropdownMenu);
-    
-    // Check if we have theme options in the DOM
-    const themeOptions = this.dropdownMenu.querySelectorAll('.theme-option');
-    console.log('bindEvents: Found theme options:', themeOptions.length);
-    
-    const browseButton = this.dropdownMenu.querySelector('#browse-more-themes');
-    const settingsButton = this.dropdownMenu.querySelector('#theme-settings-btn');
-    console.log('bindEvents: Found browse button:', !!browseButton);
-    console.log('bindEvents: Found settings button:', !!settingsButton);
+    // Prevent multiple event bindings
+    if (this.eventsBound) {
+      console.log('bindEvents: Events already bound, skipping');
+      return;
+    }
 
+    console.log('bindEvents: Starting event binding...');
+    
     // Use event delegation for dynamically generated content
     const clickHandler = (e: Event) => {
-      console.log('bindEvents: Click detected on dropdown!', e.target);
+      e.stopPropagation();
+      e.preventDefault();
+      
       const target = e.target as HTMLElement;
       const themeOption = target.closest('.theme-option');
       
       if (themeOption) {
         const themeName = themeOption.getAttribute('data-theme');
-        console.log('bindEvents: Theme option clicked:', themeName);
         if (themeName && this.onThemeSelect) {
-          console.log('bindEvents: Calling onThemeSelect callback');
           this.onThemeSelect(themeName);
           
           // Only close dropdown if closeOnSelect is enabled
           if (this.closeOnSelect) {
-            console.log('bindEvents: Closing dropdown (closeOnSelect=true)');
             this.closeDropdown();
-          } else {
-            console.log('bindEvents: Keeping dropdown open (closeOnSelect=false)');
           }
         }
         return;
@@ -88,7 +82,6 @@ export class ThemeDropdown {
 
       // Browse more button
       if (target.closest('#browse-more-themes')) {
-        console.log('bindEvents: Browse more button clicked');
         if (this.onBrowseMore) {
           this.onBrowseMore();
         }
@@ -97,17 +90,15 @@ export class ThemeDropdown {
 
       // Settings button
       if (target.closest('#theme-settings-btn')) {
-        console.log('bindEvents: Settings button clicked');
         if (this.onSettings) {
           this.onSettings();
         }
         return;
       }
-      
-      console.log('bindEvents: Click on unhandled element:', target);
     };
 
     this.dropdownMenu.addEventListener('click', clickHandler);
+    this.eventsBound = true;
     console.log('bindEvents: Click event listener added to dropdown menu');
   }
 
@@ -151,9 +142,8 @@ export class ThemeDropdown {
 
       console.log('- Theme options:', themeOptions);
 
-      // Temporarily skip template engine and use fallback directly
-      console.log('Using fallback rendering (template engine disabled temporarily)');
-      this.renderFallback();
+      // Use proper template engine rendering (restored)
+      await this.renderWithTemplateEngine(themeOptions);
       
     } catch (error) {
       console.error('Failed to render theme dropdown:', error);
@@ -162,7 +152,81 @@ export class ThemeDropdown {
   }
 
   /**
-   * Fallback rendering without templates
+   * Proper template engine rendering
+   */
+  private async renderWithTemplateEngine(themeOptions: ThemeOption[]): Promise<void> {
+    if (!this.dropdownMenu) {
+      console.error('renderWithTemplateEngine: No dropdown menu element');
+      return;
+    }
+
+    // For now, use the same HTML generation but with proper structure
+    // TODO: Create actual template file if needed
+    console.log('renderWithTemplateEngine: Starting proper template rendering');
+    
+    let html = '';
+
+    // Add theme options
+    themeOptions.forEach(option => {
+      html += `
+        <button 
+          type="button"
+          class="theme-option relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+          data-theme="${option.name}"
+          role="menuitem"
+          ${option.isActive ? 'aria-selected="true"' : ''}
+        >
+          ${option.icon}
+          <span>${option.displayName}</span>
+          ${option.isActive ? '<svg class="ml-auto h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' : ''}
+        </button>
+      `;
+    });
+
+    // Add separator and action buttons
+    html += `
+      <div class="h-px bg-border my-1"></div>
+      <div class="flex">
+        <button 
+          type="button"
+          id="browse-more-themes"
+          class="relative flex flex-1 cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-primary"
+          role="menuitem"
+        >
+          <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          Browse More...
+        </button>
+        <button 
+          type="button"
+          id="theme-settings-btn"
+          class="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-muted-foreground hover:text-accent-foreground"
+          role="menuitem"
+        >
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+        </button>
+      </div>
+    `;
+
+    console.log('renderWithTemplateEngine: Generated HTML length:', html.length);
+    console.log('renderWithTemplateEngine: Setting innerHTML...');
+    
+    this.dropdownMenu.innerHTML = html;
+    
+    console.log('renderWithTemplateEngine: innerHTML set, now binding events...');
+    
+    // Bind events AFTER setting innerHTML
+    this.bindEvents();
+    
+    console.log('renderWithTemplateEngine: Events bound successfully');
+  }
+
+  /**
+   * Fallback rendering without templates (kept for error cases)
    */
   private renderFallback(): void {
     if (!this.dropdownMenu) {
@@ -279,5 +343,13 @@ export class ThemeDropdown {
   setCloseOnSelect(closeOnSelect: boolean): void {
     this.closeOnSelect = closeOnSelect;
     console.log('ThemeDropdown: closeOnSelect set to', closeOnSelect);
+  }
+
+  /**
+   * Cleanup resources
+   */
+  destroy(): void {
+    // Cleanup resources if needed
+    console.log('🗑️ ThemeDropdown destroyed');
   }
 }

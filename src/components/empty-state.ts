@@ -1,4 +1,5 @@
 import { BaseComponent } from '../utils/base-component';
+import emptyStateTemplate from '../templates/widgets/empty-state.html?raw';
 
 interface EmptyStateData {
   iconPath: string;
@@ -8,7 +9,7 @@ interface EmptyStateData {
 
 export class EmptyState extends BaseComponent {
   constructor(containerId: string) {
-    super('/templates/widgets/empty-state.html');
+    super(emptyStateTemplate);
     this.element = document.getElementById(containerId);
   }
 
@@ -16,7 +17,7 @@ export class EmptyState extends BaseComponent {
     // Empty states typically don't need event handling
   }
 
-  async show(config: EmptyStateData): Promise<void> {
+  async showEmptyState(config: EmptyStateData): Promise<void> {
     this.setData(config);
     await this.render();
     super.show();
