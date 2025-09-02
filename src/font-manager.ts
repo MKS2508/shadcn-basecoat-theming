@@ -55,6 +55,9 @@ export class FontManager {
     }
     
     console.log('✅ FontManager: Initialized', this.currentOverride);
+    
+    // Clean up any debug test containers
+    this.cleanupDebugElements();
   }
 
   /**
@@ -454,6 +457,17 @@ body, .font-sans {
     }
     
     console.log('⚡ FontManager: Font variables updated (optimized)');
+  }
+
+  /**
+   * Clean up debug elements that might have been created
+   */
+  private cleanupDebugElements(): void {
+    const testContainer = document.getElementById('font-test-container');
+    if (testContainer) {
+      testContainer.remove();
+      console.log('🧹 FontManager: Cleaned up debug test container');
+    }
   }
 
   /**

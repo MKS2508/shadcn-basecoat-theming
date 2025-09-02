@@ -194,6 +194,18 @@ export class FontSelectorModal extends ModalComponent {
       fontLogger.debug(`Font selected: ${category} -> ${fontId}`);
       // Apply the font selection through FontManager
       this.fontManager.setFontOverride(category, fontId);
+      
+      // CRITICAL: Update the FontOptionsGrid internal state to match FontManager
+      // This ensures visual selection state stays in sync
+      const updatedConfig = this.fontManager.getOverrideConfiguration();
+      if (this.optionsGrid) {
+        this.optionsGrid.setSelectedFonts({
+          sans: updatedConfig.fonts.sans || null,
+          serif: updatedConfig.fonts.serif || null,
+          mono: updatedConfig.fonts.mono || null
+        });
+      }
+      
       // Update UI to reflect changes
       this.updateFontSelectorButton();
     });
