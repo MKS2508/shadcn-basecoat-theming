@@ -62,6 +62,17 @@ export class ThemeListFetcher {
         const cached = this.getCachedThemeNames();
         if (cached.length > 0) {
           console.log(`🎨 ThemeListFetcher: Using cached theme names (${cached.length} themes)`);
+          
+          // Populate this.cache for fetchAvailableThemes() compatibility
+          if (!this.cache) {
+            this.cache = {
+              name: 'TweakCN Registry',
+              homepage: 'https://tweakcn.com',
+              items: cached.map(name => ({ name }))
+            };
+            console.log(`🎨 ThemeListFetcher: Populated cache.items with ${this.cache.items.length} themes`);
+          }
+          
           return cached;
         }
       }
@@ -127,12 +138,21 @@ export class ThemeListFetcher {
   async fetchAvailableThemes(): Promise<ExternalThemeItem[]> {
     // If we have cache, use it
     if (this.cache && this.cache.items) {
+      console.log(`🎨 ThemeListFetcher: Using existing cache (${this.cache.items.length} themes)`);
       return this.cache.items;
     }
 
     // Otherwise, fetch and populate cache
+    console.log('🎨 ThemeListFetcher: No cache available, fetching from server...');
     await this.fetchAndCacheThemeNames();
-    return this.cache?.items || [];
+    
+    if (!this.cache || !this.cache.items) {
+      console.error('❌ ThemeListFetcher: Cache still empty after fetch');
+      return [];
+    }
+    
+    console.log(`✅ ThemeListFetcher: Cache populated with ${this.cache.items.length} themes`);
+    return this.cache.items;
   }
 
   /**
@@ -205,9 +225,11 @@ export class ThemeListFetcher {
    * Fetch theme list - alias for fetchAvailableThemes
    */
   async fetchThemeList(forceRefresh: boolean = false): Promise<ExternalThemeItem[]> {
-    if (!forceRefresh && this.cache) {
+    if (!forceRefresh && this.cache && this.cache.items) {
+      console.log(`🎨 ThemeListFetcher: Using cache.items (${this.cache.items.length} themes)`);
       return this.cache.items;
     }
+    console.log('🎨 ThemeListFetcher: Cache empty or force refresh, calling fetchAvailableThemes()');
     return await this.fetchAvailableThemes();
   }
 }
