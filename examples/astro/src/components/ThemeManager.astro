@@ -1,0 +1,232 @@
+---
+// Server-side: Load themes directly from JSON file (no core package initialization)
+import fs from 'node:fs';
+import path from 'node:path';
+
+// Read registry.json directly from public folder
+const registryPath = path.join(process.cwd(), 'public/themes/registry.json');
+let availableThemes = [];
+
+try {
+  const registryContent = fs.readFileSync(registryPath, 'utf-8');
+  const registry = JSON.parse(registryContent);
+  availableThemes = registry.themes || [];
+  console.log('✅ Loaded', availableThemes.length, 'themes from registry');
+} catch (error) {
+  console.error('❌ Failed to load themes registry:', error);
+  // Fallback themes
+  availableThemes = [
+    { id: 'default', label: 'Default', modes: { light: '/src/themes/default-light.css', dark: '/src/themes/default-dark.css' } },
+    { id: 'supabase', label: 'Supabase', modes: { light: '/src/themes/supabase-light.css', dark: '/src/themes/supabase-dark.css' } },
+    { id: 'tangerine', label: 'Tangerine', modes: { light: '/src/themes/tangerine-light.css', dark: '/src/themes/tangerine-dark.css' } }
+  ];
+}
+---
+
+<!-- Pass server data to client-side -->
+<script type="module" define:vars={{ availableThemes }}>
+  // Client-side logic with server data - no external imports
+  const logger = {
+    info: (msg, ...args) => console.log(`🎨 [ThemeManager] ${msg}`, ...args),
+    error: (msg, ...args) => console.error(`❌ [ThemeManager] ${msg}`, ...args),
+    warn: (msg, ...args) => console.warn(`⚠️ [ThemeManager] ${msg}`, ...args)
+  };
+  let currentMode = 'auto';
+  
+  // Use passed server data
+  const themes = availableThemes;
+  
+  console.log('🎨 Available themes from server:', themes);
+
+  async function initializeThemeSystem() {
+    try {
+      logger.info('🎨 Initializing Theme System');
+      
+      // Load saved preferences
+      const savedTheme = localStorage.getItem('theme') || 'default';
+      const savedMode = localStorage.getItem('theme-mode') || 'auto';
+      currentMode = savedMode;
+      
+      // Apply mode first
+      applyMode(savedMode);
+      
+      // Apply saved theme immediately  
+      applyThemeVariables(savedTheme);
+      
+      // Render theme list and bind events
+      renderThemeList();
+      bindEvents();
+      setupModeToggle();
+      updateUI(savedTheme, savedMode);
+      
+      logger.info('✅ Theme System initialized successfully');
+    } catch (error) {
+      logger.error('❌ Failed to initialize Theme System:', error);
+    }
+  }
+
+  function renderThemeList() {
+    const themeList = document.getElementById('theme-list');
+    if (!themeList) return;
+
+    const currentTheme = localStorage.getItem('theme') || 'default';
+
+    themeList.innerHTML = themes.map(theme => {
+      const isActive = currentTheme === theme.id;
+      const icon = getThemeIcon(theme.id);
+      
+      return `
+        <button 
+          type="button"
+          class="theme-option relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+          data-theme="${theme.id}"
+          role="menuitem"
+          ${isActive ? 'aria-selected="true"' : ''}
+        >
+          ${icon}
+          <span>${theme.label}</span>
+          ${isActive ? '<svg class="ml-auto h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' : ''}
+        </button>
+      `;
+    }).join('');
+  }
+
+  function bindEvents() {
+    // Theme selection
+    document.addEventListener('click', (e) => {
+      const themeOption = e.target.closest('.theme-option');
+      if (themeOption) {
+        const themeName = themeOption.getAttribute('data-theme');
+        if (themeName) selectTheme(themeName);
+      }
+    });
+
+    // Browse more button
+    const browseMoreBtn = document.getElementById('browse-more-themes');
+    if (browseMoreBtn) {
+      browseMoreBtn.addEventListener('click', () => {
+        document.getElementById('theme-management-modal')?.showModal();
+      });
+    }
+  }
+
+  function setupModeToggle() {
+    const modeToggle = document.getElementById('mode-toggle');
+    if (modeToggle) {
+      modeToggle.addEventListener('click', toggleMode);
+    }
+  }
+
+  function selectTheme(themeName) {
+    try {
+      // Apply basic CSS variables based on theme
+      applyThemeVariables(themeName);
+      localStorage.setItem('theme', themeName);
+      
+      updateCurrentThemeLabel(themeName);
+      renderThemeList();
+      
+      logger.info(`🎨 Theme changed to: ${themeName}`);
+    } catch (error) {
+      logger.error('❌ Failed to set theme:', error);
+    }
+  }
+
+  function applyThemeVariables(themeName) {
+    // Apply theme CSS immediately
+    const theme = themes.find(t => t.id === themeName);
+    if (theme && theme.modes) {
+      const mode = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      const cssPath = theme.modes[mode];
+      
+      if (cssPath) {
+        // Load CSS file dynamically
+        loadThemeCSS(cssPath, themeName);
+        logger.info(`🎨 Applied theme: ${themeName} (${mode} mode)`);
+      }
+    }
+  }
+
+  function loadThemeCSS(cssPath, themeName) {
+    // Remove existing theme CSS
+    const existingLink = document.querySelector('link[data-theme]');
+    if (existingLink) {
+      existingLink.remove();
+    }
+
+    // Add new theme CSS
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = cssPath;
+    link.dataset.theme = themeName;
+    document.head.appendChild(link);
+  }
+
+  function toggleMode() {
+    const modes = ['light', 'dark', 'auto'];
+    const currentIndex = modes.indexOf(currentMode);
+    const nextMode = modes[(currentIndex + 1) % modes.length];
+    
+    currentMode = nextMode;
+    applyMode(nextMode);
+    updateModeToggleIcon(nextMode);
+    
+    localStorage.setItem('theme-mode', nextMode);
+    logger.info(`🌓 Mode changed to: ${nextMode}`);
+    
+    // Re-apply theme with new mode
+    const currentTheme = localStorage.getItem('theme') || 'default';
+    applyThemeVariables(currentTheme);
+  }
+
+  function applyMode(mode) {
+    let resolvedMode = mode;
+    if (mode === 'auto') {
+      resolvedMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    
+    document.documentElement.setAttribute('data-mode', resolvedMode);
+    document.documentElement.classList.toggle('dark', resolvedMode === 'dark');
+  }
+
+  function updateUI(themeName, mode) {
+    updateCurrentThemeLabel(themeName);
+    updateModeToggleIcon(mode);
+  }
+
+  function updateCurrentThemeLabel(themeName) {
+    const label = document.getElementById('current-theme-label');
+    if (label) {
+      const theme = themes.find(t => t.id === themeName);
+      label.textContent = theme?.label || themeName;
+    }
+  }
+
+  function updateModeToggleIcon(mode) {
+    const lightIcon = document.getElementById('light-icon');
+    const darkIcon = document.getElementById('dark-icon');
+    const autoIcon = document.getElementById('auto-icon');
+    
+    [lightIcon, darkIcon, autoIcon].forEach(icon => {
+      if (icon) icon.classList.add('hidden');
+    });
+    
+    const iconMap = { light: lightIcon, dark: darkIcon, auto: autoIcon };
+    iconMap[mode]?.classList.remove('hidden');
+  }
+
+  function getThemeIcon(themeName) {
+    const iconMap = {
+      default: `<svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5H9a2 2 0 00-2 2v12a4 4 0 004 4h10a2 2 0 002-2V7a2 2 0 00-2-2z"></path></svg>`,
+      supabase: `<svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7"></path></svg>`,
+      tangerine: `<svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>`
+    };
+    return iconMap[themeName] || iconMap.default;
+  }
+
+  // Initialize on DOM load
+  document.addEventListener('DOMContentLoaded', initializeThemeSystem);
+  
+  // Re-initialize on Astro page transitions
+  document.addEventListener('astro:page-load', initializeThemeSystem);
+</script>

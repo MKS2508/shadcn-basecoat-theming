@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css'
+import { ViewTransitions } from 'astro:transitions'
+import ThemeManager from '../components/ThemeManager.astro'
 ---
 <!doctype html>
 <html lang="en">
@@ -9,6 +11,80 @@ import '../styles/global.css'
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>Astro + Basecoat UI Demo</title>
+		<ViewTransitions />
+		
+		<!-- FOUC Prevention - visibility hidden method -->
+		<style>
+			/* Hide body until CSS is loaded to prevent flash */
+			body {
+				visibility: hidden;
+				opacity: 0;
+			}
+			
+			/* Basic fallback variables - overridden by theme manager */
+			:root {
+				--font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+			}
+		</style>
+		
+		<!-- FOUC Prevention Script - Optimized for Astro + View Transitions -->
+		<script is:inline>
+			(function() {
+				let hasRevealed = false;
+				
+				// Apply saved theme immediately to prevent flash
+				function applyThemeVariables() {
+					try {
+						const savedTheme = localStorage.getItem('theme') || 'default';
+						const savedMode = localStorage.getItem('theme-mode') || 'auto';
+						
+						let resolvedMode = savedMode;
+						if (savedMode === 'auto') {
+							resolvedMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+						}
+						
+						// Apply theme and mode attributes
+						document.documentElement.setAttribute('data-theme', savedTheme);
+						document.documentElement.setAttribute('data-mode', resolvedMode);
+						document.documentElement.classList.toggle('dark', resolvedMode === 'dark');
+						
+						// Note: CSS variables now handled by ThemeManager component
+					} catch (error) {
+						console.warn('Theme detection failed:', error);
+					}
+				}
+				
+				// Reveal content - optimized for Astro
+				function revealContent() {
+					if (hasRevealed) return;
+					hasRevealed = true;
+					
+					document.body.style.visibility = 'visible';
+					document.body.style.opacity = '1';
+					document.body.style.transition = 'opacity 0.15s ease-out';
+				}
+				
+				// Apply theme immediately
+				applyThemeVariables();
+				
+				// Astro-specific: Listen for View Transitions
+				document.addEventListener('astro:page-load', function() {
+					applyThemeVariables();
+					revealContent();
+				});
+				
+				// Standard reveal methods
+				if (document.readyState === 'complete') {
+					revealContent();
+				} else {
+					document.addEventListener('DOMContentLoaded', revealContent);
+					window.addEventListener('load', revealContent);
+				}
+				
+				// Safety fallback - reduced timeout for better UX
+				setTimeout(revealContent, 1500);
+			})();
+		</script>
 		
 		<!-- Basecoat JavaScript (all components included) -->
 		<script is:inline src="https://cdn.jsdelivr.net/npm/basecoat-css@0.3.2/dist/js/all.min.js" defer></script>
@@ -18,6 +94,9 @@ import '../styles/global.css'
 		
 		<!-- Toast container for Basecoat toasts -->
 		<div id="toaster" class="toaster" data-align="end"></div>
+		
+		<!-- Theme Provider Component -->
+		<ThemeManager />
 	</body>
 </html>
 
