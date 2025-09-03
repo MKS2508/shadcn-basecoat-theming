@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { 
-  ThemeManager, 
+  ThemeManager,
   FontManager,
   ThemeInstaller,
   ThemeConfig,
@@ -53,7 +53,7 @@ export function ThemeProvider({
       setCurrentTheme(themeManager.getCurrentTheme());
       setCurrentMode(themeManager.getCurrentMode());
       setThemes(themeManager.getAvailableThemes());
-      setFontOverrides(fontManager.getCurrentOverride());
+      setFontOverrides({ enabled: false, fonts: {} });
       setInitialized(true);
     };
     init();
@@ -70,9 +70,9 @@ export function ThemeProvider({
     setThemes(themeManager.getAvailableThemes());
   }, [installer, themeManager]);
 
-  const setFontOverride = useCallback((category: 'sans' | 'serif' | 'mono', fontId: string) => {
-    fontManager.setFontOverride(category, fontId);
-    setFontOverrides(fontManager.getCurrentOverride());
+  const setFontOverride = useCallback(async (category: 'sans' | 'serif' | 'mono', fontId: string) => {
+    await fontManager.setFontOverride(category, fontId);
+    setFontOverrides({ enabled: true, fonts: { [category]: fontId } });
   }, [fontManager]);
 
   const value: ThemeContextValue = {
@@ -132,7 +132,7 @@ export function ThemeSelector() {
 /**
  * Componente instalador de temas
  */
-export function ThemeInstaller() {
+export function ThemeInstallerComponent() {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const { installTheme } = useTheme();

@@ -12,6 +12,47 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run type-check` - Run TypeScript type checking without emitting files
 - `npm run install-theme <url>` - Install a theme from TweakCN or any shadcn-compatible JSON URL
 
+### Package Development
+- `pnpm run build:packages` - Build all NPM packages (core, vanilla, react, web-components)
+- `pnpm run type-check:all` - Run TypeScript check on all packages
+- `pnpm install` - Configure workspaces and install all dependencies (links packages automatically)
+
+#### Individual Package Commands:
+```bash
+# Core package (logic pura sin UI)
+cd packages/theme-manager-core
+pnpm run build              # Build core package
+pnpm run type-check         # TypeScript validation
+
+# Vanilla implementation  
+cd packages/theme-manager-vanilla
+pnpm run build              # Build vanilla package
+pnpm run type-check         # Requires workspaces setup
+
+# React implementation
+cd packages/theme-manager-react  
+pnpm run build              # Build React hooks/components
+pnpm run type-check         # Requires React types
+
+# Web Components
+cd packages/theme-manager-web-components
+pnpm run build              # Build custom elements
+pnpm run type-check         # Requires workspaces setup
+```
+
+#### Alternative: Use pnpm filters from root:
+```bash
+# Build specific packages from root
+pnpm run build:core              # Build core package
+pnpm run build:vanilla           # Build vanilla package
+pnpm run build:react             # Build React package
+pnpm run build:web-components    # Build web-components package
+
+# Build all packages
+pnpm run build:packages          # Build todos los packages
+pnpm run type-check:all          # TypeCheck todos los packages
+```
+
 ### Remote Debugging Workflow
 ```bash
 # Terminal 1: Start WebSocket logger server
@@ -26,6 +67,49 @@ npm run dev
 ```
 
 ## Architecture
+
+### Monorepo Package Structure
+
+Este proyecto usa una **arquitectura de monorepo con packages NPM** para máxima modularidad y reutilización:
+
+#### **Package Mapping:**
+| **Directorio** | **Package NPM** | **Propósito** |
+|----------------|-----------------|---------------|
+| `packages/theme-manager-core/` | `@mks2508/shadcn-basecoat-theme-manager` | **CORE** - Lógica de temas y fuentes sin UI |
+| `packages/template-engine/` | `@mks2508/simple-html-component-template-engine` | Sistema de componentes vanilla JS |
+| `packages/theme-manager-vanilla/` | `@mks2508/theme-manager-vanilla` | Implementación para Basecoat CSS |
+| `packages/theme-manager-react/` | `@mks2508/theme-manager-react` | Hooks y componentes React |
+| `packages/theme-manager-web-components/` | `@mks2508/theme-manager-web-components` | Web Components nativos |
+
+#### **Core Package Structure:**
+```
+packages/theme-manager-core/  ← @mks2508/shadcn-basecoat-theme-manager (CORE)
+├── src/
+│   ├── core/                 ← ThemeManager, FontManager, StorageManager
+│   ├── installers/           ← ThemeInstaller, ThemeListFetcher  
+│   └── catalogs/            ← FontCatalog
+├── package.json             ← name: "@mks2508/shadcn-basecoat-theme-manager"
+└── tsup.config.ts           ← Build config (ESM + CJS)
+```
+
+#### **Package Dependencies:**
+```typescript
+// packages/theme-manager-vanilla/src/index.ts
+import { 
+  ThemeManager,     // ← Viene del CORE
+  FontManager,      // ← Viene del CORE
+  ThemeInstaller    // ← Viene del CORE
+} from '@mks2508/shadcn-basecoat-theme-manager';  // ← EL CORE
+```
+
+```json
+// packages/theme-manager-vanilla/package.json
+{
+  "dependencies": {
+    "@mks2508/shadcn-basecoat-theme-manager": "workspace:*"  // ← CORE
+  }
+}
+```
 
 ### Modular Component System
 This project uses a **modular component architecture** with TypeScript classes, template-based rendering, and advanced logging.
@@ -305,38 +389,66 @@ The system seamlessly captures styled `@mks2508/better-logger` output:
 - Custom fonts specified in themes need to be loaded separately
 
 ## File Structure
-```
-src/
-├── components/                    # Modular UI components
-│   ├── app-controller.ts            # Main application coordinator
-│   ├── theme-dropdown.ts            # Theme selector dropdown
-│   ├── font-selector-modal.ts       # Font customization modal
-│   ├── theme-installer-modal.ts     # Theme installation modal
-│   └── theme-management-modal.ts    # Theme management interface
-├── templates/                     # HTML templates (*.html?raw imports)
-│   ├── components/                  # Component templates
-│   ├── modals/                     # Modal templates
-│   └── widgets/                    # Widget templates
-├── themes/                        # Theme CSS files
-│   ├── default-light.css           # Built-in light theme
-│   ├── default-dark.css            # Built-in dark theme
-│   ├── supabase-light.css          # Supabase theme (light)
-│   ├── supabase-dark.css           # Supabase theme (dark)
-│   └── base.css                    # Base theme utilities
-├── utils/                         # Core utilities
-│   ├── base-component.ts           # Component foundation class
-│   ├── logger.ts                   # Scoped logging system
-│   └── template-engine.ts          # HTML template processing
-├── main.ts                       # Application entry point
-├── theme-manager.ts              # Dynamic theme loading
-├── font-manager.ts               # Font override system  
-├── theme-registry.ts             # Theme catalog management
-├── storage-manager.ts            # IndexedDB abstraction
-└── style.css                     # Base styles and imports
 
-# Root level debugging tools
-├── logger-server.js              # WebSocket logging server
-├── vite-plugin-browser-logger.js # Vite plugin for console interception
-└── vite.config.ts               # Includes browser logger plugin
+### Monorepo Structure
+```
+# Root level
+├── packages/                      # NPM packages monorepo
+│   ├── theme-manager-core/          # @mks2508/shadcn-basecoat-theme-manager (CORE)
+│   │   ├── src/
+│   │   │   ├── core/               # ThemeManager, FontManager, StorageManager
+│   │   │   ├── installers/         # ThemeInstaller, ThemeListFetcher
+│   │   │   ├── catalogs/           # FontCatalog
+│   │   │   └── index.ts            # Exports públicos
+│   │   ├── package.json            # Core package config
+│   │   ├── tsconfig.json           # TypeScript config
+│   │   └── tsup.config.ts          # Build config (ESM + CJS)
+│   │
+│   ├── template-engine/             # @mks2508/simple-html-component-template-engine
+│   │   ├── src/
+│   │   │   ├── base-component.ts   # BaseComponent class
+│   │   │   ├── template-engine.ts  # Template processing
+│   │   │   └── index.ts            # Exports
+│   │   └── package.json
+│   │
+│   ├── theme-manager-vanilla/       # @mks2508/theme-manager-vanilla
+│   │   ├── src/index.ts            # Vanilla JS implementation
+│   │   └── package.json            # Dependencies: core + template-engine
+│   │
+│   ├── theme-manager-react/         # @mks2508/theme-manager-react
+│   │   ├── src/index.tsx           # React hooks y componentes
+│   │   └── package.json            # Dependencies: core + React
+│   │
+│   └── theme-manager-web-components/ # @mks2508/theme-manager-web-components
+│       ├── src/index.ts            # Custom Elements
+│       └── package.json            # Dependencies: core
+│
+# Demo application (legacy structure)
+├── src/                           # Demo app usando packages
+│   ├── components/                  # UI components del demo
+│   ├── templates/                   # HTML templates  
+│   ├── themes/                      # CSS theme files
+│   ├── utils/                       # Demo utilities
+│   └── main.ts                      # Demo entry point
+│
+# Root configuration
+├── package.json                     # Workspace config + demo dependencies
+├── logger-server.js                 # WebSocket debugging server
+├── vite-plugin-browser-logger.js    # Console interception
+└── vite.config.ts                   # Vite + debugging plugins
+```
+
+### Package Dependencies
+```
+theme-manager-vanilla     ──→  theme-manager-core (CORE)
+                         ──→  template-engine
+
+theme-manager-react      ──→  theme-manager-core (CORE)
+
+theme-manager-web-components ──→  theme-manager-core (CORE)
+
+template-engine          ──→  (sin dependencies, standalone)
+
+theme-manager-core       ──→  (solo peer dependencies como @mks2508/better-logger)
 ```
 - no me gusta que dejes bloques vacios con //Cleanup handled by UI implementationModal handling moved to UI implementations o 43 +      // Callbacks are now handled externally by UI implementations. para eso elimina los bloques no dejes comentarios para luego limpiarlos

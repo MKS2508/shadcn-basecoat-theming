@@ -13,7 +13,14 @@
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
     "install-theme": "tsx scripts/install-theme.ts",
-    "dev:logger": "node logger-server.js"
+    "dev:logger": "node logger-server.js",
+    "build:packages": "pnpm --filter './packages/*' run build",
+    "type-check:all": "pnpm --filter './packages/*' run type-check",
+    "build:core": "pnpm --filter @mks2508/shadcn-basecoat-theme-manager run build",
+    "build:template-engine": "pnpm --filter @mks2508/simple-html-component-template-engine run build",
+    "build:vanilla": "pnpm --filter @mks2508/theme-manager-vanilla run build",
+    "build:react": "pnpm --filter @mks2508/theme-manager-react run build",
+    "build:web-components": "pnpm --filter @mks2508/theme-manager-web-components run build"
   },
   "dependencies": {
     "@mks2508/better-logger": "^0.3.0",

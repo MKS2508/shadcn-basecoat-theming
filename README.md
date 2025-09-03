@@ -1,18 +1,91 @@
-# Advanced Theme System with Remote Debugging
+# Advanced Theme System - Monorepo NPM Packages
 
-A production-ready theme management system with **Tailwind CSS v4**, **Basecoat UI**, **modular components**, and **WebSocket remote debugging**. Built with TypeScript and optimized for performance and development experience.
+A production-ready **monorepo** with **modular NPM packages** for theme management. Includes **Tailwind CSS v4**, **Basecoat UI**, **React hooks**, **Web Components**, and **WebSocket remote debugging**. Built with TypeScript and optimized for performance and developer experience.
+
+## 📦 NPM Packages
+
+### Core Package
+- **[@mks2508/shadcn-basecoat-theme-manager](packages/theme-manager-core/)** - Lógica core de temas y fuentes sin UI
+- **[@mks2508/simple-html-component-template-engine](packages/template-engine/)** - Sistema de componentes vanilla JS
+
+### Implementation Packages  
+- **[@mks2508/theme-manager-vanilla](packages/theme-manager-vanilla/)** - Implementación para Basecoat CSS
+- **[@mks2508/theme-manager-react](packages/theme-manager-react/)** - Hooks y componentes React
+- **[@mks2508/theme-manager-web-components](packages/theme-manager-web-components/)** - Web Components nativos
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Node.js 18+
-- npm package manager
+### Using NPM Packages
 
-### Installation & Development
-
-1. **Install dependencies:**
+#### Vanilla JS Implementation
 ```bash
-npm install
+npm install @mks2508/shadcn-basecoat-theme-manager @mks2508/theme-manager-vanilla
+```
+
+```javascript
+import { createThemeManager } from '@mks2508/theme-manager-vanilla';
+
+const themeManager = createThemeManager({
+  autoInit: true
+});
+
+// Mount theme selector
+themeManager.mountThemeSelector('#theme-selector');
+
+// Programmatic usage
+await themeManager.setTheme('supabase', 'dark');
+await themeManager.installThemeFromUrl('https://tweakcn.com/r/themes/theme.json');
+```
+
+#### React Implementation
+```bash
+npm install @mks2508/shadcn-basecoat-theme-manager @mks2508/theme-manager-react
+```
+
+```jsx
+import { ThemeProvider, ThemeSelector, useTheme } from '@mks2508/theme-manager-react';
+
+function App() {
+  return (
+    <ThemeProvider defaultTheme="default" defaultMode="auto">
+      <ThemeSelector />
+      <MyApp />
+    </ThemeProvider>
+  );
+}
+
+function MyComponent() {
+  const { setTheme, currentTheme } = useTheme();
+  // ...
+}
+```
+
+#### Web Components
+```bash
+npm install @mks2508/shadcn-basecoat-theme-manager @mks2508/theme-manager-web-components
+```
+
+```html
+<!-- Auto-registered custom elements -->
+<script type="module" src="@mks2508/theme-manager-web-components"></script>
+
+<theme-selector></theme-selector>
+<dark-mode-toggle></dark-mode-toggle>
+```
+
+---
+
+### Development Setup (Monorepo)
+
+#### Prerequisites
+- Node.js 18+
+- pnpm package manager (recommended) or npm with workspaces support
+
+#### Installation & Development
+
+1. **Configure workspaces:**
+```bash
+pnpm install  # Automatically configures workspaces and links packages
 ```
 
 2. **Development with Remote Debugging (Recommended):**
@@ -36,10 +109,13 @@ npm run dev
 ### Build for Production
 
 ```bash
-# Type check (fix any errors before building)
-npm run type-check
+# Build all packages (NPM-ready)
+npm run build:packages
 
-# Build optimized bundle
+# Type check all packages
+npm run type-check:all
+
+# Build demo application
 npm run build
 
 # Preview production build
@@ -48,25 +124,59 @@ npm run preview
 
 ### Available Commands
 
+#### Monorepo Commands
+```bash
+pnpm install              # Configure workspaces and link packages
+pnpm run build:packages   # Build all NPM packages
+pnpm run type-check:all   # TypeScript validation for all packages
+```
+
+#### Demo Application Commands  
 ```bash
 npm run dev              # Development server (port 3000)
 npm run dev:logger       # WebSocket logging server (port 8081)
-npm run build            # Production build
+npm run build            # Production build (demo app)
 npm run preview          # Preview production build
-npm run type-check       # TypeScript validation
+npm run type-check       # TypeScript validation (demo)
 npm run install-theme    # Install theme from URL
+```
+
+#### Individual Package Commands
+```bash
+cd packages/theme-manager-core && pnpm run build        # Build core package
+cd packages/theme-manager-vanilla && pnpm run build     # Build vanilla package
+cd packages/theme-manager-react && pnpm run build       # Build React package
+cd packages/theme-manager-web-components && pnpm run build # Build web-components
+```
+
+#### pnpm Filter Commands (from root)
+```bash
+pnpm run build:core              # Build core package
+pnpm run build:vanilla           # Build vanilla package  
+pnpm run build:react             # Build React package
+pnpm run build:web-components    # Build web-components package
 ```
 
 ## 🎨 Architecture Overview
 
-### Modern Component System
-This project uses a **modular TypeScript architecture** with advanced development tools:
+### Monorepo Package System
+This project uses a **modular NPM monorepo architecture** with workspace-based development:
 
-- **Basecoat UI**: Modern component library with Tailwind CSS v4
+| **Package** | **Purpose** | **Dependencies** |
+|-------------|-------------|------------------|
+| `@mks2508/shadcn-basecoat-theme-manager` | **CORE** - Theme & font logic (sin UI) | `@mks2508/better-logger` |
+| `@mks2508/simple-html-component-template-engine` | Component system + templates | None (standalone) |
+| `@mks2508/theme-manager-vanilla` | Basecoat CSS implementation | core + template-engine |
+| `@mks2508/theme-manager-react` | React hooks & components | core + React |
+| `@mks2508/theme-manager-web-components` | Custom Elements | core |
+
+### Core Features
 - **Dynamic Theme Loading**: CSS files loaded on-demand with performance tracking
-- **Modular Components**: TypeScript classes with template-based rendering
+- **Modular Packages**: Independent NPM packages with clean APIs
+- **Multiple Implementations**: Vanilla JS, React, Web Components
 - **Remote Debugging**: WebSocket-based browser log streaming to terminal
 - **Advanced Logging**: @mks2508/better-logger with categorized, styled output
+- **Workspace Development**: Automatic package linking and dependency resolution
 
 ### Available Themes
 
