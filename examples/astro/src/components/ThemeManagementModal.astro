@@ -1,0 +1,168 @@
+---
+import Modal from './ui/Modal.astro';
+import Button from './ui/Button.astro';
+import Input from './ui/Input.astro';
+import Label from './ui/Label.astro';
+import SimpleTabs from './ui/SimpleTabs.astro';
+import SearchIcon from './icons/SearchIcon.astro';
+import PlusIcon from './icons/PlusIcon.astro';
+import TrashIcon from './icons/TrashIcon.astro';
+
+const tabs = [
+  { id: 'browse', label: 'Browse Themes', active: true },
+  { id: 'manage', label: 'Manage Installed', active: false }
+];
+---
+
+<Modal 
+  id="theme-management-modal" 
+  titleId="theme-management-modal-title"
+  size="lg"
+  class="theme-management-modal"
+>
+  <header class="border-b pb-4 mb-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 id="theme-management-modal-title" class="text-lg font-semibold text-foreground">Theme Manager</h2>
+        <p class="text-sm text-muted-foreground">Browse available themes or manage installed ones</p>
+      </div>
+      <Button 
+        variant="ghost"
+        id="theme-mgmt-modal-close"
+        class="w-8 h-8 p-0"
+        aria-label="Close modal"
+        onclick="document.getElementById('theme-management-modal').close()"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </Button>
+    </div>
+  </header>
+
+  <SimpleTabs id="theme-modal-tabs" tabs={tabs} class="flex-1">
+    <!-- Browse Themes Panel -->
+    <div slot="panel-1" class="space-y-6">
+      <!-- Search and Browse Section -->
+      <div class="space-y-4">
+        <div class="grid gap-2">
+          <Label for="theme-search-input">Search Available Themes</Label>
+          <div class="relative">
+            <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+            <Input 
+              id="theme-search-input" 
+              type="search" 
+              placeholder="Search themes from TweakCN registry..." 
+              class="pl-10"
+            />
+          </div>
+        </div>
+        
+        <!-- Theme Gallery -->
+        <div class="border rounded-lg p-4 bg-muted/5 min-h-[200px]">
+          <div id="available-themes-grid" class="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <!-- Available themes will be loaded here -->
+            <div class="col-span-full flex items-center justify-center py-12 text-muted-foreground">
+              <div class="text-center">
+                <SearchIcon size="xl" class="mx-auto mb-4 opacity-50" />
+                <p class="text-sm">Loading available themes...</p>
+                <p class="text-xs mt-1">Browsing TweakCN registry</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manual Install Section -->
+      <div class="border-t pt-4 space-y-4">
+        <h4 class="font-medium text-sm">Manual Install</h4>
+        <div class="grid gap-3">
+          <div class="grid gap-2">
+            <Label for="theme-url-input">Theme URL</Label>
+            <Input 
+              id="theme-url-input" 
+              type="url" 
+              placeholder="https://tweakcn.com/r/themes/theme-name.json" 
+              class="font-mono text-sm"
+            />
+            <p class="text-xs text-muted-foreground">
+              Enter a TweakCN theme URL or any shadcn-compatible JSON URL
+            </p>
+          </div>
+          
+          <div class="flex gap-2">
+            <Button 
+              id="install-theme-btn" 
+              variant="primary" 
+              class="flex-1"
+            >
+              <PlusIcon class="mr-2" />
+              Install Theme
+            </Button>
+            <Button 
+              id="preview-theme-btn" 
+              variant="outline"
+            >
+              Preview
+            </Button>
+          </div>
+        </div>
+
+        <!-- Status/Progress area -->
+        <div id="install-status" class="hidden">
+          <div class="flex items-center gap-2 p-3 bg-muted/20 rounded-md">
+            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+            <span class="text-sm" id="install-status-text">Installing theme...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manage Installed Panel -->
+    <div slot="panel-2" class="space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="font-medium">Installed Themes</h3>
+          <p class="text-sm text-muted-foreground">
+            <span id="installed-themes-count">0</span> themes installed
+          </p>
+        </div>
+        <Button 
+          id="clear-all-themes-btn"
+          variant="outline"
+          size="sm"
+          class="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+        >
+          <TrashIcon class="mr-2" />
+          Clear All
+        </Button>
+      </div>
+
+      <!-- Themes list -->
+      <div class="max-h-96 overflow-y-auto">
+        <div id="installed-themes-list" class="space-y-2">
+          <!-- Empty state -->
+          <div id="no-themes-message" class="flex items-center justify-center py-12 text-muted-foreground">
+            <div class="text-center">
+              <svg class="w-12 h-12 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+              </svg>
+              <p class="text-sm">No themes installed</p>
+              <p class="text-xs mt-1">Browse and install themes from the first tab</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </SimpleTabs>
+
+  <!-- Footer actions -->
+  <div class="flex justify-end gap-2 pt-6 border-t mt-6">
+    <Button 
+      variant="outline"
+      onclick="document.getElementById('theme-management-modal').close()"
+    >
+      Close
+    </Button>
+  </div>
+</Modal>

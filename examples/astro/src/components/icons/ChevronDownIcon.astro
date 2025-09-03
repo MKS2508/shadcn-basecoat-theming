@@ -1,0 +1,38 @@
+---
+export interface Props {
+  class?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  rotated?: boolean;
+}
+
+const { 
+  class: className = '', 
+  size = 'md',
+  rotated = false
+} = Astro.props;
+
+const sizeClasses = {
+  sm: 'h-3 w-3',
+  md: 'h-4 w-4', 
+  lg: 'h-5 w-5',
+  xl: 'h-6 w-6'
+};
+
+const rotateClass = rotated ? 'rotate-180' : '';
+const classes = `${sizeClasses[size]} transition-transform duration-200 ${rotateClass} ${className}`.trim();
+---
+
+<svg 
+  class={classes}
+  fill="none" 
+  stroke="currentColor" 
+  viewBox="0 0 24 24"
+  aria-hidden="true"
+>
+  <path 
+    stroke-linecap="round" 
+    stroke-linejoin="round" 
+    stroke-width="2" 
+    d="M19 9l-7 7-7-7"
+  />
+</svg>

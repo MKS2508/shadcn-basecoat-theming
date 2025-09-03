@@ -1,6 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Tabs from '../components/ui/Tabs.astro';
+import ThemeSelector from '../components/ThemeSelector.astro';
+import ThemeManagementModal from '../components/ThemeManagementModal.astro';
 
 // Form Controls components
 import Button from '../components/ui/Button.astro';
@@ -11,6 +13,11 @@ import Textarea from '../components/ui/Textarea.astro';
 import Checkbox from '../components/ui/Checkbox.astro';
 import Switch from '../components/ui/Switch.astro';
 import RadioGroup from '../components/ui/RadioGroup.astro';
+
+// Icons
+import SunIcon from '../components/icons/SunIcon.astro';
+import MoonIcon from '../components/icons/MoonIcon.astro';
+import MonitorIcon from '../components/icons/MonitorIcon.astro';
 
 // Display components
 import Card from '../components/ui/Card.astro';
@@ -58,11 +65,42 @@ const breadcrumbItems = [
 ---
 
 <Layout title="Basecoat UI Kitchen Sink">
+	<!-- Header with theme controls -->
+	<header class="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+		<div class="container mx-auto px-4 flex h-16 items-center justify-between max-w-7xl">
+			<div class="flex items-center space-x-4">
+				<h1 class="text-xl font-bold text-foreground">Basecoat UI Demo</h1>
+				<span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full font-medium">
+					Tailwind v4 + Core Package
+				</span>
+			</div>
+			
+			<!-- Theme Controls -->
+			<div class="flex items-center space-x-3">
+				<!-- Theme selector -->
+				<ThemeSelector />
+
+				<!-- Mode toggle button -->
+				<button 
+					type="button"
+					id="mode-toggle"
+					class="inline-flex items-center justify-center rounded-md border border-input bg-background w-10 h-10 text-sm ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
+					aria-label="Toggle light/dark mode"
+					title="Toggle light/dark mode"
+				>
+					<SunIcon id="light-icon" />
+					<MoonIcon id="dark-icon" class="hidden" />
+					<MonitorIcon id="auto-icon" class="hidden" />
+				</button>
+			</div>
+		</div>
+	</header>
+
 	<main class="container mx-auto px-4 py-8 max-w-7xl">
 		<div class="mb-8">
-			<h1 class="text-3xl font-bold text-foreground mb-2">
+			<h2 class="text-3xl font-bold text-foreground mb-2">
 				🍽️ Basecoat UI Kitchen Sink
-			</h1>
+			</h2>
 			<p class="text-lg text-muted-foreground">
 				Comprehensive showcase of all 24 Basecoat UI components organized by category
 			</p>
@@ -581,4 +619,7 @@ const breadcrumbItems = [
 			</div>
 		</Tabs>
 	</main>
+
+	<!-- Theme Management Modal -->
+	<ThemeManagementModal />
 </Layout>

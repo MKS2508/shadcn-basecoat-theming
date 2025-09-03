@@ -41,3 +41,61 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  /* Enhanced button animations for all button types */
+  button,
+  .btn,
+  .btn-outline,
+  .btn-primary,
+  .btn-secondary,
+  [role="button"],
+  [type="button"],
+  [data-theme-option] {
+    @apply transition-all duration-150 ease-out;
+    transform: scale(1);
+  }
+  
+  button:hover,
+  .btn:hover,
+  .btn-outline:hover,
+  .btn-primary:hover,
+  .btn-secondary:hover,
+  [role="button"]:hover,
+  [type="button"]:hover,
+  [data-theme-option]:hover {
+    @apply brightness-110;
+    transform: scale(1.02);
+  }
+  
+  button:active,
+  .btn:active,
+  .btn-outline:active,
+  .btn-primary:active,
+  .btn-secondary:active,
+  [role="button"]:active,
+  [type="button"]:active,
+  [data-theme-option]:active {
+    @apply brightness-90;
+    transform: scale(0.97);
+  }
+  
+  /* Special handling for popover/dropdown triggers */
+  [popovertarget]:hover {
+    @apply shadow-md;
+    transform: scale(1.01);
+  }
+  
+  [popovertarget]:active {
+    transform: scale(0.98);
+  }
+  
+  /* Tab buttons get subtle animations */
+  [role="tab"]:hover {
+    transform: scale(1.01);
+  }
+  
+  [role="tab"]:active {
+    transform: scale(0.99);
+  }
+}
