@@ -56,7 +56,7 @@ export class VanillaThemeManager {
     select.className = 'theme-selector';
     
     const themes = this.themeManager.getAvailableThemes();
-    themes.forEach(theme => {
+    themes.forEach((theme: ThemeConfig) => {
       const option = document.createElement('option');
       option.value = theme.name;
       option.textContent = theme.label;

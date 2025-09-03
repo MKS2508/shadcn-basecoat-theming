@@ -65,7 +65,8 @@ export class ThemeRegistry {
   }
 
   /**
-   * Initialize the theme registry
+   * Inicializa el registro de temas cargando temas incorporados e instalados
+   * @returns Promise que se resuelve cuando el registro est\u00e1 configurado
    */
   async init(): Promise<void> {
     if (this.isInitialized) return;

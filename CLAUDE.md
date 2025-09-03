@@ -339,3 +339,4 @@ src/
 ├── vite-plugin-browser-logger.js # Vite plugin for console interception
 └── vite.config.ts               # Includes browser logger plugin
 ```
+- no me gusta que dejes bloques vacios con //Cleanup handled by UI implementationModal handling moved to UI implementations o 43 +      // Callbacks are now handled externally by UI implementations. para eso elimina los bloques no dejes comentarios para luego limpiarlos

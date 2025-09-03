@@ -25,7 +25,8 @@ export class StorageManager {
   private indexedDBAvailable = false;
 
   /**
-   * Initialize storage (try IndexedDB, fallback to localStorage)
+   * Inicializa el sistema de almacenamiento con IndexedDB y fallback a localStorage
+   * @returns Promise que se resuelve cuando el almacenamiento est\u00e1 configurado
    */
   async init(): Promise<void> {
     try {

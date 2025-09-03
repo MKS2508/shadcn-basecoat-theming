@@ -2,7 +2,7 @@
  * Theme List Fetcher - Integrates with TweakCN registry for theme discovery
  */
 
-import { StorageManager } from './storage-manager';
+import { StorageManager } from '../core/storage-manager';
 
 export interface ExternalThemeItem {
   name: string;

@@ -64,7 +64,9 @@ export class ThemeManager {
 
 
   /**
-   * Initialize the theme manager (with performance monitoring)
+   * Inicializa el gestor de temas con configuración persistente
+   * Carga la configuración guardada y aplica el tema inicial
+   * @returns Promise que se resuelve cuando la inicialización está completa
    */
   async init(): Promise<void> {
     try {
@@ -107,7 +109,10 @@ export class ThemeManager {
   }
 
   /**
-   * Set a new theme (with performance monitoring)
+   * Establece un tema específico con modo opcional
+   * @param theme - Nombre del tema a aplicar
+   * @param mode - Modo del tema: 'light', 'dark' o 'auto'
+   * @returns Promise que se resuelve cuando el tema se ha aplicado
    */
   async setTheme(theme: string, mode?: 'light' | 'dark' | 'auto'): Promise<void> {
     const newMode = mode || this.currentMode;
@@ -184,7 +189,11 @@ export class ThemeManager {
   }
 
   /**
-   * Apply a specific theme using direct CSS variable updates (optimized)
+   * Aplica un tema al documento con monitoreo de rendimiento
+   * Carga las variables CSS y las aplica al elemento root
+   * @param themeName - Nombre del tema
+   * @param mode - Modo del tema
+   * @returns Promise que se resuelve cuando el tema se ha aplicado
    */
   private async applyTheme(themeName: string, mode: 'light' | 'dark' | 'auto'): Promise<void> {
     

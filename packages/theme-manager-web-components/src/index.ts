@@ -43,7 +43,7 @@ export class ThemeSelectorElement extends HTMLElement {
         }
       </style>
       <select>
-        ${themes.map(theme => `
+        ${themes.map((theme: ThemeConfig) => `
           <option value="${theme.name}" ${theme.name === currentTheme ? 'selected' : ''}>
             ${theme.label}
           </option>

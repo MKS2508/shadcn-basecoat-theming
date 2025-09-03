@@ -39,46 +39,13 @@ export class ThemeInstaller {
   async init(): Promise<void> {
     await this.storageManager.init();
     await this.themeListFetcher.init();
-    
-    // Initialize modal component with ThemeManager
-    await this.installerModal.init();
-    
-    // Set up callbacks
-    this.installerModal.setOnThemeInstalledCallback(() => {
-      if (this.onThemeInstalled) {
-        this.onThemeInstalled();
-      }
-    });
-
-    this.setupEventListeners();
   }
 
-  /**
-   * Set up main event listeners
-   */
-  private setupEventListeners(): void {
-    // Install theme button
-    const installBtn = document.getElementById('install-theme-btn');
-    if (installBtn) {
-      installBtn.addEventListener('click', () => {
-        this.openModal();
-      });
-    }
-  }
-
-  /**
-   * Open installation modal
-   */
-  public openModal(): void {
-    if (this.installerModal) {
-      this.installerModal.openModal();
-    }
-  }
 
   /**
    * Install theme from URL
    */
-  async installThemeFromUrl(url: string): Promise<void> {
+  async installFromUrl(url: string): Promise<void> {
     try {
       
       const response = await fetch(url);
@@ -94,7 +61,6 @@ export class ThemeInstaller {
       await this.processAndInstallTheme(themeData, url);
       
     } catch (error) {
-      console.error('❌ Theme installation failed:', error);
       throw error;
     }
   }
@@ -114,10 +80,9 @@ export class ThemeInstaller {
       }
 
       const themeUrl = registry[themeName];
-      await this.installThemeFromUrl(themeUrl);
+      await this.installFromUrl(themeUrl);
       
     } catch (error) {
-      console.error('❌ Registry theme installation failed:', error);
       throw error;
     }
   }
@@ -125,17 +90,17 @@ export class ThemeInstaller {
   /**
    * Process and install theme data
    */
-  private async processAndInstallTheme(themeData: ThemeData, _url: string): Promise<void> {
-    // Installation logic simplified for now
-    // CSS generation handled elsewhere
-
-    // Add to theme manager
-    // Theme registration handled elsewhere
-
-    // Cache theme data
-
-    // Storage handled elsewhere
-    
+  private async processAndInstallTheme(themeData: ThemeData, url: string): Promise<void> {
+    await this.storageManager.storeTheme({
+      name: themeData.name,
+      url: url,
+      data: {
+        name: themeData.name,
+        cssVars: themeData.cssVars
+      },
+      installed: true,
+      timestamp: Date.now()
+    });
   }
 
 
@@ -155,7 +120,6 @@ export class ThemeInstaller {
    * Get cached theme data
    */
   async getCachedTheme(url: string): Promise<CachedTheme | null> {
-    // Get cached theme data - temporary implementation
     const allThemes = await this.storageManager.getAllThemes();
     return allThemes.find((theme: any) => theme.url === url) || null;
   }
@@ -168,12 +132,4 @@ export class ThemeInstaller {
     return installedThemes.some((theme: any) => theme.name === themeName);
   }
 
-  /**
-   * Clean up resources
-   */
-  destroy(): void {
-    if (this.installerModal) {
-      this.installerModal.unmount();
-    }
-  }
 }

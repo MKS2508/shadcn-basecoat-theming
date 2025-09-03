@@ -41,7 +41,9 @@ export class FontManager {
 
 
   /**
-   * Initialize font manager
+   * Inicializa el gestor de fuentes con configuración guardada
+   * Carga overrides persistentes y aplica las fuentes configuradas
+   * @returns Promise que se resuelve cuando la inicialización está completa
    */
   async init(): Promise<void> {
     
@@ -160,7 +162,10 @@ export class FontManager {
   }
 
   /**
-   * Set font override for specific category
+   * Establece una fuente personalizada para una categor\u00eda espec\u00edfica
+   * @param category - Categor\u00eda de fuente: 'sans', 'serif' o 'mono'
+   * @param fontId - ID de la fuente del cat\u00e1logo
+   * @returns Promise que se resuelve cuando la fuente se ha aplicado
    */
   async setFontOverride(category: 'sans' | 'serif' | 'mono', fontId: string): Promise<void> {
     
