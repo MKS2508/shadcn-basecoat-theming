@@ -1,0 +1,13 @@
+---
+export interface Props {
+  class?: string;
+}
+
+const { class: className = "" } = Astro.props;
+
+const skeletonClass = 'animate-pulse';
+---
+
+<div class={`${skeletonClass} ${className}`.trim()}>
+  <slot />
+</div>

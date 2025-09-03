@@ -1,0 +1,40 @@
+---
+export interface Props {
+  id?: string;
+  name?: string;
+  label?: string;
+  checked?: boolean;
+  disabled?: boolean;
+  required?: boolean;
+  value?: string;
+  class?: string;
+  [key: string]: any;
+}
+
+const { 
+  id,
+  name,
+  label,
+  checked = false, 
+  disabled = false,
+  required = false,
+  value,
+  class: className = "",
+  ...restProps
+} = Astro.props;
+---
+
+<label class="label flex items-center gap-2">
+  <input 
+    type="checkbox"
+    class={`input ${className}`.trim()}
+    id={id}
+    name={name}
+    checked={checked}
+    disabled={disabled}
+    required={required}
+    value={value}
+    {...restProps}
+  />
+  {label && <span>{label}</span>}
+</label>

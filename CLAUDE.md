@@ -452,3 +452,155 @@ template-engine          ──→  (sin dependencies, standalone)
 theme-manager-core       ──→  (solo peer dependencies como @mks2508/better-logger)
 ```
 - no me gusta que dejes bloques vacios con //Cleanup handled by UI implementationModal handling moved to UI implementations o 43 +      // Callbacks are now handled externally by UI implementations. para eso elimina los bloques no dejes comentarios para luego limpiarlos
+- el proceso de agregar componentes de shadcn es a traves de su cli https://ui.shadcn.com/docs/cli.md 
+
+## add
+
+Use the `add` command to add components and dependencies to your project.
+
+```bash
+npx shadcn@latest add [component]
+```
+
+**Options**
+
+```bash
+Usage: shadcn add [options] [components...]
+
+add a component to your project
+
+Arguments:
+  components         name, url or local path to component
+
+Options:
+  -y, --yes           skip confirmation prompt. (default: false)
+  -o, --overwrite     overwrite existing files. (default: false)
+  -c, --cwd <cwd>     the working directory. defaults to the current directory.
+  -a, --all           add all available components (default: false)
+  -p, --path <path>   the path to add the component to.
+  -s, --silent        mute output. (default: false)
+  --src-dir           use the src directory when creating a new project. (default: false)
+  --no-src-dir        do not use the src directory when creating a new project.
+  --css-variables     use css variables for theming. (default: true)
+  --no-css-variables  do not use css variables for theming.
+  -h, --help          display help for command
+```
+
+---
+
+## view
+
+Use the `view` command to view items from the registry before installing them.
+
+```bash
+npx shadcn@latest view [item]
+```
+
+You can view multiple items at once:
+
+```bash
+npx shadcn@latest view button card dialog
+```
+
+Or view items from namespaced registries:
+
+```bash
+npx shadcn@latest view @acme/auth @v0/dashboard
+```
+
+**Options**
+
+```bash
+Usage: shadcn view [options] <items...>
+
+view items from the registry
+
+Arguments:
+  items            the item names or URLs to view
+
+Options:
+  -c, --cwd <cwd>  the working directory. defaults to the current directory.
+  -h, --help       display help for command
+```
+
+---
+
+## search
+
+Use the `search` command to search for items from registries.
+
+```bash
+npx shadcn@latest search [registry]
+```
+
+You can search with a query:
+
+```bash
+npx shadcn@latest search @shadcn -q "button"
+```
+
+Or search multiple registries at once:
+
+```bash
+npx shadcn@latest search @shadcn @v0 @acme
+```
+
+The `list` command is an alias for `search`:
+
+```bash
+npx shadcn@latest list @acme
+```
+
+**Options**
+
+```bash
+Usage: shadcn search|list [options] <registries...>
+
+search items from registries
+
+Arguments:
+  registries             the registry names or urls to search items from. Names
+                         must be prefixed with @.
+
+Options:
+  -c, --cwd <cwd>        the working directory. defaults to the current directory.
+  -q, --query <query>    query string
+  -l, --limit <number>   maximum number of items to display per registry (default: "100")
+  -o, --offset <number>  number of items to skip (default: "0")
+  -h, --help             display help for command
+```
+
+---
+
+## list
+
+Use the `list` command to list all items from a registry.
+
+```bash
+npx shadcn@latest list @acme
+```
+
+**Options**
+
+```bash
+Usage: shadcn list [options] <registries...>
+
+list items from registries
+
+Arguments:
+  registries             the registry names or urls to list items from. Names
+    must be prefixed with @.
+```
+
+**Options**
+
+```bash
+Usage: shadcn list [options] <registries...>
+
+list items from registries
+
+Arguments:
+  registries             the registry names or urls to list items from. Names
+    must be prefixed with @.
+```
+- el proceso de agregar un componente basecoat, es: fetch con download a references, con into.md , por ejemplo https://into.md/basecoatui.com/components/popover/ cambiando popover por el componente de basecoat. Despues, leer el fichero, las instrucciones, copiar EXACTAMENTE el componente de ahi, que tiene el codigo completo

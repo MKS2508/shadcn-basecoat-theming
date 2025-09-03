@@ -1,0 +1,53 @@
+---
+export interface Props {
+  placeholder?: string;
+  value?: string;
+  disabled?: boolean;
+  required?: boolean;
+  rows?: number;
+  cols?: number;
+  id?: string;
+  name?: string;
+  autoResize?: boolean;
+  class?: string;
+  [key: string]: any;
+}
+
+const { 
+  placeholder,
+  value,
+  disabled = false,
+  required = false,
+  rows,
+  cols,
+  id,
+  name,
+  autoResize = false,
+  class: className = "",
+  ...restProps
+} = Astro.props;
+
+const autoResizeClass = autoResize ? "textarea-auto-resize" : "";
+---
+
+<textarea 
+  class={`textarea ${autoResizeClass} ${className}`.trim()}
+  placeholder={placeholder}
+  value={value}
+  disabled={disabled}
+  required={required}
+  rows={rows}
+  cols={cols}
+  id={id}
+  name={name}
+  {...restProps}
+></textarea>
+
+<style>
+  .textarea-auto-resize {
+    field-sizing: content;
+    min-height: 2.5rem;
+    max-height: 20rem;
+    resize: vertical;
+  }
+</style>

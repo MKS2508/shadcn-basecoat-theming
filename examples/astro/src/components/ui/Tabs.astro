@@ -1,0 +1,43 @@
+---
+export interface Tab {
+  id: string;
+  label: string;
+}
+
+export interface Props {
+  id: string;
+  tabs: Tab[];
+  class?: string;
+}
+
+const { id, tabs, class: className = "" } = Astro.props;
+
+// Generar IDs para tabs y panels
+const tabsWithIds = tabs.map((tab, index) => ({
+  ...tab,
+  tabId: `${id}-tab-${index + 1}`,
+  panelId: `${id}-panel-${index + 1}`,
+  isFirst: index === 0
+}));
+---
+
+<!-- JavaScript incluido via Layout - all.min.js incluye tabs.min.js -->
+
+<div class={`tabs w-full ${className}`.trim()} id={id}>
+  <nav role="tablist" aria-orientation="horizontal" class="w-full">
+    {tabsWithIds.map((tab) => (
+      <button 
+        type="button" 
+        role="tab" 
+        id={tab.tabId}
+        aria-controls={tab.panelId}
+        aria-selected={tab.isFirst ? "true" : "false"}
+        tabindex="0"
+      >
+        {tab.label}
+      </button>
+    ))}
+  </nav>
+
+  <slot />
+</div>

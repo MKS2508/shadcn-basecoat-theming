@@ -1,0 +1,20 @@
+---
+export interface Props {
+  id: string;
+  triggerId: string;
+  class?: string;
+  popoverClass?: string;
+  triggerClass?: string;
+}
+
+const { id, triggerId, class: className = "", popoverClass: popoverClassName = "", triggerClass: triggerClassName = "" } = Astro.props;
+---
+
+<div id={id} class={`popover ${className}`.trim()}>
+  <button id={triggerId} type="button" aria-expanded="false" aria-controls={`${id}-popover`} class={`btn-outline ${triggerClassName}`.trim()}>
+    <slot name="trigger" />
+  </button>
+  <div id={`${id}-popover`} data-popover aria-hidden="true" class={`w-80 ${popoverClassName}`.trim()}>
+    <slot />
+  </div>
+</div>

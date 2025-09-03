@@ -1,0 +1,40 @@
+---
+export interface Props {
+  src?: string;
+  alt?: string;
+  fallback?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  class?: string;
+}
+
+const { 
+  src, 
+  alt = "", 
+  fallback, 
+  size = 'md',
+  class: className = "" 
+} = Astro.props;
+
+const sizeClasses = {
+  sm: 'w-6 h-6',
+  md: 'w-8 h-8', 
+  lg: 'w-10 h-10',
+  xl: 'w-12 h-12'
+};
+
+const sizeClass = sizeClasses[size] || sizeClasses.md;
+---
+
+<div class={`${sizeClass} rounded-full overflow-hidden bg-muted flex items-center justify-center ${className}`.trim()}>
+  {src ? (
+    <img 
+      src={src} 
+      alt={alt}
+      class="w-full h-full object-cover"
+    />
+  ) : (
+    <span class="text-sm font-medium text-muted-foreground">
+      {fallback || alt?.charAt(0)?.toUpperCase() || '?'}
+    </span>
+  )}
+</div>

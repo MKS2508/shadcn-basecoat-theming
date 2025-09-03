@@ -104,13 +104,21 @@ export class VanillaThemeManager {
 
     this.log(`🎨 Rendering theme dropdown in ${selector}`);
 
-    // Create dropdown HTML structure
+    // Add data-dropdown attribute to container if not present
+    if (!container.hasAttribute('data-dropdown')) {
+      container.setAttribute('data-dropdown', '');
+    }
+    if (!container.classList.contains('relative')) {
+      container.classList.add('relative');
+    }
+
+    // Create dropdown HTML structure and insert into container
     const dropdownHTML = this.generateThemeDropdownHTML(options);
     container.innerHTML = dropdownHTML;
 
-    // Find the rendered elements
-    const dropdownMenu = container.querySelector('.theme-dropdown-menu') as HTMLElement;
-    const dropdownButton = container.querySelector('.theme-dropdown-button') as HTMLElement;
+    // Find the rendered elements within the container
+    const dropdownMenu = container.querySelector('#theme-menu') as HTMLElement;
+    const dropdownButton = container.querySelector('#theme-button') as HTMLElement;
 
     if (!dropdownMenu || !dropdownButton) {
       this.logError('Failed to find dropdown elements after rendering');
@@ -123,7 +131,7 @@ export class VanillaThemeManager {
     // Populate with current themes
     this.refreshThemeDropdownContent(dropdownMenu, options);
 
-    // Track rendered component
+    // Track rendered component (container with dropdown inside)
     this.renderedComponents.set(`theme-dropdown-${selector}`, container as HTMLElement);
 
     this.log(`✅ Theme dropdown rendered in ${selector}`);
@@ -131,8 +139,8 @@ export class VanillaThemeManager {
   }
 
   /**
-   * Render mode toggle button in specified selector
-   * @param selector CSS selector where to render the toggle
+   * Render mode toggle button in specified selector (configure existing element like @src)
+   * @param selector CSS selector where to find the existing toggle button
    */
   renderModeToggle(selector: string, options?: {
     customClasses?: string;
@@ -140,42 +148,41 @@ export class VanillaThemeManager {
   }): HTMLElement | null {
     this.ensureInitialized();
     
-    const container = document.querySelector(selector);
-    if (!container) {
-      this.logError(`Mode toggle container not found: ${selector}`);
+    // Find existing mode toggle button (like @src AppController)
+    const modeToggle = document.querySelector(selector) as HTMLElement;
+    if (!modeToggle) {
+      this.logError(`Mode toggle button not found: ${selector}`);
       return null;
     }
 
-    this.log(`🌙 Rendering mode toggle in ${selector}`);
+    this.log(`🌙 Configuring mode toggle at ${selector}`);
 
-    // Generate mode toggle HTML
-    const toggleHTML = this.generateModeToggleHTML(options);
-    container.innerHTML = toggleHTML;
+    // Apply complete CSS classes to button (essential for styling)
+    const baseClasses = "btn-icon";
+    const customClasses = options?.customClasses || '';
+    modeToggle.className = baseClasses + (customClasses ? ` ${customClasses}` : '');
+    
+    // Set proper attributes
+    modeToggle.setAttribute('aria-label', 'Toggle light/dark mode');
+    modeToggle.setAttribute('title', 'Toggle light/dark mode');
 
-    // Find the rendered button
-    const toggleButton = container.querySelector('.mode-toggle-button') as HTMLElement;
-    if (!toggleButton) {
-      this.logError('Failed to find toggle button after rendering');
-      return null;
-    }
+    // Setup toggle functionality (like @src)
+    this.setupModeToggleEvents(modeToggle);
 
-    // Setup toggle functionality
-    this.setupModeToggleEvents(toggleButton);
-
-    // Set initial mode
+    // Set initial mode and render icon
     const currentMode = options?.initialMode || this.themeManager.getCurrentMode();
-    this.updateModeToggleIcon(toggleButton, currentMode);
+    this.updateModeToggleIcon(modeToggle, currentMode);
 
     // Track rendered component
-    this.renderedComponents.set(`mode-toggle-${selector}`, container as HTMLElement);
+    this.renderedComponents.set(`mode-toggle-${selector}`, modeToggle);
 
-    this.log(`✅ Mode toggle rendered in ${selector}`);
-    return container as HTMLElement;
+    this.log(`✅ Mode toggle configured at ${selector}`);
+    return modeToggle;
   }
 
   /**
-   * Render font selector button in specified selector
-   * @param selector CSS selector where to render the button
+   * Render font selector button in specified selector (configure existing element like @src)
+   * @param selector CSS selector where to find the existing font selector button
    */
   renderFontSelector(selector: string, options?: {
     customClasses?: string;
@@ -183,33 +190,36 @@ export class VanillaThemeManager {
   }): HTMLElement | null {
     this.ensureInitialized();
     
-    const container = document.querySelector(selector);
-    if (!container) {
-      this.logError(`Font selector container not found: ${selector}`);
+    // Find existing font selector button (like @src FontSelector)
+    const fontButton = document.querySelector(selector) as HTMLElement;
+    if (!fontButton) {
+      this.logError(`Font selector button not found: ${selector}`);
       return null;
     }
 
-    this.log(`🔤 Rendering font selector in ${selector}`);
+    this.log(`🔤 Configuring font selector at ${selector}`);
 
-    // Generate font selector HTML
-    const selectorHTML = this.generateFontSelectorHTML(options);
-    container.innerHTML = selectorHTML;
+    // Apply complete CSS classes to button (essential for styling)
+    const baseClasses = "btn-icon";
+    const customClasses = options?.customClasses || '';
+    fontButton.className = baseClasses + (customClasses ? ` ${customClasses}` : '');
+    
+    // Set proper attributes
+    fontButton.setAttribute('aria-label', 'Configure fonts');
+    fontButton.setAttribute('title', 'Configure fonts');
 
-    // Find the rendered button
-    const selectorButton = container.querySelector('.font-selector-button') as HTMLElement;
-    if (!selectorButton) {
-      this.logError('Failed to find font selector button after rendering');
-      return null;
-    }
+    // Generate and set font icon content using template engine
+    const iconHTML = this.generateFontSelectorIcon();
+    fontButton.innerHTML = iconHTML;
 
-    // Setup font selector functionality
-    this.setupFontSelectorEvents(selectorButton);
+    // Setup font selector functionality (like @src)
+    this.setupFontSelectorEvents(fontButton);
 
     // Track rendered component
-    this.renderedComponents.set(`font-selector-${selector}`, container as HTMLElement);
+    this.renderedComponents.set(`font-selector-${selector}`, fontButton);
 
-    this.log(`✅ Font selector rendered in ${selector}`);
-    return container as HTMLElement;
+    this.log(`✅ Font selector configured at ${selector}`);
+    return fontButton;
   }
 
   // ===========================================
@@ -305,68 +315,55 @@ export class VanillaThemeManager {
   // ===========================================
 
   private generateThemeDropdownHTML(options?: any): string {
-    const customClasses = options?.customClasses || '';
-    
-    return `
-      <div class="relative theme-dropdown ${customClasses}" data-dropdown>
-        <button 
+    return `<button 
           type="button"
-          class="theme-dropdown-button inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
+          class="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
           aria-haspopup="true"
           aria-expanded="false"
           aria-label="Select theme"
         >
-          <span class="theme-current-label">Loading...</span>
+          <span id="current-theme-label">Default</span>
           <svg class="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
           </svg>
         </button>
         
         <div 
-          class="theme-dropdown-menu absolute right-0 z-50 mt-2 w-56 rounded-md border bg-popover p-1 shadow-lg animate-fade-in hidden"
+          id="theme-menu"
+          class="absolute right-0 z-50 mt-2 w-40 rounded-md border bg-popover p-1 shadow-lg animate-fade-in hidden"
           role="menu"
           aria-orientation="vertical"
-          aria-labelledby="theme-button"
         >
-          <!-- Theme options will be populated by JavaScript -->
-        </div>
-      </div>
-    `;
+          <!-- Theme options will be generated by JavaScript -->
+        </div>`;
   }
 
-  private generateModeToggleHTML(options?: any): string {
-    const customClasses = options?.customClasses || '';
+  /**
+   * Generate SVG icon content for mode toggle (template engine approach)
+   */
+  private generateModeToggleIcon(mode: 'light' | 'dark' | 'auto'): string {
+    const icons = {
+      light: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+      </svg>`,
+      dark: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 7 18.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+      </svg>`,
+      auto: `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+      </svg>`
+    };
     
-    return `
-      <button 
-        type="button"
-        class="mode-toggle-button inline-flex items-center justify-center rounded-md border border-input bg-background w-10 h-10 text-sm ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer ${customClasses}"
-        aria-label="Toggle light/dark mode"
-        title="Toggle light/dark mode"
-      >
-        <svg class="mode-icon h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
-        </svg>
-      </button>
-    `;
+    return icons[mode];
   }
 
-  private generateFontSelectorHTML(options?: any): string {
-    const customClasses = options?.customClasses || '';
-    const buttonText = options?.buttonText || 'Configure Fonts';
-    
-    return `
-      <button 
-        type="button"
-        class="font-selector-button inline-flex items-center justify-center rounded-md border border-input bg-background w-10 h-10 text-sm ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer ${customClasses}"
-        aria-label="${buttonText}"
-        title="${buttonText}"
-      >
-        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z M16 21v-7a1 1 0 00-1-1H9a1 1 0 00-1 1v7"></path>
-        </svg>
-      </button>
-    `;
+  /**
+   * Generate font selector icon content (template engine approach)
+   */
+  private generateFontSelectorIcon(): string {
+    return `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z M16 21v-7a1 1 0 00-1-1H9a1 1 0 00-1 1v7"></path>
+    </svg>`;
   }
 
   // ===========================================
@@ -391,7 +388,14 @@ export class VanillaThemeManager {
   }
 
   private setupModeToggleEvents(button: HTMLElement): void {
-    button.addEventListener('click', async (event) => {
+    // Add pointer-events to ensure SVG children don't block clicks (matching @src)
+    button.style.pointerEvents = 'auto';
+    const svgs = button.querySelectorAll('svg');
+    svgs.forEach(svg => {
+      svg.style.pointerEvents = 'none';
+    });
+    
+    const clickHandler = async (event: Event) => {
       event.preventDefault();
       event.stopPropagation();
       
@@ -418,13 +422,29 @@ export class VanillaThemeManager {
       } catch (error) {
         this.logError('Failed to switch mode', error as Error);
       }
-    });
+    };
+
+    button.addEventListener('click', clickHandler);
   }
 
   private setupFontSelectorEvents(button: HTMLElement): void {
-    button.addEventListener('click', () => {
-      this.openFontSelectorModal();
+    // Add pointer-events to ensure SVG children don't block clicks (matching @src)
+    button.style.pointerEvents = 'auto';
+    const svgs = button.querySelectorAll('svg');
+    svgs.forEach(svg => {
+      svg.style.pointerEvents = 'none';
     });
+    
+    const clickHandler = (event: Event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      this.openFontSelectorModal();
+    };
+    
+    button.addEventListener('click', clickHandler);
+    
+    // Update button state based on font overrides (matching @src)
+    this.updateFontButtonState(button);
   }
 
   // ===========================================
@@ -432,86 +452,139 @@ export class VanillaThemeManager {
   // ===========================================
 
   private refreshThemeDropdownContent(menu: HTMLElement, options?: any): void {
-    // Clear existing content
-    menu.innerHTML = '';
-    
     // Get available themes
     const themes = this.themeManager.getAvailableThemes();
     const currentTheme = this.themeManager.getCurrentTheme();
     
-    // Add theme options
-    themes.forEach(theme => {
-      const menuItem = document.createElement('button');
-      menuItem.className = 'block w-full text-left px-3 py-2 text-sm rounded hover:bg-accent hover:text-accent-foreground';
-      menuItem.textContent = theme.label;
-      
-      if (theme.name === currentTheme) {
-        menuItem.classList.add('bg-accent', 'text-accent-foreground');
+    // Theme-specific icons (matching original structure)
+    const getThemeIcon = (themeName: string): string => {
+      switch (themeName) {
+        case 'supabase':
+          return `<svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>`;
+        default:
+          return `<svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5H9a2 2 0 00-2 2v12a4 4 0 004 4h10a2 2 0 002-2V7a2 2 0 00-2-2z"></path>
+                                </svg>`;
       }
-      
-      menuItem.addEventListener('click', async () => {
+    };
+    
+    const checkIcon = `<svg class="ml-auto h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+    
+    // Generate complete HTML structure exactly like original
+    let htmlContent = '';
+    
+    themes.forEach(theme => {
+      htmlContent += `
+        <button 
+          type="button"
+          class="theme-option relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+          data-theme="${theme.name}"
+          role="menuitem"
+          ${theme.name === currentTheme ? 'aria-selected="true"' : ''}
+        >
+          ${getThemeIcon(theme.name)}
+          <span>${theme.label}</span>
+          ${theme.name === currentTheme ? checkIcon : ''}
+        </button>
+      `;
+    });
+    
+    // Add separator and bottom section
+    if (themes.length > 0) {
+      htmlContent += `<div class="h-px bg-border my-1"></div>
+                            <div class="flex">
+                                <button type="button" id="browse-more-themes" class="relative flex flex-1 cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-primary" role="menuitem">
+                                    <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    </svg>
+                                    Browse More...
+                                </button>
+                                <button type="button" id="theme-settings-btn" class="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-muted-foreground hover:text-accent-foreground" role="menuitem">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                </button>
+                            </div>`;
+    }
+    
+    // Set the complete HTML at once
+    menu.innerHTML = htmlContent;
+    
+    // Setup event listeners for all theme options
+    themes.forEach(theme => {
+      const menuItem = menu.querySelector(`[data-theme="${theme.name}"]`);
+      menuItem?.addEventListener('click', async () => {
         await this.handleThemeSelection(theme.name);
         menu.classList.add('hidden');
         
         // Update button state
-        const button = menu.parentElement?.querySelector('.theme-dropdown-button');
+        const button = menu.parentElement?.querySelector('#theme-button');
         button?.setAttribute('aria-expanded', 'false');
       });
-      
-      menu.appendChild(menuItem);
     });
     
-    // Add separator and special options if enabled
-    if (themes.length > 0 && (options?.showInstallOption !== false || options?.showManageOption !== false)) {
-      const separator = document.createElement('div');
-      separator.className = 'h-px bg-border my-1';
-      menu.appendChild(separator);
-      
-      if (options?.showInstallOption !== false) {
-        const installOption = document.createElement('button');
-        installOption.className = 'block w-full text-left px-3 py-2 text-sm rounded hover:bg-accent hover:text-accent-foreground';
-        installOption.textContent = '🌐 Install New Theme...';
-        installOption.addEventListener('click', () => {
-          this.openThemeInstallerModal();
-          menu.classList.add('hidden');
-          menu.parentElement?.querySelector('.theme-dropdown-button')?.setAttribute('aria-expanded', 'false');
-        });
-        menu.appendChild(installOption);
-      }
-      
-      if (options?.showManageOption !== false) {
-        const manageOption = document.createElement('button');
-        manageOption.className = 'block w-full text-left px-3 py-2 text-sm rounded hover:bg-accent hover:text-accent-foreground';
-        manageOption.textContent = '⚙️ Manage Themes';
-        manageOption.addEventListener('click', () => {
-          this.openThemeManagementModal();
-          menu.classList.add('hidden');
-          menu.parentElement?.querySelector('.theme-dropdown-button')?.setAttribute('aria-expanded', 'false');
-        });
-        menu.appendChild(manageOption);
-      }
-    }
+    // Setup event listeners for bottom buttons
+    const browseButton = menu.querySelector('#browse-more-themes');
+    browseButton?.addEventListener('click', () => {
+      this.openThemeInstallerModal();
+      menu.classList.add('hidden');
+      menu.parentElement?.querySelector('#theme-button')?.setAttribute('aria-expanded', 'false');
+    });
+    
+    const settingsButton = menu.querySelector('#theme-settings-btn');
+    settingsButton?.addEventListener('click', () => {
+      this.openThemeManagementModal();
+      menu.classList.add('hidden');
+      menu.parentElement?.querySelector('#theme-button')?.setAttribute('aria-expanded', 'false');
+    });
     
     // Update current theme label in button
     const currentThemeConfig = themes.find(t => t.name === currentTheme);
-    const buttonLabel = menu.parentElement?.querySelector('.theme-current-label');
+    const buttonLabel = menu.parentElement?.querySelector('#current-theme-label');
     if (buttonLabel && currentThemeConfig) {
       buttonLabel.textContent = currentThemeConfig.label;
     }
   }
 
   private updateModeToggleIcon(button: HTMLElement, mode: 'light' | 'dark' | 'auto'): void {
-    const icon = button.querySelector('.mode-icon');
-    if (!icon) return;
-
-    const icons = {
-      light: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>`,
-      dark: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>`,
-      auto: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>`
-    };
-
-    icon.innerHTML = icons[mode];
+    // Use template engine to generate icon content
+    const iconHTML = this.generateModeToggleIcon(mode);
+    
+    // Update button content (like @src AppController)
+    button.innerHTML = iconHTML;
     button.setAttribute('aria-label', `Current mode: ${mode}`);
+  }
+
+  /**
+   * Update theme label in UI (matching @src)
+   */
+  private updateThemeLabel(theme: string): void {
+    const themeLabel = document.getElementById('current-theme-label');
+    if (themeLabel) {
+      const themes = this.themeManager.getAvailableThemes();
+      const themeConfig = themes.find(t => t.name === theme);
+      themeLabel.textContent = themeConfig?.label || theme;
+    }
+  }
+
+  /**
+   * Update font button state based on overrides (matching @src behavior)
+   */
+  private updateFontButtonState(button: HTMLElement): void {
+    // Check if font override is enabled via core manager
+    const hasOverrides = this.fontManager.isOverrideEnabled();
+    
+    // Visual indication of active overrides (matching @src)
+    if (hasOverrides) {
+      button.classList.add('text-primary', 'font-medium');
+      button.setAttribute('title', 'Font overrides active - Click to configure');
+    } else {
+      button.classList.remove('text-primary', 'font-medium');
+      button.setAttribute('title', 'Configure fonts');
+    }
   }
 
   // ===========================================
@@ -541,6 +614,9 @@ export class VanillaThemeManager {
     try {
       const currentMode = this.themeManager.getCurrentMode();
       await this.themeManager.setTheme(themeName, currentMode);
+      
+      // Update theme label (matching @src)
+      this.updateThemeLabel(themeName);
       
       // Refresh all rendered theme dropdowns
       this.refreshAllThemeDropdowns();
@@ -576,9 +652,17 @@ export class VanillaThemeManager {
 
   private setupGlobalEventListeners(): void {
     // System theme preference changes
+    this.setupSystemThemeListener();
+  }
+
+  /**
+   * Set up system theme preference listener (matching @src exactly)
+   */
+  private setupSystemThemeListener(): void {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     mediaQuery.addEventListener('change', async () => {
       if (this.themeManager.getCurrentMode() === 'auto') {
+        // Re-apply current theme with auto mode to pick up system change
         const currentTheme = this.themeManager.getCurrentTheme();
         await this.themeManager.setTheme(currentTheme, 'auto');
       }

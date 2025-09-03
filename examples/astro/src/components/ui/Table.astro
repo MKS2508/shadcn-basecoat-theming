@@ -1,0 +1,13 @@
+---
+export interface Props {
+  class?: string;
+}
+
+const { class: className = "" } = Astro.props;
+
+const tableClass = `table ${className}`.trim();
+---
+
+<table class={tableClass}>
+  <slot />
+</table>

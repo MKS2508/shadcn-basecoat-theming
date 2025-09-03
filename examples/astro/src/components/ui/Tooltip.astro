@@ -1,0 +1,17 @@
+---
+export interface Props {
+  text: string;
+  side?: 'top' | 'bottom' | 'left' | 'right';
+  align?: 'start' | 'center' | 'end';
+  class?: string;
+}
+
+const { text, side, align, class: className = "" } = Astro.props;
+
+let tooltipSide = side ? side : null;
+let tooltipAlign = align ? align : null;
+---
+
+<span data-tooltip={text} data-side={tooltipSide} data-align={tooltipAlign} class={className}>
+  <slot />
+</span>

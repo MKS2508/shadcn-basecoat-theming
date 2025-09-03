@@ -1,0 +1,21 @@
+---
+export interface Props {
+  open?: boolean;
+  expanded?: boolean;
+  title?: string;
+  summary?: string;
+  class?: string;
+}
+
+const { open = false, expanded = false, title, summary, class: className = "" } = Astro.props;
+
+// Use title if provided, otherwise use summary for backwards compatibility
+const displayTitle = title || summary || "";
+---
+
+<details class={className} open={open || expanded}>
+  <summary>{displayTitle}</summary>
+  <div>
+    <slot />
+  </div>
+</details>

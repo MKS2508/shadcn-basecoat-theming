@@ -1,0 +1,110 @@
+@import "tailwindcss";
+@import "basecoat-css";
+
+/* Windows 98 Theme variables */
+:root {
+  /* Color System - Authentic Windows 98 colors in original HEX format */
+  --background: #c0c0c0;
+  --foreground: #222222;
+  --card: #dfdfdf;
+  --card-foreground: #222222;
+  --popover: #dfdfdf;
+  --popover-foreground: #222222;
+  --primary: #000080;
+  --primary-foreground: #ffffff;
+  --secondary: #808080;
+  --secondary-foreground: #222222;
+  --muted: #b5b5b5;
+  --muted-foreground: #666666;
+  --accent: #0000ff;
+  --accent-foreground: #ffffff;
+  --destructive: #cc0000;
+  --destructive-foreground: #ffffff;
+  --border: #808080;
+  --input: #ffffff;
+  --ring: #000080;
+  
+  /* Chart colors inspired by Windows 98 system palette */
+  --chart-1: #000080;
+  --chart-2: #0000ff;
+  --chart-3: #cc0000;
+  --chart-4: #008000;
+  --chart-5: #800080;
+  
+  /* Windows 98 authentic spacing - no rounded corners */
+  --radius: 0rem;
+}
+
+.dark {
+  /* Dark variant maintaining Windows 98 aesthetic in HEX format */
+  --background: #1a1a1a;
+  --foreground: #e0e0e0;
+  --card: #2d2d2d;
+  --card-foreground: #e0e0e0;
+  --popover: #2d2d2d;
+  --popover-foreground: #e0e0e0;
+  --primary: #6666ff;
+  --primary-foreground: #1a1a1a;
+  --secondary: #404040;
+  --secondary-foreground: #e0e0e0;
+  --muted: #333333;
+  --muted-foreground: #b0b0b0;
+  --accent: #8888ff;
+  --accent-foreground: #1a1a1a;
+  --destructive: #ff4444;
+  --destructive-foreground: #ffffff;
+  --border: #404040;
+  --input: #2d2d2d;
+  --ring: #6666ff;
+  
+  --chart-1: #6666ff;
+  --chart-2: #8888ff;
+  --chart-3: #ff4444;
+  --chart-4: #44aa44;
+  --chart-5: #aa44aa;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  
+  /* Windows 98 no tiene border-radius */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+}
+
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: "MS Sans Serif", Tahoma, Arial, sans-serif;
+    font-size: 12px;
+  }
+}

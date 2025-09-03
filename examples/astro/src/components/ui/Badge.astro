@@ -1,0 +1,24 @@
+---
+export interface Props {
+  variant?: 'primary' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' | 'error';
+  class?: string;
+}
+
+const { variant = "primary", class: className = "" } = Astro.props;
+
+let badgeClass = 'badge';
+// Map semantic variants to available variants
+if (variant === 'success') {
+  badgeClass = 'badge-primary'; // Map success to primary for now
+} else if (variant === 'warning') {
+  badgeClass = 'badge-secondary'; // Map warning to secondary for now  
+} else if (variant === 'error') {
+  badgeClass = 'badge-destructive'; // Map error to destructive
+} else if (variant !== 'primary') {
+  badgeClass = `badge-${variant}`;
+}
+---
+
+<span class={`${badgeClass} ${className}`.trim()}>
+  <slot />
+</span>
