@@ -1,0 +1,44 @@
+{
+  "name": "@mks2508/simple-html-component-template-engine",
+  "version": "0.1.0",
+  "description": "Lightweight HTML template engine with component system for vanilla JS",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "template",
+    "template-engine",
+    "components",
+    "vanilla-js",
+    "html",
+    "mustache",
+    "web-components"
+  ],
+  "author": "MKS2508",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.6.2"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MKS2508/template-engine.git"
+  }
+}

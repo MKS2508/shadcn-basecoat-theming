@@ -1,0 +1,47 @@
+{
+  "name": "@mks2508/shadcn-basecoat-theme-manager",
+  "version": "0.1.0",
+  "description": "Core theme and font management system for shadcn/ui and Basecoat CSS",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "theme",
+    "theming",
+    "css-variables",
+    "shadcn",
+    "basecoat",
+    "font-management",
+    "dark-mode"
+  ],
+  "author": "MKS2508",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.6.2"
+  },
+  "peerDependencies": {
+    "@mks2508/better-logger": "^0.3.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MKS2508/theme-manager.git"
+  }
+}

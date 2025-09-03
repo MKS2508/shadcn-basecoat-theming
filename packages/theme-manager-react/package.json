@@ -1,0 +1,47 @@
+{
+  "name": "@mks2508/theme-manager-react",
+  "version": "0.1.0",
+  "description": "React hooks and components for theme management (shadcn/ui compatible)",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "react",
+    "theme",
+    "shadcn",
+    "hooks",
+    "dark-mode"
+  ],
+  "author": "MKS2508",
+  "license": "MIT",
+  "dependencies": {
+    "@mks2508/shadcn-basecoat-theme-manager": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.6.2"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}

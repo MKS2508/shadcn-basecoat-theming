@@ -1,0 +1,39 @@
+{
+  "name": "@mks2508/theme-manager-web-components",
+  "version": "0.1.0",
+  "description": "Web Components for theme management",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "web-components",
+    "theme",
+    "custom-elements"
+  ],
+  "author": "MKS2508",
+  "license": "MIT",
+  "dependencies": {
+    "@mks2508/shadcn-basecoat-theme-manager": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.6.2"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}

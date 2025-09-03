@@ -1,8 +1,12 @@
-{
-  "name": "vite-theme-switching-demo",
+  {
+  "name": "theme-manager-monorepo",
   "version": "1.0.0",
+  "private": true,
   "type": "module",
-  "description": "Production-ready Vite project with Tailwind CSS v4, Basecoat UI, and TweakCN theme switching",
+  "description": "Monorepo for theme management packages and demo",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
