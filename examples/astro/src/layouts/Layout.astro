@@ -1,0 +1,82 @@
+---
+export interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en" class="theme-loading">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Astro Theme Manager Example using Core Package" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+    
+    <!-- Prevent FOUC with inline script -->
+    <script is:inline>
+      // FOUC Prevention - Apply saved theme immediately
+      (function() {
+        try {
+          const savedTheme = localStorage.getItem('theme') || 'default';
+          const savedMode = localStorage.getItem('theme-mode') || 'auto';
+          
+          // Apply theme class to html
+          if (savedTheme !== 'default') {
+            document.documentElement.classList.add(`theme-${savedTheme}`);
+          }
+          
+          // Apply mode class
+          let effectiveMode = savedMode;
+          if (savedMode === 'auto') {
+            effectiveMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          document.documentElement.classList.add(`theme-${effectiveMode}`);
+          
+          console.log(`🎨 FOUC prevention: Applied ${savedTheme}-${effectiveMode}`);
+        } catch (error) {
+          console.warn('FOUC prevention failed:', error);
+          // Fallback to light mode
+          document.documentElement.classList.add('theme-light');
+        }
+      })();
+    </script>
+  </head>
+  <body class="min-h-screen bg-background text-foreground antialiased theme-loading">
+    <div id="app">
+      <slot />
+    </div>
+    
+    <!-- Remove loading state once page is loaded -->
+    <script is:inline>
+      window.addEventListener('load', function() {
+        document.documentElement.classList.remove('theme-loading');
+        document.body.classList.remove('theme-loading');
+        console.log('✅ FOUC: Content revealed');
+      });
+    </script>
+  </body>
+</html>
+
+<style>
+  html {
+    font-family: system-ui, sans-serif;
+  }
+  
+  /* Ensure smooth theme transitions */
+  html.theme-loading * {
+    transition: none !important;
+  }
+  
+  /* Animation for dropdowns */
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 0.15s ease-out;
+  }
+</style>
