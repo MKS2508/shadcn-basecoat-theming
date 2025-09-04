@@ -1,6 +1,7 @@
 import { FontLoader } from './font-loader';
 import { ThemeRegistry, ThemeConfig } from './theme-registry';
 import { FontManager } from './font-manager';
+import { StorageManager, ThemeModeConfig } from './storage-manager';
 
 /**
  * Performance monitoring utility
@@ -36,10 +37,9 @@ class PerformanceMonitor {
 export class ThemeManager {
   private themeRegistry: ThemeRegistry;
   private fontManager: FontManager;
+  private storageManager: StorageManager;
   private currentTheme: string = 'default';
   private currentMode: 'light' | 'dark' | 'auto' = 'auto';
-  private readonly THEME_STORAGE_KEY = 'theme';
-  private readonly MODE_STORAGE_KEY = 'theme-mode';
   private currentStyleElement: HTMLLinkElement | null = null;
   private fontLoader: FontLoader;
   
@@ -59,6 +59,7 @@ export class ThemeManager {
     this.themeRegistry = new ThemeRegistry();
     this.fontManager = new FontManager();
     this.fontLoader = new FontLoader();
+    this.storageManager = StorageManager.getInstance();
   }
 
 
@@ -70,32 +71,63 @@ export class ThemeManager {
    */
   async init(): Promise<void> {
     try {
+      console.log('🔄 [ThemeManager] Starting initialization...');
       PerformanceMonitor.startTimer('theme-manager-init');
       
-      // Initialize theme registry first
+      // Initialize storage manager first
+      console.log('🔄 [ThemeManager] Initializing StorageManager...');
+      await this.storageManager.init();
+      console.log('✅ [ThemeManager] StorageManager initialized');
+
+      // Initialize theme registry
+      console.log('🔄 [ThemeManager] Initializing ThemeRegistry...');
       await this.themeRegistry.init();
+      console.log('✅ [ThemeManager] ThemeRegistry initialized');
       
-      // Initialize font manager
-      await this.fontManager.init();
+      // Initialize font manager with timeout fallback
+      console.log('🔄 [ThemeManager] Initializing FontManager...');
+      try {
+        // Add timeout to prevent FontManager from blocking the entire initialization
+        const fontManagerPromise = this.fontManager.init();
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('FontManager.init() timeout after 5 seconds')), 5000);
+        });
+        
+        await Promise.race([fontManagerPromise, timeoutPromise]);
+        console.log('✅ [ThemeManager] FontManager initialized');
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.warn('⚠️ [ThemeManager] FontManager initialization failed, continuing without font management:', errorMessage);
+        // Continue without font manager - it's not critical for basic theme functionality
+      }
       
-      // Get saved theme and mode
-      const savedTheme = localStorage.getItem(this.THEME_STORAGE_KEY) || 'default';
-      const savedMode = localStorage.getItem(this.MODE_STORAGE_KEY) as 'light' | 'dark' | 'auto' || 'auto';
+      // Get saved theme and mode from StorageManager
+      console.log('🔄 [ThemeManager] Getting saved theme from StorageManager...');
+      const savedConfig = await this.storageManager.getThemeModeConfig();
+      const savedTheme = savedConfig?.currentTheme || 'default';
+      const savedMode = savedConfig?.currentMode || 'auto';
+      console.log('✅ [ThemeManager] Saved theme:', savedTheme, 'mode:', savedMode);
       
       // Validate saved theme exists in registry
+      console.log('🔄 [ThemeManager] Validating saved theme exists...');
       const themeExists = this.themeRegistry.getTheme(savedTheme);
       this.currentTheme = themeExists ? savedTheme : 'default';
       this.currentMode = savedMode;
-      
+      console.log('✅ [ThemeManager] Current theme set to:', this.currentTheme);
       
       // Apply initial theme
+      console.log('🔄 [ThemeManager] Applying initial theme...');
       await this.applyTheme(this.currentTheme, this.currentMode);
+      console.log('✅ [ThemeManager] Initial theme applied');
       
       // Preload built-in themes in background (non-blocking)
+      console.log('🔄 [ThemeManager] Starting theme preloading...');
       this.preloadBuiltinThemes();
+      console.log('✅ [ThemeManager] Theme preloading started');
       
       // End initialization timer
       PerformanceMonitor.endTimer('theme-manager-init');
+      console.log('✅ [ThemeManager] Initialization completed successfully');
       
     } catch (error) {
       console.error('❌ ThemeManager: Failed to initialize:', error);
@@ -117,7 +149,9 @@ export class ThemeManager {
   async setTheme(theme: string, mode?: 'light' | 'dark' | 'auto'): Promise<void> {
     const newMode = mode || this.currentMode;
     
-    if (theme === this.currentTheme && newMode === this.currentMode) return;
+    // Check if this is a real theme change
+    const isThemeChange = theme !== this.currentTheme || newMode !== this.currentMode;
+    if (!isThemeChange) return;
 
     // Start performance timer
     const timerLabel = `theme-switch-${theme}-${newMode}`;
@@ -129,7 +163,7 @@ export class ThemeManager {
     // Debounced storage save (non-blocking)
     this.saveThemeSettings(theme, newMode);
 
-    await this.applyTheme(theme, newMode);
+    await this.applyTheme(theme, newMode, true); // Pass true to indicate real theme change
     
     // End performance timer and log metrics
     const duration = PerformanceMonitor.endTimer(timerLabel);
@@ -193,9 +227,10 @@ export class ThemeManager {
    * Carga las variables CSS y las aplica al elemento root
    * @param themeName - Nombre del tema
    * @param mode - Modo del tema
+   * @param enableTransition - Whether to enable theme transition animation
    * @returns Promise que se resuelve cuando el tema se ha aplicado
    */
-  private async applyTheme(themeName: string, mode: 'light' | 'dark' | 'auto'): Promise<void> {
+  private async applyTheme(themeName: string, mode: 'light' | 'dark' | 'auto', enableTransition: boolean = false): Promise<void> {
     
     // Get theme config from registry
     const themeConfig = this.themeRegistry.getTheme(themeName);
@@ -245,7 +280,7 @@ export class ThemeManager {
       
       // Apply CSS variables directly to document root
       const startTime = performance.now();
-      this.applyCSSVariables(cssVariables);
+      this.applyCSSVariables(cssVariables, enableTransition);
       const applyTime = performance.now() - startTime;
       
       // Remove any previous theme CSS link
@@ -325,14 +360,49 @@ export class ThemeManager {
   /**
    * Apply CSS variables directly to document root
    */
-  private applyCSSVariables(variables: Record<string, string>): void {
+  private applyCSSVariables(variables: Record<string, string>, enableTransition: boolean = false): void {
     const root = document.documentElement;
+    
+    // Apply transition class only when theme actually changes
+    if (enableTransition && document.body) {
+      document.body.classList.add('theme-transition');
+      // Remove transition class after animation completes
+      setTimeout(() => {
+        document.body?.classList.remove('theme-transition');
+      }, 200);
+    }
     
     // Apply each variable
     Object.entries(variables).forEach(([property, value]) => {
       root.style.setProperty(property, value);
     });
     
+  }
+
+  /**
+   * Apply theme variables temporarily for preview (no storage save)
+   * @param themeData - Theme data containing CSS variables
+   * @param mode - Theme mode to apply
+   */
+  applyThemeVariablesTemporary(themeData: any, mode: 'light' | 'dark'): void {
+    const variables = themeData.cssVars[mode] || themeData.cssVars.theme || themeData.cssVars.light;
+    
+    if (variables) {
+      // Clear any existing inline styles first to ensure clean application
+      const root = document.documentElement;
+      
+      // Get all CSS custom properties currently set
+      const computedStyle = getComputedStyle(root);
+      const existingVars = Array.from(root.style).filter(prop => prop.startsWith('--'));
+      
+      // Remove existing inline custom properties
+      existingVars.forEach(prop => {
+        root.style.removeProperty(prop);
+      });
+      
+      // Apply new variables
+      this.applyCSSVariables(variables);
+    }
   }
 
   /**
@@ -347,6 +417,30 @@ export class ThemeManager {
    */
   getCurrentMode(): 'light' | 'dark' | 'auto' {
     return this.currentMode;
+  }
+
+  /**
+   * Get the resolved effective mode (converts 'auto' to 'light' or 'dark')
+   * @returns The resolved mode based on current mode and system preferences
+   */
+  getEffectiveMode(): 'light' | 'dark' {
+    if (this.currentMode === 'auto') {
+      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      return systemPrefersDark ? 'dark' : 'light';
+    }
+    return this.currentMode;
+  }
+
+  /**
+   * Toggle mode between light, dark, and auto
+   * @returns Promise que se resuelve cuando el modo se ha cambiado
+   */
+  async toggleMode(): Promise<void> {
+    const modes: ('light' | 'dark' | 'auto')[] = ['light', 'dark', 'auto'];
+    const currentIndex = modes.indexOf(this.currentMode);
+    const nextMode = modes[(currentIndex + 1) % modes.length];
+    
+    await this.setTheme(this.currentTheme, nextMode);
   }
 
   /**
@@ -443,19 +537,21 @@ export class ThemeManager {
   }
 
   /**
-   * Save theme to localStorage (async)
+   * Save theme to StorageManager (async)
    */
-  private saveThemeToStorage(): void {
+  private async saveThemeToStorage(): Promise<void> {
     const { theme, mode } = this.themeStorage.pending;
     
     try {
-      if (theme) {
-        localStorage.setItem(this.THEME_STORAGE_KEY, theme);
+      if (theme && mode) {
+        const config: ThemeModeConfig = {
+          currentTheme: theme,
+          currentMode: mode as 'light' | 'dark' | 'auto',
+          timestamp: Date.now()
+        };
+        
+        await this.storageManager.storeThemeModeConfig(config);
       }
-      if (mode) {
-        localStorage.setItem(this.MODE_STORAGE_KEY, mode);
-      }
-      
       
       // Clear pending saves
       this.themeStorage.pending = {};

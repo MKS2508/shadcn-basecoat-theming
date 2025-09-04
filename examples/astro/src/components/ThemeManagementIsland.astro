@@ -1,0 +1,796 @@
+---
+import Modal from './ui/Modal.astro';
+import Button from './ui/Button.astro';
+import SearchIcon from './icons/SearchIcon.astro';
+
+// Server-side: Themes will be loaded client-side from IndexedDB via core
+---
+
+<Modal id="theme-management-modal" titleId="theme-management-title" size="xl" class="theme-management-modal">
+  <div client:load>
+    <!-- Header -->
+  <div class="flex items-center justify-between border-b pb-4 mb-6">
+    <div class="flex items-center space-x-3">
+      <div class="w-6 h-6">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5H9a2 2 0 00-2 2v12a4 4 0 004 4h10a2 2 0 002-2V7a2 2 0 00-2-2z"></path>
+        </svg>
+      </div>
+      <h2 id="theme-management-title" class="text-xl font-semibold text-foreground">Theme Manager</h2>
+    </div>
+    <Button 
+      variant="ghost" 
+      size="sm" 
+      class="theme-close-btn"
+      data-close
+    >
+      ✕
+    </Button>
+  </div>
+
+  <!-- Tab navigation -->
+  <div class="border-b border-border mb-6">
+    <div class="flex space-x-1" role="tablist">
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        class="theme-tab active border-b-2 border-primary text-primary rounded-none" 
+        data-tab="installed"
+      >
+        Installed Themes
+      </Button>
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        class="theme-tab border-b-2 border-transparent text-muted-foreground rounded-none" 
+        data-tab="browse"
+      >
+        Browse Registry
+      </Button>
+    </div>
+  </div>
+
+    <!-- Content container -->
+    <div class="flex-1 overflow-hidden">
+      <!-- Installed Themes Tab -->
+      <div id="tab-installed" class="tab-content active">
+        <div class="space-y-4 max-h-[500px] overflow-y-auto">
+          <!-- Loading state -->
+          <div id="themes-loading" class="flex items-center justify-center py-12 text-muted-foreground">
+            <div class="text-center">
+              <div class="w-8 h-8 mx-auto mb-4 animate-spin">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+              </div>
+              <p class="text-sm">Loading installed themes...</p>
+            </div>
+          </div>
+          
+          <!-- Themes container -->
+          <div id="installed-themes-container" class="grid gap-4 hidden">
+            <!-- Themes will be populated by JavaScript -->
+          </div>
+          
+          <!-- Empty state -->
+          <div id="no-themes" class="flex items-center justify-center py-12 text-muted-foreground hidden">
+            <div class="text-center">
+              <div class="w-12 h-12 mx-auto mb-4 opacity-50">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5H9a2 2 0 00-2 2v12a4 4 0 004 4h10a2 2 0 002-2V7a2 2 0 00-2-2z"></path>
+                </svg>
+              </div>
+              <p class="text-sm mb-2">No themes installed</p>
+              <p class="text-xs text-muted-foreground/75">Browse registry to install new themes</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Browse Registry Tab -->
+      <div id="tab-browse" class="tab-content hidden">
+        <div class="space-y-4">
+          <!-- Search bar -->
+          <div class="flex items-center space-x-4">
+            <div class="flex-1 relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <SearchIcon class="h-4 w-4 text-muted-foreground" />
+              </div>
+              <input
+                type="text"
+                id="theme-search"
+                class="w-full pl-10 pr-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
+                placeholder="Search themes..."
+              />
+            </div>
+            <Button
+              id="refresh-registry-btn"
+              variant="ghost"
+              size="sm"
+              class="px-4 py-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+            </Button>
+          </div>
+
+          <!-- Registry themes list -->
+          <div id="registry-themes" class="max-h-[400px] overflow-y-auto">
+            <div class="flex items-center justify-center py-12 text-muted-foreground">
+              <div class="text-center">
+                <div class="w-12 h-12 mx-auto mb-4 opacity-50">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5H9a2 2 0 00-2 2v12a4 4 0 004 4h10a2 2 0 002-2V7a2 2 0 00-2-2z"></path>
+                  </svg>
+                </div>
+                <p class="text-sm mb-2">Click "Refresh" to browse registry themes</p>
+                <p class="text-xs text-muted-foreground/75">Search for themes from TweakCN and other registries</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <!-- Footer -->
+  <div class="flex items-center justify-end pt-4 border-t space-x-3 mt-6">
+    <Button
+      variant="ghost"
+      size="sm"
+      class="theme-cancel-btn"
+      data-cancel
+    >
+      Close
+    </Button>
+  </div>
+
+  <!-- Preview notification -->
+  <div id="preview-notification" class="fixed bottom-4 right-4 bg-card border border-border rounded-lg p-4 shadow-lg hidden">
+    <div class="flex items-center space-x-3">
+      <div class="w-4 h-4">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <p class="text-sm font-medium">Previewing theme</p>
+        <p id="preview-countdown" class="text-xs text-muted-foreground">Reverting in 15s</p>
+      </div>
+      <Button
+        id="cancel-preview-btn"
+        variant="primary"
+        size="sm"
+        class="px-2 py-1 text-xs"
+      >
+        Keep
+      </Button>
+    </div>
+  </div>
+  </div>
+</Modal>
+
+<style>
+  .tab-content.hidden {
+    display: none;
+  }
+  
+  .tab-content.active {
+    display: block;
+  }
+
+  .theme-tab.active {
+    border-color: var(--primary) !important;
+    color: var(--primary) !important;
+  }
+
+  .theme-card {
+    transition: all 0.2s ease;
+  }
+
+  .theme-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .theme-badge.active {
+    display: inline-block !important;
+  }
+
+  .theme-badge.hidden {
+    display: none !important;
+  }
+</style>
+
+<script>
+  let themeManager = null;
+  let previewTimer = null;
+  let originalTheme = null;
+
+  function waitForThemeCore() {
+    const initializeWithCore = (themeCore) => {
+      if (themeCore?.themeManager) {
+        themeManager = themeCore.themeManager;
+        loadInstalledThemes();
+        updateThemeCards();
+      }
+    };
+
+    if (window.themeCore?.themeManager) {
+      initializeWithCore(window.themeCore);
+    } else {
+      window.addEventListener('theme-core-ready', (event) => {
+        initializeWithCore(event.detail.themeCore);
+      });
+    }
+  }
+
+  function bindEvents() {
+    const modal = document.getElementById('theme-management-modal');
+    if (!modal) return;
+
+    // Close button
+    modal.querySelector('.theme-close-btn')?.addEventListener('click', () => {
+      closeModal();
+    });
+
+    modal.querySelector('.theme-cancel-btn')?.addEventListener('click', () => {
+      closeModal();
+    });
+
+    // Tab switching
+    modal.querySelectorAll('.theme-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const tabName = tab.getAttribute('data-tab');
+        if (tabName) {
+          switchTab(tabName);
+        }
+      });
+    });
+
+    // Theme actions
+    modal.addEventListener('click', (e) => {
+      const target = e.target.closest('button');
+      if (!target) return;
+
+      const themeId = target.getAttribute('data-theme-id');
+      if (!themeId) return;
+
+      if (target.classList.contains('preview-btn')) {
+        previewTheme(themeId);
+      } else if (target.classList.contains('apply-theme-btn')) {
+        applyTheme(themeId);
+      } else if (target.classList.contains('remove-theme-btn')) {
+        removeTheme(themeId);
+      }
+    });
+
+    // Search functionality
+    const searchInput = modal.querySelector('#theme-search');
+    searchInput?.addEventListener('input', (e) => {
+      filterRegistryThemes(e.target.value);
+    });
+
+    // Refresh registry
+    modal.querySelector('#refresh-registry-btn')?.addEventListener('click', () => {
+      refreshRegistry();
+    });
+
+    // Preview notification
+    modal.querySelector('#cancel-preview-btn')?.addEventListener('click', () => {
+      cancelPreview();
+    });
+  }
+
+  function switchTab(tabName) {
+    const modal = document.getElementById('theme-management-modal');
+    if (!modal) return;
+    
+    // Update tabs
+    modal.querySelectorAll('.theme-tab').forEach(tab => {
+      tab.classList.remove('active');
+    });
+    
+    const activeTab = modal.querySelector(`[data-tab="${tabName}"]`);
+    activeTab?.classList.add('active');
+    
+    // Update content visibility
+    modal.querySelectorAll('.tab-content').forEach(content => {
+      content.classList.add('hidden');
+      content.classList.remove('active');
+    });
+    
+    const activeContent = modal.querySelector(`#tab-${tabName}`);
+    activeContent?.classList.remove('hidden');
+    activeContent?.classList.add('active');
+    
+    // Load registry themes if browsing
+    if (tabName === 'browse') {
+      const registryContainer = modal.querySelector('#registry-themes');
+      if (registryContainer && registryContainer.children.length === 1) {
+        // Only has the placeholder, load registry
+        refreshRegistry();
+      }
+    }
+  }
+
+  async function loadInstalledThemes() {
+    const modal = document.getElementById('theme-management-modal');
+    if (!modal || !themeManager) return;
+    
+    const loadingEl = modal.querySelector('#themes-loading');
+    const containerEl = modal.querySelector('#installed-themes-container');
+    const noThemesEl = modal.querySelector('#no-themes');
+    
+    try {
+      // Get installed themes from core ThemeManager via ThemeRegistry
+      const installedThemes = themeManager.getThemeRegistry().getInstalledThemes();
+      
+      // Hide loading
+      loadingEl?.classList.add('hidden');
+      
+      if (!installedThemes || installedThemes.length === 0) {
+        // Show empty state
+        noThemesEl?.classList.remove('hidden');
+        containerEl?.classList.add('hidden');
+        return;
+      }
+      
+      // Show themes container
+      containerEl?.classList.remove('hidden');
+      noThemesEl?.classList.add('hidden');
+      
+      // Populate themes
+      if (containerEl) {
+        containerEl.innerHTML = installedThemes.map(theme => {
+          const isBuiltIn = theme.category === 'built-in' || theme.source === 'local';
+          return `
+            <div class="theme-card border border-border rounded-lg p-4 hover:border-primary/50 transition-colors">
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <div class="flex items-center space-x-3 mb-2">
+                    <h3 class="font-semibold text-foreground">${theme.label || theme.name || theme.id}</h3>
+                    <span class="theme-badge bg-primary text-primary-foreground px-2 py-1 text-xs rounded hidden">Active</span>
+                    <span class="installed-badge bg-green-500 text-white px-2 py-1 text-xs rounded">Installed</span>
+                    ${isBuiltIn ? '<span class="built-in-badge bg-blue-500 text-white px-2 py-1 text-xs rounded">Built-in</span>' : ''}
+                  </div>
+                  <p class="text-sm text-muted-foreground mb-3">${theme.description || 'No description available'}</p>
+                  <div class="flex items-center space-x-4 text-xs text-muted-foreground">
+                    <span>Version: ${theme.version || '1.0.0'}</span>
+                    <span>Author: ${theme.author || 'Unknown'}</span>
+                    ${theme.modes ? `<span>Modes: ${Object.keys(theme.modes).join(', ')}</span>` : ''}
+                    ${theme.category ? `<span>Category: ${theme.category}</span>` : ''}
+                  </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    class="preview-btn px-3 py-1 text-xs border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded"
+                    data-theme-id="${theme.id}"
+                  >
+                    Preview
+                  </button>
+                  <button
+                    type="button"
+                    class="apply-theme-btn px-3 py-1 text-xs bg-primary text-primary-foreground hover:bg-primary/90 rounded"
+                    data-theme-id="${theme.id}"
+                  >
+                    Apply
+                  </button>
+                  ${!isBuiltIn ? `
+                    <button
+                      type="button"
+                      class="remove-theme-btn px-3 py-1 text-xs bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded"
+                      data-theme-id="${theme.id}"
+                    >
+                      Remove
+                    </button>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+      
+      // Update active theme after loading
+      updateThemeCards();
+      
+    } catch (error) {
+      console.error('Failed to load installed themes:', error);
+      
+      // Hide loading and show error state
+      loadingEl?.classList.add('hidden');
+      if (containerEl) {
+        containerEl.innerHTML = `
+          <div class="flex items-center justify-center py-12 text-destructive">
+            <div class="text-center">
+              <p class="text-sm">Failed to load installed themes</p>
+              <p class="text-xs text-muted-foreground mt-1">Please try refreshing</p>
+            </div>
+          </div>
+        `;
+        containerEl.classList.remove('hidden');
+      }
+    }
+  }
+
+  function updateThemeCards() {
+    const modal = document.getElementById('theme-management-modal');
+    if (!modal || !themeManager) return;
+    
+    const currentTheme = themeManager.getCurrentTheme();
+    
+    // Update active badges
+    modal.querySelectorAll('.theme-badge').forEach(badge => {
+      badge.classList.add('hidden');
+      badge.classList.remove('active');
+    });
+    
+    modal.querySelectorAll('.theme-card').forEach(card => {
+      const applyBtn = card.querySelector('.apply-theme-btn');
+      const themeId = applyBtn?.getAttribute('data-theme-id');
+      
+      if (themeId === currentTheme?.id) {
+        const badge = card.querySelector('.theme-badge');
+        if (badge) {
+          badge.classList.remove('hidden');
+          badge.classList.add('active');
+        }
+      }
+    });
+  }
+
+  function previewTheme(themeId) {
+    if (!themeManager) return;
+    
+    // Store original theme
+    originalTheme = themeManager.getCurrentTheme();
+    
+    // Apply preview
+    themeManager.setTheme(themeId);
+    
+    // Show countdown notification
+    showPreviewNotification();
+    
+    // Set auto-revert timer
+    let countdown = 15;
+    previewTimer = setInterval(() => {
+      countdown--;
+      const countdownEl = document.getElementById('preview-countdown');
+      if (countdownEl) {
+        countdownEl.textContent = `Reverting in ${countdown}s`;
+      }
+      
+      if (countdown <= 0) {
+        revertPreview();
+      }
+    }, 1000);
+  }
+
+  function applyTheme(themeId) {
+    if (!themeManager) return;
+    
+    // Cancel any active preview
+    if (previewTimer) {
+      clearInterval(previewTimer);
+      previewTimer = null;
+      hidePreviewNotification();
+    }
+    
+    // Apply theme permanently
+    themeManager.setTheme(themeId);
+    updateThemeCards();
+  }
+
+  function removeTheme(themeId) {
+    if (!themeManager) return;
+    
+    if (confirm(`Are you sure you want to remove the theme "${themeId}"?`)) {
+      // Note: This would require implementing removeTheme in core
+      console.log('Remove theme functionality not yet implemented in core');
+    }
+  }
+
+  function showPreviewNotification() {
+    const notification = document.getElementById('preview-notification');
+    if (notification) {
+      notification.classList.remove('hidden');
+    }
+  }
+
+  function hidePreviewNotification() {
+    const notification = document.getElementById('preview-notification');
+    if (notification) {
+      notification.classList.add('hidden');
+    }
+  }
+
+  function cancelPreview() {
+    if (previewTimer) {
+      clearInterval(previewTimer);
+      previewTimer = null;
+    }
+    hidePreviewNotification();
+    updateThemeCards();
+  }
+
+  function revertPreview() {
+    if (previewTimer) {
+      clearInterval(previewTimer);
+      previewTimer = null;
+    }
+    
+    if (originalTheme && themeManager) {
+      themeManager.setTheme(originalTheme.id);
+    }
+    
+    hidePreviewNotification();
+    updateThemeCards();
+    originalTheme = null;
+  }
+
+  async function refreshRegistry() {
+    const registryContainer = document.getElementById('registry-themes');
+    if (!registryContainer || !themeManager) return;
+    
+    try {
+      // Show loading state
+      registryContainer.innerHTML = `
+        <div class="flex items-center justify-center py-12 text-muted-foreground">
+          <div class="text-center">
+            <div class="w-8 h-8 mx-auto mb-4 animate-spin">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+            </div>
+            <p class="text-sm">Loading registry themes...</p>
+          </div>
+        </div>
+      `;
+      
+      // Access ThemeListFetcher from core
+      const ThemeListFetcher = await import('@mks2508/shadcn-basecoat-theme-manager');
+      const fetcher = new ThemeListFetcher.ThemeListFetcher();
+      await fetcher.init();
+      
+      // Fetch theme names from registry
+      const themeNames = await fetcher.fetchAndCacheThemeNames();
+      
+      if (!themeNames || themeNames.length === 0) {
+        registryContainer.innerHTML = `
+          <div class="flex items-center justify-center py-12 text-muted-foreground">
+            <div class="text-center">
+              <div class="w-12 h-12 mx-auto mb-4 opacity-50">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5H9a2 2 0 00-2 2v12a4 4 0 004 4h10a2 2 0 002-2V7a2 2 0 00-2-2z"></path>
+                </svg>
+              </div>
+              <p class="text-sm mb-2">No registry themes found</p>
+              <p class="text-xs text-muted-foreground/75">Try refreshing or check your connection</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+      
+      // Render theme list
+      registryContainer.innerHTML = `
+        <div class="grid gap-4">
+          ${themeNames.map(themeName => `
+            <div class="registry-theme-card border border-border rounded-lg p-4 hover:border-primary/50 transition-colors">
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <div class="flex items-center space-x-3 mb-2">
+                    <h3 class="font-semibold text-foreground">${themeName}</h3>
+                    <span class="registry-badge bg-blue-500 text-white px-2 py-1 text-xs rounded">Registry</span>
+                  </div>
+                  <p class="text-sm text-muted-foreground mb-3">Theme from TweakCN registry</p>
+                  <div class="flex items-center space-x-4 text-xs text-muted-foreground">
+                    <span>Source: TweakCN</span>
+                    <span>Type: External</span>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    class="preview-registry-btn px-3 py-1 text-xs border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded"
+                    data-theme-name="${themeName}"
+                  >
+                    Preview
+                  </button>
+                  <button
+                    type="button"
+                    class="install-theme-btn px-3 py-1 text-xs bg-primary text-primary-foreground hover:bg-primary/90 rounded"
+                    data-theme-name="${themeName}"
+                  >
+                    Install
+                  </button>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      
+      // Bind registry theme actions
+      bindRegistryThemeActions(registryContainer, fetcher);
+      
+    } catch (error) {
+      console.error('Failed to refresh registry:', error);
+      registryContainer.innerHTML = `
+        <div class="flex items-center justify-center py-12 text-destructive">
+          <div class="text-center">
+            <p class="text-sm">Failed to load registry themes</p>
+            <p class="text-xs text-muted-foreground mt-1">${error.message || 'Please try again later'}</p>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  function bindRegistryThemeActions(container, fetcher) {
+    if (!container || !fetcher) return;
+    
+    container.addEventListener('click', async (e) => {
+      const target = e.target.closest('button');
+      if (!target) return;
+      
+      const themeName = target.getAttribute('data-theme-name');
+      if (!themeName) return;
+      
+      if (target.classList.contains('preview-registry-btn')) {
+        await previewRegistryTheme(themeName, fetcher);
+      } else if (target.classList.contains('install-theme-btn')) {
+        await installRegistryTheme(themeName, fetcher);
+      }
+    });
+  }
+  
+  async function previewRegistryTheme(themeName, fetcher) {
+    if (!themeManager || !fetcher) return;
+    
+    try {
+      const themeUrl = fetcher.getThemeInstallUrl(themeName);
+      
+      // Fetch theme data without installing
+      const response = await fetch(themeUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch theme: ${response.status}`);
+      }
+      
+      const themeData = await response.json();
+      
+      // Store original theme for revert
+      originalTheme = {
+        id: themeManager.getCurrentTheme(),
+        mode: themeManager.getCurrentMode()
+      };
+      
+      // Apply theme temporarily using current effective mode
+      const effectiveMode = themeManager.getEffectiveMode();
+      themeManager.applyThemeVariablesTemporary(themeData, effectiveMode);
+      
+      // Show preview notification
+      showPreviewNotification();
+      
+      // Set auto-revert timer  
+      let countdown = 15;
+      previewTimer = setInterval(() => {
+        countdown--;
+        const countdownEl = document.getElementById('preview-countdown');
+        if (countdownEl) {
+          countdownEl.textContent = `Reverting in ${countdown}s`;
+        }
+        
+        if (countdown <= 0) {
+          revertPreview();
+        }
+      }, 1000);
+      
+    } catch (error) {
+      console.error(`Failed to preview registry theme ${themeName}:`, error);
+      alert(`Failed to preview theme: ${error.message}`);
+    }
+  }
+  
+  async function installRegistryTheme(themeName, fetcher) {
+    if (!themeManager || !fetcher) return;
+    
+    try {
+      const themeUrl = fetcher.getThemeInstallUrl(themeName);
+      
+      // Show loading state on button
+      const installBtn = document.querySelector(`[data-theme-name="${themeName}"].install-theme-btn`);
+      if (installBtn) {
+        installBtn.disabled = true;
+        installBtn.textContent = 'Installing...';
+      }
+      
+      // Fetch and install theme
+      const response = await fetch(themeUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch theme: ${response.status}`);
+      }
+      
+      const themeData = await response.json();
+      
+      // Install theme via ThemeManager
+      await themeManager.installTheme(themeData, themeUrl);
+      
+      // Success feedback
+      if (installBtn) {
+        installBtn.textContent = 'Installed!';
+        installBtn.classList.remove('bg-primary', 'hover:bg-primary/90');
+        installBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+        
+        setTimeout(() => {
+          installBtn.disabled = false;
+          installBtn.textContent = 'Install';
+          installBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+          installBtn.classList.add('bg-primary', 'hover:bg-primary/90');
+        }, 2000);
+      }
+      
+      // Refresh installed themes tab
+      loadInstalledThemes();
+      
+      // Notify other components (like ThemeSelector) that a theme was installed
+      window.dispatchEvent(new CustomEvent('theme-installed', { detail: { themeName } }));
+      
+    } catch (error) {
+      console.error(`Failed to install registry theme ${themeName}:`, error);
+      alert(`Failed to install theme: ${error.message}`);
+      
+      // Reset button state
+      const installBtn = document.querySelector(`[data-theme-name="${themeName}"].install-theme-btn`);
+      if (installBtn) {
+        installBtn.disabled = false;
+        installBtn.textContent = 'Install';
+      }
+    }
+  }
+
+  function filterRegistryThemes(query) {
+    const registryContainer = document.getElementById('registry-themes');
+    if (!registryContainer) return;
+    
+    const themeCards = registryContainer.querySelectorAll('.registry-theme-card');
+    const searchTerm = query.toLowerCase().trim();
+    
+    themeCards.forEach(card => {
+      const themeName = card.querySelector('h3')?.textContent?.toLowerCase() || '';
+      const shouldShow = !searchTerm || themeName.includes(searchTerm);
+      card.style.display = shouldShow ? 'block' : 'none';
+    });
+  }
+
+  function openModal() {
+    const modal = document.getElementById('theme-management-modal');
+    if (modal) {
+      // Reload installed themes when opening modal
+      if (themeManager) {
+        loadInstalledThemes();
+      }
+      modal.showModal();
+    }
+  }
+
+  function closeModal() {
+    const modal = document.getElementById('theme-management-modal');
+    if (modal) {
+      // Cancel any active preview
+      if (previewTimer) {
+        revertPreview();
+      }
+      modal.close();
+    }
+  }
+
+  // Initialize
+  waitForThemeCore();
+  bindEvents();
+
+  // Global access function
+  window.openThemeManagementModal = openModal;
+</script>
