@@ -15,4 +15,4 @@ export * from './catalogs/font-catalog';
 // Types
 export type { ThemeConfig } from './core/theme-registry';
 export type { FontOverride } from './core/font-manager';
-export type { CachedTheme } from './core/storage-manager';
+export type { CachedTheme, FontOverrideConfig, ThemeModeConfig } from './core/storage-manager';

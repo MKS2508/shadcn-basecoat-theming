@@ -22,7 +22,7 @@ export class ThemeInstaller {
 
   constructor(themeManager: ThemeManager) {
     this.themeManager = themeManager;
-    this.storageManager = new StorageManager();
+    this.storageManager = StorageManager.getInstance();
     this.themeListFetcher = new ThemeListFetcher();
   }
 

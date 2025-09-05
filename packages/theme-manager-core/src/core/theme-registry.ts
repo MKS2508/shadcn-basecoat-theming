@@ -1,5 +1,6 @@
 import { StorageManager, CachedTheme } from './storage-manager';
 
+
 /**
  * Theme configuration interface matching registry.json schema
  */
@@ -61,31 +62,34 @@ export class ThemeRegistry {
   private isInitialized = false;
 
   constructor() {
-    this.storageManager = new StorageManager();
+    this.storageManager = StorageManager.getInstance();
   }
 
   /**
-   * Inicializa el registro de temas cargando temas incorporados e instalados
-   * @returns Promise que se resuelve cuando el registro est\u00e1 configurado
+   * FAST synchronous initialization with built-in themes available immediately
+   * @returns Promise que se resuelve con built-in themes y installed themes
    */
   async init(): Promise<void> {
     if (this.isInitialized) return;
 
     try {
+      console.log('🚀 [ThemeRegistry] Fast initialization (built-in + installed themes)...');
       
-      // Initialize storage
+      // Load built-in themes immediately (await to make them available before proceeding)
+      await this.loadBuiltInThemes();
+      console.log('✅ [ThemeRegistry] Built-in themes loaded synchronously');
+      
+      // Initialize storage (typically fast IndexedDB connection)
       await this.storageManager.init();
       
-      // Load built-in themes from registry.json
-      await this.loadBuiltInThemes();
-      
-      // Load user-installed themes from IndexedDB
+      // Load user-installed themes from IndexedDB (fast, local)
       await this.loadInstalledThemes();
       
-      // Build unified registry
+      // Build registry with both built-in and installed themes
       this.buildUnifiedRegistry();
       
       this.isInitialized = true;
+      console.log('✅ [ThemeRegistry] Initialization completed - all themes available immediately');
       
     } catch (error) {
       console.error('❌ ThemeRegistry: Failed to initialize:', error);
@@ -98,13 +102,17 @@ export class ThemeRegistry {
    */
   private async loadBuiltInThemes(): Promise<void> {
     try {
-      
+      console.log('🔄 [ThemeRegistry] Fetching /themes/registry.json...');
       const response = await fetch('/themes/registry.json');
+      console.log('✅ [ThemeRegistry] Fetch response received:', response.status);
+      
       if (!response.ok) {
         throw new Error(`Failed to fetch registry.json: ${response.status}`);
       }
 
+      console.log('🔄 [ThemeRegistry] Parsing JSON response...');
       const registryData: ThemeRegistryData = await response.json();
+      console.log('✅ [ThemeRegistry] JSON parsed successfully');
       
       // Validate registry data
       if (!registryData.themes || !Array.isArray(registryData.themes)) {
@@ -138,8 +146,9 @@ export class ThemeRegistry {
       });
 
       // Convert cached themes to theme config format
+      // Filter out internal config records
       this.installedThemes = cachedThemes
-        .filter(cached => cached.installed)
+        .filter(cached => cached.installed && !cached.name.startsWith('__'))
         .map(cached => this.convertCachedToThemeConfig(cached));
 
       
@@ -378,4 +387,5 @@ export class ThemeRegistry {
     
     await this.init();
   }
+
 }

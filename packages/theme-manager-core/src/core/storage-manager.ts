@@ -17,23 +17,84 @@ export interface CachedTheme {
   timestamp: number;
 }
 
+export interface CachedFont {
+  fontKey: string; // e.g., "Inter-400,700" 
+  family: string;  // e.g., "Inter"
+  cssContent: string; // Full CSS from Google Fonts
+  timestamp: number;
+  url: string; // Original Google Fonts URL - this is the main reference
+}
+
+export interface FontOverrideConfig {
+  enabled: boolean;
+  fonts: {
+    sans?: string;   // Font ID from catalog
+    serif?: string;  // Font ID from catalog  
+    mono?: string;   // Font ID from catalog
+  };
+  timestamp: number;
+}
+
+export interface ThemeModeConfig {
+  currentTheme: string;
+  currentMode: 'light' | 'dark' | 'auto';
+  timestamp: number;
+}
+
 export class StorageManager {
+  private static instance: StorageManager | null = null;
   private dbName = 'theme-installer-db';
-  private dbVersion = 1;
+  private dbVersion = 4; // Increment version for cleanup and optimization
   private storeName = 'themes';
+  private fontConfigStoreName = 'font-config';
   private db: IDBDatabase | null = null;
   private indexedDBAvailable = false;
+  private initPromise: Promise<void> | null = null;
+
+  /**
+   * Get singleton instance of StorageManager
+   */
+  static getInstance(): StorageManager {
+    if (!StorageManager.instance) {
+      console.log('🔧 StorageManager: Creating new singleton instance');
+      StorageManager.instance = new StorageManager();
+    }
+    return StorageManager.instance;
+  }
 
   /**
    * Inicializa el sistema de almacenamiento con IndexedDB y fallback a localStorage
    * @returns Promise que se resuelve cuando el almacenamiento est\u00e1 configurado
    */
   async init(): Promise<void> {
+    // Return existing promise if already initializing
+    if (this.initPromise) {
+      console.log('🔄 StorageManager: Using existing initialization promise');
+      return this.initPromise;
+    }
+
+    // Return immediately if already initialized
+    if (this.db && this.indexedDBAvailable) {
+      console.log('⚡ StorageManager: Already initialized, skipping');
+      return Promise.resolve();
+    }
+
+    console.log('🚀 StorageManager: Starting initialization (singleton)');
+    
+    this.initPromise = this.performInit();
+    return this.initPromise;
+  }
+
+  private async performInit(): Promise<void> {
     try {
       await this.initIndexedDB();
       this.indexedDBAvailable = true;
+      console.log('✅ StorageManager: Singleton initialization completed successfully');
     } catch (error) {
+      console.error('❌ StorageManager: Initialization failed, falling back to localStorage:', error);
       this.indexedDBAvailable = false;
+    } finally {
+      this.initPromise = null; // Reset promise after completion
     }
   }
 
@@ -47,22 +108,41 @@ export class StorageManager {
         return;
       }
 
+      // Add timeout to prevent hanging
+      const timeout = setTimeout(() => {
+        reject(new Error('IndexedDB initialization timeout'));
+      }, 5000);
+
       const request = indexedDB.open(this.dbName, this.dbVersion);
 
-      request.onerror = () => reject(request.error);
+      request.onerror = () => {
+        clearTimeout(timeout);
+        reject(request.error || new Error('IndexedDB open failed'));
+      };
+      
       request.onsuccess = () => {
+        clearTimeout(timeout);
         this.db = request.result;
+        console.log('✅ IndexedDB opened successfully');
         resolve();
       };
 
       request.onupgradeneeded = (event) => {
+        console.log('🔄 IndexedDB upgrade needed, creating object stores...');
         const db = (event.target as IDBOpenDBRequest).result;
         
         // Create themes store if it doesn't exist
         if (!db.objectStoreNames.contains(this.storeName)) {
           const store = db.createObjectStore(this.storeName, { keyPath: 'name' });
           store.createIndex('url', 'url', { unique: false });
-          store.createIndex('installed', 'installed', { unique: false });
+          console.log('✅ IndexedDB themes store created');
+        }
+        
+        // Create font config store if it doesn't exist
+        if (!db.objectStoreNames.contains(this.fontConfigStoreName)) {
+          const fontConfigStore = db.createObjectStore(this.fontConfigStoreName, { keyPath: 'id' });
+          fontConfigStore.createIndex('timestamp', 'timestamp', { unique: false });
+          console.log('✅ IndexedDB font config store created');
         }
       };
     });
@@ -131,6 +211,9 @@ export class StorageManager {
       this.deleteFromLocalStorage(name);
     }
   }
+
+  // === FONT CACHE METHODS REMOVED ===
+  // Font caching is now handled by font-config store only
 
   // IndexedDB implementations
   private storeInIndexedDB(theme: CachedTheme): Promise<void> {
@@ -221,5 +304,163 @@ export class StorageManager {
   private deleteFromLocalStorage(name: string): void {
     const key = `theme-cache-${name}`;
     localStorage.removeItem(key);
+  }
+
+  // === FONT methods removed - using only font-config store ===
+
+  // ===== FONT OVERRIDE CONFIGURATION METHODS =====
+
+  /**
+   * Store font override configuration in IndexedDB
+   */
+  async storeFontConfig(config: FontOverrideConfig): Promise<void> {
+    if (this.indexedDBAvailable && this.db) {
+      await this.storeFontConfigInIndexedDB(config);
+    }
+    
+    // Always store in localStorage as backup
+    this.storeFontConfigInLocalStorage(config);
+  }
+
+  /**
+   * Get font override configuration from storage
+   */
+  async getFontConfig(): Promise<FontOverrideConfig | null> {
+    if (this.indexedDBAvailable && this.db) {
+      try {
+        return await this.getFontConfigFromIndexedDB();
+      } catch (error) {
+        console.warn('⚠️ StorageManager: Failed to get font config from IndexedDB, trying localStorage:', error);
+      }
+    }
+    
+    return this.getFontConfigFromLocalStorage();
+  }
+
+  private storeFontConfigInIndexedDB(config: FontOverrideConfig): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([this.fontConfigStoreName], 'readwrite');
+      const store = transaction.objectStore(this.fontConfigStoreName);
+      
+      const configWithId = { 
+        id: 'font-overrides', // Single config record
+        ...config 
+      };
+      
+      const request = store.put(configWithId);
+
+      request.onsuccess = () => {
+        console.log('✅ StorageManager: Font config stored in IndexedDB');
+        resolve();
+      };
+
+      request.onerror = () => {
+        console.error('❌ StorageManager: Failed to store font config in IndexedDB', request.error);
+        reject(request.error);
+      };
+    });
+  }
+
+  private getFontConfigFromIndexedDB(): Promise<FontOverrideConfig | null> {
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([this.fontConfigStoreName], 'readonly');
+      const store = transaction.objectStore(this.fontConfigStoreName);
+      const request = store.get('font-overrides');
+
+      request.onsuccess = () => {
+        const result = request.result;
+        if (result) {
+          // Remove the 'id' field added for IndexedDB
+          const { id, ...config } = result;
+          resolve(config);
+        } else {
+          resolve(null);
+        }
+      };
+      
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  private storeFontConfigInLocalStorage(config: FontOverrideConfig): void {
+    try {
+      localStorage.setItem('font-override-config', JSON.stringify(config));
+    } catch (error) {
+      console.error('❌ StorageManager: Failed to store font config in localStorage:', error);
+    }
+  }
+
+  private getFontConfigFromLocalStorage(): FontOverrideConfig | null {
+    try {
+      const data = localStorage.getItem('font-override-config');
+      return data ? JSON.parse(data) : null;
+    } catch (error) {
+      console.error('❌ StorageManager: Failed to parse font config from localStorage:', error);
+      return null;
+    }
+  }
+
+  // ===== THEME MODE CONFIGURATION METHODS =====
+  // Using themes store to store a special "theme-mode-config" record
+
+  /**
+   * Store theme mode configuration using existing themes store
+   */
+  async storeThemeModeConfig(config: ThemeModeConfig): Promise<void> {
+    // Create a special theme record for mode config
+    const modeConfigRecord: CachedTheme = {
+      name: '__theme-mode-config__',
+      url: 'internal://config',
+      data: {
+        name: '__theme-mode-config__',
+        cssVars: {
+          theme: {
+            '__current-theme': config.currentTheme,
+            '__current-mode': config.currentMode,
+            '__timestamp': config.timestamp.toString()
+          }
+        }
+      },
+      installed: true,
+      timestamp: config.timestamp
+    };
+
+    await this.storeTheme(modeConfigRecord);
+    
+    // Also store in localStorage as backup
+    try {
+      localStorage.setItem('theme-mode-config', JSON.stringify(config));
+    } catch (error) {
+      console.error('❌ StorageManager: Failed to store theme mode config in localStorage:', error);
+    }
+  }
+
+  /**
+   * Get theme mode configuration from themes store
+   */
+  async getThemeModeConfig(): Promise<ThemeModeConfig | null> {
+    try {
+      const configRecord = await this.getTheme('__theme-mode-config__');
+      
+      if (configRecord && configRecord.data.cssVars.theme) {
+        const vars = configRecord.data.cssVars.theme;
+        return {
+          currentTheme: vars['__current-theme'] || 'default',
+          currentMode: (vars['__current-mode'] as 'light' | 'dark' | 'auto') || 'auto',
+          timestamp: parseInt(vars['__timestamp'] || '0')
+        };
+      }
+    } catch (error) {
+      console.warn('⚠️ StorageManager: Failed to get theme mode config from IndexedDB, trying localStorage:', error);
+    }
+    
+    // Fallback to localStorage
+    try {
+      const data = localStorage.getItem('theme-mode-config');
+      return data ? JSON.parse(data) : null;
+    } catch (error) {
+      console.error('❌ StorageManager: Failed to parse theme mode config from localStorage:', error);
+      return null;
+    }
   }
 }

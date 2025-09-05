@@ -29,7 +29,7 @@ export class ThemeListFetcher {
   private storageManager: StorageManager;
 
   constructor() {
-    this.storageManager = new StorageManager();
+    this.storageManager = StorageManager.getInstance();
   }
 
   /**

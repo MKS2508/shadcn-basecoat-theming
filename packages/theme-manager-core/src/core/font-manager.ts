@@ -1,4 +1,5 @@
 import { getFontById, buildFontFamily, needsGoogleFontsLoad, FontOption } from '../catalogs/font-catalog';
+import { StorageManager, CachedFont } from './storage-manager';
 
 /**
  * Font override configuration
@@ -19,8 +20,9 @@ export class FontManager {
   private currentOverride: FontOverride;
   private readonly STORAGE_KEY = 'font-override';
   private styleElement: HTMLStyleElement | null = null;
+  private storageManager: StorageManager;
   
-  // Performance optimizations
+  // Performance optimizations with persistent cache
   private loadedGoogleFonts: Set<string> = new Set();
   private fontLoadPromises: Map<string, Promise<void>> = new Map();
   private readonly BATCH_DELAY = 50; // ms to batch font loads
@@ -28,7 +30,7 @@ export class FontManager {
   private batchTimer: NodeJS.Timeout | null = null;
   
   // Storage optimization
-  private readonly SAVE_DEBOUNCE_MS = 300;
+  private readonly SAVE_DEBOUNCE_MS = 100; // Reduced for better responsiveness
   private saveTimer: NodeJS.Timeout | null = null;
   private pendingConfig: FontOverride | null = null;
 
@@ -37,39 +39,51 @@ export class FontManager {
       enabled: false,
       fonts: {}
     };
+    this.storageManager = StorageManager.getInstance();
   }
 
 
   /**
    * Inicializa el gestor de fuentes con configuración guardada
-   * Carga overrides persistentes y aplica las fuentes configuradas
+   * NO carga fonts automáticamente - solo configuración
    * @returns Promise que se resuelve cuando la inicialización está completa
    */
   async init(): Promise<void> {
     
-    // Load saved font override configuration
-    this.loadOverrideConfiguration();
+    // Initialize StorageManager for font cache persistence
+    console.log('🔄 [FontManager] Initializing StorageManager...');
+    await this.storageManager.init();
+    console.log('✅ [FontManager] StorageManager initialized');
     
-    // Apply saved overrides if enabled
-    if (this.currentOverride.enabled) {
-      await this.applyFontOverrides();
-    }
+    // Load saved font override configuration (now with StorageManager ready)
+    await this.loadOverrideConfiguration();
     
+    // Do NOT apply overrides here - only load them on demand
+    // This prevents automatic Google Fonts loading during init
     
     // Clean up any debug test containers
     this.cleanupDebugElements();
+    
+    console.log('✅ [FontManager] Initialized without loading fonts - fonts will load on demand');
   }
 
   /**
    * Load font override configuration from localStorage
    */
-  private loadOverrideConfiguration(): void {
+  private async loadOverrideConfiguration(): Promise<void> {
     try {
-      const saved = localStorage.getItem(this.STORAGE_KEY);
+      const saved = await this.storageManager.getFontConfig();
       if (saved) {
-        this.currentOverride = JSON.parse(saved);
+        // Remove timestamp from loaded config
+        const { timestamp, ...config } = saved;
+        this.currentOverride = config;
+        console.log('✅ FontManager: Loaded configuration from storage');
+      } else {
+        this.currentOverride = { enabled: false, fonts: {} };
+        console.log('ℹ️ FontManager: No saved configuration found, using defaults');
       }
     } catch (error) {
+      console.error('❌ FontManager: Failed to load configuration, using defaults:', error);
       this.currentOverride = { enabled: false, fonts: {} };
     }
   }
@@ -78,8 +92,11 @@ export class FontManager {
    * Save font override configuration with debouncing (optimized)
    */
   private saveOverrideConfiguration(): void {
+    const wasTimerActive = this.saveTimer !== null;
+    
     // Store pending configuration
     this.pendingConfig = { ...this.currentOverride };
+    console.log(`🔄 FontManager: Saving config scheduled${wasTimerActive ? ' (previous timer cancelled)' : ''}:`, this.pendingConfig);
     
     // Clear existing timer
     if (this.saveTimer) {
@@ -88,6 +105,7 @@ export class FontManager {
     
     // Debounced save to avoid UI blocking
     this.saveTimer = setTimeout(() => {
+      console.log('⏰ FontManager: Debounce timer fired, performing save...');
       this.performSave();
     }, this.SAVE_DEBOUNCE_MS);
   }
@@ -100,28 +118,43 @@ export class FontManager {
     
     // Use requestIdleCallback for non-blocking save
     if (window.requestIdleCallback) {
-      window.requestIdleCallback(() => {
-        this.saveToStorage();
+      window.requestIdleCallback(async () => {
+        await this.saveToStorage();
       });
     } else {
       // Fallback for browsers without requestIdleCallback
-      setTimeout(() => {
-        this.saveToStorage();
+      setTimeout(async () => {
+        await this.saveToStorage();
       }, 0);
     }
   }
 
   /**
-   * Save to localStorage (async)
+   * Save to localStorage and IndexedDB (async)
    */
-  private saveToStorage(): void {
-    if (!this.pendingConfig) return;
+  private async saveToStorage(): Promise<void> {
+    if (!this.pendingConfig) {
+      console.warn('⚠️ FontManager: No pending config to save');
+      return;
+    }
     
     try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.pendingConfig));
+      const configWithTimestamp = {
+        ...this.pendingConfig,
+        timestamp: Date.now()
+      };
+      
+      console.log('💾 FontManager: About to save config:', configWithTimestamp);
+      
+      // Save to both localStorage and IndexedDB via StorageManager
+      await this.storageManager.storeFontConfig(configWithTimestamp);
+      console.log('✅ FontManager: Configuration saved to storage successfully');
+      
       this.pendingConfig = null;
+      this.saveTimer = null;
     } catch (error) {
       console.error('❌ FontManager: Failed to save configuration', error);
+      this.saveTimer = null;
     }
   }
 
@@ -242,12 +275,22 @@ export class FontManager {
       }
     });
 
-    // Load all fonts in parallel
+    // Load all fonts in parallel with timeout
     const loadPromises = fontsToLoad.map(font => this.loadFontIfNeeded(font));
     
     try {
-      await Promise.all(loadPromises);
+      // Add 8-second timeout to font loading
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Font loading timeout after 8 seconds')), 8000);
+      });
+      
+      await Promise.race([
+        Promise.all(loadPromises),
+        timeoutPromise
+      ]);
     } catch (error) {
+      console.warn('⚠️ [FontManager] Font loading failed or timed out, continuing without Google Fonts:', error);
+      console.info('💡 [FontManager] The system will use system fonts as fallbacks');
     }
   }
 
@@ -324,6 +367,10 @@ export class FontManager {
 
     const batchUrl = `https://fonts.googleapis.com/css2?${families.join('&')}&display=optional`;
     
+    console.log('🔍 [FontManager] Testing Google Fonts request:');
+    console.log('🔍 [FontManager] Fonts to load:', fontsToLoad);
+    console.log('🔍 [FontManager] Generated URL:', batchUrl);
+    console.log('🔍 [FontManager] Families array:', families);
     
     return new Promise((resolve, reject) => {
       // Check if similar batch already loaded
@@ -340,7 +387,25 @@ export class FontManager {
       link.setAttribute('data-batch', 'true');
       link.id = `font-batch-${Date.now()}`;
 
+      console.log('🔍 [FontManager] Created link element:', {
+        rel: link.rel,
+        href: link.href,
+        crossOrigin: link.crossOrigin,
+        id: link.id
+      });
+
+      // Add timeout to prevent hanging
+      const timeout = setTimeout(() => {
+        console.warn(`⚠️ [FontManager] Font batch loading timed out after 8 seconds: ${batchUrl}`);
+        console.warn(`⚠️ [FontManager] Link element state:`, link.sheet?.href || 'no sheet');
+        reject(new Error(`Font batch loading timeout: ${batchUrl}`));
+      }, 8000);
+
       link.onload = () => {
+        clearTimeout(timeout);
+        console.log('✅ [FontManager] Google Fonts loaded successfully:', batchUrl);
+        console.log('✅ [FontManager] Fonts marked as loaded:', fontsToLoad);
+        
         // Mark all fonts as loaded
         fontsToLoad.forEach(fontKey => {
           this.loadedGoogleFonts.add(fontKey);
@@ -349,13 +414,18 @@ export class FontManager {
         resolve();
       };
 
-      link.onerror = () => {
-        console.error(`❌ FontManager: Batch load failed for URL: ${batchUrl}`);
+      link.onerror = (error) => {
+        clearTimeout(timeout);
+        console.error(`❌ FontManager: Batch load FAILED for URL: ${batchUrl}`);
         console.error(`❌ FontManager: Failed fonts: ${fontsToLoad.join(', ')}`);
+        console.error(`❌ FontManager: Error details:`, error);
+        console.error(`❌ FontManager: Link element:`, link);
         reject(new Error(`Failed to load font batch: ${batchUrl}`));
       };
 
+      console.log('🔍 [FontManager] Appending link to document.head...');
       document.head.appendChild(link);
+      console.log('✅ [FontManager] Link element appended, waiting for load/error...');
     });
   }
 
@@ -558,5 +628,44 @@ body, .font-sans {
       overrides: Object.keys(this.currentOverride.fonts).length,
       categories: Object.keys(this.currentOverride.fonts)
     };
+  }
+
+  /**
+   * Test method to load a single Google Font for debugging
+   */
+  async testSingleFont(fontFamily: string = 'Inter', weights: string = '400'): Promise<void> {
+    console.log('🧪 [FontManager] Testing single Google Font...');
+    console.log('🧪 [FontManager] Font:', fontFamily, 'Weights:', weights);
+    
+    const testUrl = `https://fonts.googleapis.com/css2?family=${fontFamily}:wght@${weights}&display=optional`;
+    console.log('🧪 [FontManager] Test URL:', testUrl);
+    
+    return new Promise((resolve, reject) => {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = testUrl;
+      link.crossOrigin = 'anonymous';
+      link.id = `font-test-${Date.now()}`;
+      
+      const timeout = setTimeout(() => {
+        console.error('🧪 [FontManager] Single font test TIMEOUT after 8 seconds');
+        reject(new Error('Single font test timeout'));
+      }, 8000);
+      
+      link.onload = () => {
+        clearTimeout(timeout);
+        console.log('🧪 ✅ [FontManager] Single font test SUCCESS!');
+        resolve();
+      };
+      
+      link.onerror = (error) => {
+        clearTimeout(timeout);
+        console.error('🧪 ❌ [FontManager] Single font test FAILED:', error);
+        reject(error);
+      };
+      
+      console.log('🧪 [FontManager] Appending test link...');
+      document.head.appendChild(link);
+    });
   }
 }

@@ -360,7 +360,7 @@ export class ThemeManager {
   /**
    * Apply CSS variables directly to document root
    */
-  private applyCSSVariables(variables: Record<string, string>, enableTransition: boolean = false): void {
+  private applyCSSVariables(variables: Record<string, string>, enableTransition: boolean = false, useImportant: boolean = false): void {
     const root = document.documentElement;
     
     // Apply transition class only when theme actually changes
@@ -374,7 +374,12 @@ export class ThemeManager {
     
     // Apply each variable
     Object.entries(variables).forEach(([property, value]) => {
-      root.style.setProperty(property, value);
+      if (useImportant) {
+        root.style.setProperty(property, value, 'important');
+        console.log(`🎨 Applied with !important: ${property} = ${value}`);
+      } else {
+        root.style.setProperty(property, value);
+      }
     });
     
   }
@@ -385,7 +390,21 @@ export class ThemeManager {
    * @param mode - Theme mode to apply
    */
   applyThemeVariablesTemporary(themeData: any, mode: 'light' | 'dark'): void {
+    console.log('🎨 applyThemeVariablesTemporary called with mode:', mode);
+    console.log('🔍 themeData structure:', {
+      name: themeData.name,
+      availableModes: Object.keys(themeData.cssVars || {}),
+      cssVars: themeData.cssVars
+    });
+    
     const variables = themeData.cssVars[mode] || themeData.cssVars.theme || themeData.cssVars.light;
+    
+    if (!variables) {
+      console.warn('❌ No variables found for mode:', mode, 'Available:', Object.keys(themeData.cssVars || {}));
+      return;
+    }
+    
+    console.log('✅ Using variables for mode:', mode, 'Variables count:', Object.keys(variables).length);
     
     if (variables) {
       // Clear any existing inline styles first to ensure clean application
@@ -400,8 +419,8 @@ export class ThemeManager {
         root.style.removeProperty(prop);
       });
       
-      // Apply new variables
-      this.applyCSSVariables(variables);
+      // Apply new variables with !important for preview (higher specificity)
+      this.applyCSSVariables(variables, false, true);
     }
   }
 
@@ -457,7 +476,7 @@ export class ThemeManager {
   /**
    * Install a new theme dynamically
    */
-  async installTheme(themeData: { name: string; cssVars: any }, sourceUrl?: string): Promise<void> {
+  async installTheme(themeData: { name: string; cssVars: any }, sourceUrl?: string): Promise<ThemeConfig> {
     try {
       
       // Use theme registry to install and manage the theme
@@ -466,6 +485,8 @@ export class ThemeManager {
       
       // Trigger regeneration of theme dropdown
       this.onThemeInstalled?.(installedTheme);
+      
+      return installedTheme;
       
     } catch (error) {
       console.error(`❌ Failed to install theme ${themeData.name}:`, error);
