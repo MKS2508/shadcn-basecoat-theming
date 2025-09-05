@@ -2,16 +2,58 @@
 export interface Props {
   value?: number;
   max?: number;
+  variant?: 'primary' | 'secondary' | 'destructive' | 'accent';
+  size?: 'sm' | 'default' | 'lg';
   class?: string;
+  showValue?: boolean;
 }
 
-const { value = 0, max = 100, class: className = "" } = Astro.props;
+const { 
+  value = 0, 
+  max = 100, 
+  variant = 'primary',
+  size = 'default',
+  class: className = "",
+  showValue = false
+} = Astro.props;
+
+// Calculate percentage
+const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
+
+// Size classes
+const sizeClasses = {
+  sm: 'h-2',
+  default: 'h-3',
+  lg: 'h-4'
+};
+
+// Variant classes for the progress bar
+const variantClasses = {
+  primary: 'bg-primary',
+  secondary: 'bg-secondary', 
+  destructive: 'bg-destructive',
+  accent: 'bg-accent'
+};
 ---
 
-<progress 
-  class={`progress ${className}`.trim()}
-  value={value}
-  max={max}
->
-  {value}%
-</progress>
+<div class={`w-full ${className}`.trim()}>
+  <div 
+    class={`w-full bg-secondary/20 rounded-full overflow-hidden ${sizeClasses[size]}`}
+    role="progressbar"
+    aria-valuenow={value}
+    aria-valuemin="0"
+    aria-valuemax={max}
+    aria-label={`Progress: ${percentage.toFixed(1)}%`}
+  >
+    <div 
+      class={`h-full ${variantClasses[variant]} transition-all duration-300 ease-in-out rounded-full`}
+      style={`width: ${percentage}%`}
+    >
+    </div>
+  </div>
+  {showValue && (
+    <div class="mt-1 text-xs text-muted-foreground text-center">
+      {Math.round(percentage)}%
+    </div>
+  )}
+</div>
