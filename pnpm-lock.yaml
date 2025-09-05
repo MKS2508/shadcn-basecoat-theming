@@ -11,6 +11,9 @@ importers:
       '@mks2508/better-logger':
         specifier: ^0.3.0
         version: 0.3.0
+      '@mks2508/shadcn-basecoat-theme-manager':
+        specifier: ^0.1.0
+        version: 0.1.0(@mks2508/better-logger@0.3.0)
       '@radix-ui/react-slot':
         specifier: ^1.2.3
         version: 1.2.3(@types/react@19.1.12)(react@19.1.1)
@@ -1092,6 +1095,11 @@ packages:
 
   '@mks2508/better-logger@0.3.0':
     resolution: {integrity: sha512-h1l369bfbVARRgukTar0L59bpL0AyruxWt9f6IxOMxZjbo/NRKqvaq1HW2jtX87q+u595Casm5HThwM1pxTrfA==, tarball: https://npm.pkg.github.com/download/@mks2508/better-logger/0.3.0/704fd20eb5129cc1c656fc663b72c78037b3192e}
+
+  '@mks2508/shadcn-basecoat-theme-manager@0.1.0':
+    resolution: {integrity: sha512-0uw9Xc1xiCeZGpm84msx1jamzPtdcJMJVwfEUYKodaSyWMJWE9kvFs2X/LBAhQY4IOsmGUWBFLBvR/Pgfkryhg==, tarball: https://npm.pkg.github.com/download/@mks2508/shadcn-basecoat-theme-manager/0.1.0/cd80b3ea4e8752df09bbaa60d25272cd98de514f}
+    peerDependencies:
+      '@mks2508/better-logger': ^0.3.0
 
   '@modelcontextprotocol/sdk@1.17.5':
     resolution: {integrity: sha512-QakrKIGniGuRVfWBdMsDea/dx1PNE739QJ7gCM41s9q+qaCYTHCdsIBXQVVXry3mfWAiaM9kT22Hyz53Uw8mfg==}
@@ -5903,6 +5911,10 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.5
 
   '@mks2508/better-logger@0.3.0': {}
+
+  '@mks2508/shadcn-basecoat-theme-manager@0.1.0(@mks2508/better-logger@0.3.0)':
+    dependencies:
+      '@mks2508/better-logger': 0.3.0
 
   '@modelcontextprotocol/sdk@1.17.5':
     dependencies:

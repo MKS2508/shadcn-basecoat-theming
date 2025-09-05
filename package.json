@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Monorepo for theme management packages and demo",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "examples/*"
   ],
   "scripts": {
     "dev": "vite",
@@ -24,6 +25,7 @@
   },
   "dependencies": {
     "@mks2508/better-logger": "^0.3.0",
+    "@mks2508/shadcn-basecoat-theme-manager": "^0.1.0",
     "@radix-ui/react-slot": "^1.2.3",
     "basecoat-css": "^0.3.0",
     "class-variance-authority": "^0.7.1",
