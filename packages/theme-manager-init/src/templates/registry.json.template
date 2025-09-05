@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0",
+  "themes": [
+    {
+      "id": "default",
+      "name": "default",
+      "label": "Default",
+      "category": "built-in",
+      "modes": {
+        "light": "/src/themes/default-light.css",
+        "dark": "/src/themes/default-dark.css"
+      },
+      "fonts": {
+        "sans": "system-ui, sans-serif",
+        "serif": "Georgia, serif",
+        "mono": "ui-monospace, monospace"
+      }
+    }
+  ]
+}

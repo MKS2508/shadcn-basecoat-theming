@@ -1,0 +1,49 @@
+{
+  "name": "@mks2508/theme-manager-cli",
+  "version": "1.0.3",
+  "description": "CLI para automatizar la integración del Theme Manager en proyectos Astro",
+  "main": "dist/cli.js",
+  "module": "dist/cli.js",
+  "type": "module",
+  "bin": {
+    "theme-manager": "./src/cli-simple.tsx",
+    "theme-manager-cli": "./src/cli-simple.tsx"
+  },
+  "scripts": {
+    "build": "bun build src/cli.tsx --outdir dist --target node",
+    "dev": "bun run src/cli.tsx",
+    "test": "bun run src/cli.tsx init astro --check-only"
+  },
+  "files": [
+    "src/**/*",
+    "README.md"
+  ],
+  "keywords": [
+    "astro",
+    "react",
+    "tailwind",
+    "theme",
+    "cli",
+    "shadcn",
+    "basecoat",
+    "theme-manager"
+  ],
+  "author": "MKS2508",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/fs-extra": "^11.0.4"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@opentui/core": "^0.1.14",
+    "@opentui/react": "^0.1.14",
+    "chalk": "^5.6.0",
+    "commander": "^14.0.0",
+    "fs-extra": "^11.3.1",
+    "react": "^19.1.1",
+    "semver": "^7.7.2"
+  }
+}
