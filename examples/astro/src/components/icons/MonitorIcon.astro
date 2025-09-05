@@ -1,10 +1,12 @@
 ---
 export interface Props {
+  id?: string;
   class?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
 const { 
+  id,
   class: className = '', 
   size = 'md'
 } = Astro.props;
@@ -20,6 +22,7 @@ const classes = `${sizeClasses[size]} transition-opacity duration-200 ${classNam
 ---
 
 <svg 
+  id={id}
   class={classes}
   fill="none" 
   stroke="currentColor" 

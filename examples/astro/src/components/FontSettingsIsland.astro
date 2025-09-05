@@ -1,0 +1,536 @@
+---
+import Modal from './ui/Modal.astro';
+import Button from './ui/Button.astro';
+import Switch from './ui/Switch.astro';
+import Badge from './ui/Badge.astro';
+import TrashIcon from './icons/TrashIcon.astro';
+import SettingsIcon from './icons/SettingsIcon.astro';
+
+// Server-side: Import font catalog directly
+import { getFontsByCategory } from '@mks2508/shadcn-basecoat-theme-manager';
+
+const sansFonts = getFontsByCategory('sans');
+const serifFonts = getFontsByCategory('serif');
+const monoFonts = getFontsByCategory('mono');
+
+function getPreviewText(category: string) {
+  return category === 'mono' 
+    ? 'const code = "example";' 
+    : 'The quick brown fox jumps over the lazy dog';
+}
+
+function separateFontsByType(fonts: any[]) {
+  const systemFonts = fonts.filter(f => f.category === 'system');
+  const googleFonts = fonts.filter(f => f.category === 'google-fonts');
+  return { systemFonts, googleFonts };
+}
+---
+
+<Modal id="font-settings-modal" titleId="font-settings-title" size="xl" class="font-settings-modal">
+  <div client:load>
+    <!-- Header -->
+  <div class="flex items-center justify-between border-b pb-4">
+    <div class="flex items-center space-x-3">
+      <SettingsIcon />
+      <h2 id="font-settings-title" class="text-lg font-semibold text-foreground">Font Settings</h2>
+      <div class="flex items-center space-x-2">
+        <Switch 
+          id="font-override-toggle" 
+          label="Override fonts" 
+          class="font-override-switch"
+        />
+      </div>
+    </div>
+    <Button 
+      variant="ghost" 
+      size="sm" 
+      class="font-close-btn"
+      data-close
+    >
+      ✕
+    </Button>
+  </div>
+
+    <!-- Content -->
+    <div class="flex flex-col h-full">
+      <div class="flex-1 overflow-hidden">
+        <!-- Disabled state (default) -->
+        <div id="font-disabled-state" class="flex items-center justify-center py-12 text-muted-foreground">
+          <div class="text-center">
+            <div class="w-12 h-12 mx-auto mb-4 opacity-50">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+            </div>
+            <p class="text-sm">Enable font override to customize fonts</p>
+          </div>
+        </div>
+
+        <!-- Enabled state (hidden by default) -->
+        <div id="font-enabled-state" class="space-y-4 hidden">
+          <!-- Category tabs -->
+          <div class="border-b border-border">
+            <div class="flex space-x-1" role="tablist">
+              <button class="font-tab active px-3 py-2 text-sm rounded-t-md border-b-2 border-primary text-primary bg-background" data-category="sans">
+                Sans Serif
+              </button>
+              <button class="font-tab px-3 py-2 text-sm rounded-t-md border-b-2 border-transparent text-muted-foreground hover:text-foreground" data-category="serif">
+                Serif
+              </button>
+              <button class="font-tab px-3 py-2 text-sm rounded-t-md border-b-2 border-transparent text-muted-foreground hover:text-foreground" data-category="mono">
+                Monospace
+              </button>
+            </div>
+          </div>
+
+          <!-- Font options grid -->
+          <div class="min-h-[300px] max-h-[400px] overflow-y-auto">
+            <!-- Sans Serif Fonts -->
+            <div id="font-category-sans" class="font-category active">
+              {(() => {
+                const { systemFonts, googleFonts } = separateFontsByType(sansFonts);
+                return (
+                  <>
+                    {systemFonts.length > 0 && (
+                      <div class="mb-6">
+                        <h3 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">System Fonts</h3>
+                        <div class="grid gap-2">
+                          {systemFonts.map((font) => (
+                            <button
+                              type="button"
+                              class="font-option text-left w-full h-auto p-3 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+                              data-font-id={font.id}
+                              data-category="sans"
+                              style={`font-family: ${font.family}, ${font.fallback}`}
+                            >
+                              <div class="flex items-center justify-between mb-1">
+                                <span class="font-medium text-sm">{font.name}</span>
+                                <span class="font-badge bg-primary text-primary-foreground px-2 py-1 text-xs rounded hidden">Active</span>
+                              </div>
+                              <div class="text-xs opacity-75">{getPreviewText('sans')}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {googleFonts.length > 0 && (
+                      <div>
+                        <h3 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Google Fonts</h3>
+                        <div class="grid gap-2">
+                          {googleFonts.map((font) => (
+                            <button
+                              type="button"
+                              class="font-option text-left w-full h-auto p-3 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+                              data-font-id={font.id}
+                              data-category="sans"
+                              style={`font-family: ${font.family}, ${font.fallback}`}
+                            >
+                              <div class="flex items-center justify-between mb-1">
+                                <span class="font-medium text-sm">{font.name}</span>
+                                <span class="font-badge bg-primary text-primary-foreground px-2 py-1 text-xs rounded hidden">Active</span>
+                              </div>
+                              <div class="text-xs opacity-75">{getPreviewText('sans')}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+
+            <!-- Serif Fonts -->
+            <div id="font-category-serif" class="font-category hidden">
+              {(() => {
+                const { systemFonts, googleFonts } = separateFontsByType(serifFonts);
+                return (
+                  <>
+                    {systemFonts.length > 0 && (
+                      <div class="mb-6">
+                        <h3 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">System Fonts</h3>
+                        <div class="grid gap-2">
+                          {systemFonts.map((font) => (
+                            <button
+                              type="button"
+                              class="font-option text-left w-full h-auto p-3 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+                              data-font-id={font.id}
+                              data-category="serif"
+                              style={`font-family: ${font.family}, ${font.fallback}`}
+                            >
+                              <div class="flex items-center justify-between mb-1">
+                                <span class="font-medium text-sm">{font.name}</span>
+                                <span class="font-badge bg-primary text-primary-foreground px-2 py-1 text-xs rounded hidden">Active</span>
+                              </div>
+                              <div class="text-xs opacity-75">{getPreviewText('serif')}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {googleFonts.length > 0 && (
+                      <div>
+                        <h3 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Google Fonts</h3>
+                        <div class="grid gap-2">
+                          {googleFonts.map((font) => (
+                            <button
+                              type="button"
+                              class="font-option text-left w-full h-auto p-3 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+                              data-font-id={font.id}
+                              data-category="serif"
+                              style={`font-family: ${font.family}, ${font.fallback}`}
+                            >
+                              <div class="flex items-center justify-between mb-1">
+                                <span class="font-medium text-sm">{font.name}</span>
+                                <span class="font-badge bg-primary text-primary-foreground px-2 py-1 text-xs rounded hidden">Active</span>
+                              </div>
+                              <div class="text-xs opacity-75">{getPreviewText('serif')}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+
+            <!-- Monospace Fonts -->
+            <div id="font-category-mono" class="font-category hidden">
+              {(() => {
+                const { systemFonts, googleFonts } = separateFontsByType(monoFonts);
+                return (
+                  <>
+                    {systemFonts.length > 0 && (
+                      <div class="mb-6">
+                        <h3 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">System Fonts</h3>
+                        <div class="grid gap-2">
+                          {systemFonts.map((font) => (
+                            <button
+                              type="button"
+                              class="font-option text-left w-full h-auto p-3 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+                              data-font-id={font.id}
+                              data-category="mono"
+                              style={`font-family: ${font.family}, ${font.fallback}`}
+                            >
+                              <div class="flex items-center justify-between mb-1">
+                                <span class="font-medium text-sm">{font.name}</span>
+                                <span class="font-badge bg-primary text-primary-foreground px-2 py-1 text-xs rounded hidden">Active</span>
+                              </div>
+                              <div class="text-xs opacity-75">{getPreviewText('mono')}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {googleFonts.length > 0 && (
+                      <div>
+                        <h3 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Google Fonts</h3>
+                        <div class="grid gap-2">
+                          {googleFonts.map((font) => (
+                            <button
+                              type="button"
+                              class="font-option text-left w-full h-auto p-3 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+                              data-font-id={font.id}
+                              data-category="mono"
+                              style={`font-family: ${font.family}, ${font.fallback}`}
+                            >
+                              <div class="flex items-center justify-between mb-1">
+                                <span class="font-medium text-sm">{font.name}</span>
+                                <span class="font-badge bg-primary text-primary-foreground px-2 py-1 text-xs rounded hidden">Active</span>
+                              </div>
+                              <div class="text-xs opacity-75">{getPreviewText('mono')}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      </div>
+
+  <!-- Footer -->
+  <div class="flex items-center justify-between pt-4 border-t bg-muted/5">
+    <Button
+      id="font-reset-btn"
+      variant="destructive"
+      size="sm"
+      disabled
+      class="font-reset-btn"
+    >
+      <TrashIcon class="w-4 h-4 mr-2" />
+      Reset All
+    </Button>
+    <div class="flex items-center space-x-3">
+      <Button
+        variant="ghost"
+        size="sm"
+        data-cancel
+        class="font-cancel-btn"
+      >
+        Cancel
+      </Button>
+      <Button
+        variant="primary"
+        size="sm"
+        data-apply
+        class="font-apply-btn"
+      >
+        Apply
+      </Button>
+    </div>
+  </div>
+</Modal>
+
+<style>
+  .modal {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .modal[open] {
+    display: flex;
+  }
+
+  .font-category.hidden {
+    display: none;
+  }
+  
+  .font-category.active {
+    display: block;
+  }
+
+  .font-tab.active {
+    border-color: var(--primary) !important;
+    color: var(--primary) !important;
+  }
+
+  .font-option.selected {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    border-color: var(--primary);
+  }
+
+  .font-badge.active {
+    display: inline-block !important;
+  }
+
+  .font-badge.hidden {
+    display: none !important;
+  }
+</style>
+
+<script>
+  let fontManager = null;
+  let currentCategory = 'sans';
+
+  function waitForThemeCore() {
+    const initializeWithCore = (themeCore) => {
+      if (themeCore?.fontManager) {
+        fontManager = themeCore.fontManager;
+        updateFontSelections();
+      }
+    };
+
+    if (window.themeCore?.fontManager) {
+      initializeWithCore(window.themeCore);
+    } else {
+      window.addEventListener('theme-core-ready', (event) => {
+        initializeWithCore(event.detail.themeCore);
+      });
+    }
+  }
+
+  function bindEvents() {
+    const modal = document.getElementById('font-settings-modal');
+    if (!modal) return;
+
+    // Close button
+    modal.querySelector('.font-close-btn')?.addEventListener('click', () => {
+      closeModal();
+    });
+
+    // Override toggle
+    const toggle = modal.querySelector('#font-override-toggle');
+    toggle?.addEventListener('change', async () => {
+      const isEnabled = toggle.checked;
+      const disabledState = modal.querySelector('#font-disabled-state');
+      const enabledState = modal.querySelector('#font-enabled-state');
+      const resetBtn = modal.querySelector('#font-reset-btn');
+      
+      if (isEnabled && fontManager) {
+        await fontManager.enableOverride();
+        disabledState?.classList.add('hidden');
+        enabledState?.classList.remove('hidden');
+        resetBtn?.removeAttribute('disabled');
+        updateFontSelections();
+      } else if (fontManager) {
+        await fontManager.disableOverride();
+        disabledState?.classList.remove('hidden');
+        enabledState?.classList.add('hidden');
+        resetBtn?.setAttribute('disabled', 'disabled');
+      }
+    });
+
+    // Tab switching
+    modal.querySelectorAll('.font-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const category = tab.getAttribute('data-category');
+        if (category) {
+          switchCategory(category);
+        }
+      });
+    });
+
+    // Font selection
+    modal.querySelectorAll('.font-option').forEach(option => {
+      option.addEventListener('click', () => {
+        const fontId = option.getAttribute('data-font-id');
+        const category = option.getAttribute('data-category');
+        if (fontId && category) {
+          selectFont(fontId, category);
+        }
+      });
+    });
+
+    // Reset button
+    modal.querySelector('#font-reset-btn')?.addEventListener('click', async () => {
+      if (fontManager) {
+        await fontManager.resetOverrides();
+        updateFontSelections();
+      }
+    });
+
+    // Apply and Cancel buttons
+    modal.querySelector('.font-apply-btn')?.addEventListener('click', () => {
+      closeModal();
+    });
+
+    modal.querySelector('.font-cancel-btn')?.addEventListener('click', () => {
+      closeModal();
+    });
+  }
+
+  function switchCategory(category) {
+    const modal = document.getElementById('font-settings-modal');
+    if (!modal) return;
+    
+    currentCategory = category;
+    
+    // Update tabs
+    modal.querySelectorAll('.font-tab').forEach(tab => {
+      tab.classList.remove('active');
+    });
+    
+    const activeTab = modal.querySelector(`[data-category="${category}"]`);
+    activeTab?.classList.add('active');
+    
+    // Update category visibility
+    modal.querySelectorAll('.font-category').forEach(categoryDiv => {
+      categoryDiv.classList.add('hidden');
+      categoryDiv.classList.remove('active');
+    });
+    
+    const activeCategory = modal.querySelector(`#font-category-${category}`);
+    activeCategory?.classList.remove('hidden');
+    activeCategory?.classList.add('active');
+    
+    updateFontSelections();
+  }
+
+  function updateFontSelections() {
+    const modal = document.getElementById('font-settings-modal');
+    if (!modal || !fontManager) return;
+    
+    const config = fontManager.getOverrideConfiguration();
+    
+    // Clear all selections
+    modal.querySelectorAll('.font-option').forEach(option => {
+      option.classList.remove('selected');
+    });
+    
+    modal.querySelectorAll('.font-badge').forEach(badge => {
+      badge.classList.add('hidden');
+      badge.classList.remove('active');
+    });
+    
+    // Apply current selections
+    Object.entries(config.fonts).forEach(([category, fontId]) => {
+      if (fontId) {
+        const option = modal.querySelector(`[data-font-id="${fontId}"][data-category="${category}"]`);
+        const badge = option?.querySelector('.font-badge');
+        
+        if (option) {
+          option.classList.add('selected');
+        }
+        if (badge) {
+          badge.classList.remove('hidden');
+          badge.classList.add('active');
+        }
+      }
+    });
+  }
+
+  function selectFont(fontId, category) {
+    if (!fontManager) return;
+    
+    fontManager.setFontOverride(category, fontId);
+    updateFontSelections();
+  }
+
+  function openModal() {
+    const modal = document.getElementById('font-settings-modal');
+    if (!modal) return;
+    
+    if (fontManager) {
+      const toggle = modal.querySelector('#font-override-toggle');
+      const isEnabled = fontManager.isOverrideEnabled();
+      
+      if (toggle) {
+        toggle.checked = isEnabled;
+      }
+      
+      const disabledState = modal.querySelector('#font-disabled-state');
+      const enabledState = modal.querySelector('#font-enabled-state');
+      const resetBtn = modal.querySelector('#font-reset-btn');
+      
+      if (isEnabled) {
+        disabledState?.classList.add('hidden');
+        enabledState?.classList.remove('hidden');
+        resetBtn?.removeAttribute('disabled');
+        updateFontSelections();
+      } else {
+        disabledState?.classList.remove('hidden');
+        enabledState?.classList.add('hidden');
+        resetBtn?.setAttribute('disabled', 'disabled');
+      }
+    }
+    
+    modal.showModal();
+  }
+
+  function closeModal() {
+    const modal = document.getElementById('font-settings-modal');
+    if (modal) {
+      modal.close();
+    }
+  }
+
+  // Initialize
+  waitForThemeCore();
+  bindEvents();
+
+  // Global access function
+  window.openFontSettingsModal = openModal;
+</script>
