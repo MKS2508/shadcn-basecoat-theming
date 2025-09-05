@@ -206,6 +206,9 @@ import SearchIcon from './icons/SearchIcon.astro';
   let themeManager = null;
   let previewTimer = null;
   let originalTheme = null;
+  let previewThemeId = null; // Track the temporary theme ID for cleanup
+  let isPreviewActive = false;
+  let previewReverted = false;
 
   function waitForThemeCore() {
     const initializeWithCore = (themeCore) => {
@@ -455,7 +458,7 @@ import SearchIcon from './icons/SearchIcon.astro';
     
     // Set auto-revert timer
     let countdown = 15;
-    previewTimer = setInterval(() => {
+    previewTimer = setInterval(async () => {
       countdown--;
       const countdownEl = document.getElementById('preview-countdown');
       if (countdownEl) {
@@ -463,7 +466,7 @@ import SearchIcon from './icons/SearchIcon.astro';
       }
       
       if (countdown <= 0) {
-        revertPreview();
+        await revertPreview();
       }
     }, 1000);
   }
@@ -515,19 +518,45 @@ import SearchIcon from './icons/SearchIcon.astro';
     updateThemeCards();
   }
 
-  function revertPreview() {
+  async function revertPreview() {
+    // Guard against multiple calls and null originalTheme
+    if (!originalTheme || previewReverted || !isPreviewActive) {
+      console.log('🚫 Skipping revert - already reverted or no active preview');
+      return;
+    }
+    
+    console.log('🔄 Reverting preview, originalTheme:', originalTheme);
+    previewReverted = true; // Set flag to prevent multiple calls
+    
     if (previewTimer) {
       clearInterval(previewTimer);
       previewTimer = null;
     }
     
-    if (originalTheme && themeManager) {
-      themeManager.setTheme(originalTheme.id);
+    if (themeManager) {
+      // Restore both theme and mode
+      console.log('🔙 Restoring theme:', originalTheme.id, 'mode:', originalTheme.mode);
+      await themeManager.setTheme(originalTheme.id, originalTheme.mode);
+      
+      // Clean up temporary preview theme (since user didn't keep it)
+      if (previewThemeId) {
+        console.log('🧹 Cleaning up temporary preview theme:', previewThemeId);
+        try {
+          await themeManager.uninstallTheme(previewThemeId);
+        } catch (error) {
+          console.warn('⚠️ Could not clean up preview theme:', error);
+        }
+      }
     }
     
     hidePreviewNotification();
     updateThemeCards();
+    
+    // Reset state
     originalTheme = null;
+    previewThemeId = null;
+    isPreviewActive = false;
+    previewReverted = false;
   }
 
   async function refreshRegistry() {
@@ -660,23 +689,38 @@ import SearchIcon from './icons/SearchIcon.astro';
       }
       
       const themeData = await response.json();
+      console.log('🔍 Theme data fetched:', themeData.name, themeData);
       
       // Store original theme for revert
       originalTheme = {
         id: themeManager.getCurrentTheme(),
         mode: themeManager.getCurrentMode()
       };
+      console.log('💾 Stored original theme:', originalTheme);
       
-      // Apply theme temporarily using current effective mode
+      // Set preview state
+      isPreviewActive = true;
+      previewReverted = false;
+      
+      // Install and apply theme for preview using current effective mode
       const effectiveMode = themeManager.getEffectiveMode();
-      themeManager.applyThemeVariablesTemporary(themeData, effectiveMode);
+      console.log('🎯 Installing and applying preview theme with mode:', effectiveMode);
+      
+      // Install theme temporarily
+      const installedTheme = await themeManager.installTheme(themeData, themeUrl);
+      previewThemeId = installedTheme.id; // Store for cleanup
+      console.log('📦 Theme installed for preview:', installedTheme.id);
+      
+      // Apply the installed theme
+      await themeManager.setTheme(installedTheme.id, effectiveMode);
+      console.log('✅ Preview theme applied:', installedTheme.id);
       
       // Show preview notification
       showPreviewNotification();
       
       // Set auto-revert timer  
       let countdown = 15;
-      previewTimer = setInterval(() => {
+      previewTimer = setInterval(async () => {
         countdown--;
         const countdownEl = document.getElementById('preview-countdown');
         if (countdownEl) {
@@ -684,7 +728,7 @@ import SearchIcon from './icons/SearchIcon.astro';
         }
         
         if (countdown <= 0) {
-          revertPreview();
+          await revertPreview();
         }
       }, 1000);
       
@@ -776,12 +820,12 @@ import SearchIcon from './icons/SearchIcon.astro';
     }
   }
 
-  function closeModal() {
+  async function closeModal() {
     const modal = document.getElementById('theme-management-modal');
     if (modal) {
       // Cancel any active preview
       if (previewTimer) {
-        revertPreview();
+        await revertPreview();
       }
       modal.close();
     }

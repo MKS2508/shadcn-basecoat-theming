@@ -5,6 +5,7 @@ import ChevronDownIcon from './icons/ChevronDownIcon.astro';
 import CheckIcon from './icons/CheckIcon.astro';
 import SearchIcon from './icons/SearchIcon.astro';
 import SettingsIcon from './icons/SettingsIcon.astro';
+import FontSettingsIsland from './FontSettingsIsland.astro';
 ---
 
 <div class="relative" data-theme-selector>
@@ -46,23 +47,229 @@ import SettingsIcon from './icons/SettingsIcon.astro';
     <!-- Separator and actions -->
     <div class="h-px bg-border my-2"></div>
     <div class="flex gap-2">
-      <Button 
+      <button 
         id="browse-more-themes"
-        variant="ghost"
-        class="flex-1 justify-start text-primary"
+        type="button"
+        class="flex-1 flex items-center justify-start px-3 py-2 text-sm text-primary hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
         role="menuitem"
       >
         <SearchIcon class="mr-2" />
         Browse More...
-      </Button>
-      <Button 
+      </button>
+      <button 
         id="theme-settings-btn"
-        variant="ghost"
-        class="px-2 text-muted-foreground hover:text-accent-foreground"
+        type="button"
+        class="px-2 py-2 text-muted-foreground hover:text-accent-foreground hover:bg-accent rounded-md transition-colors"
         role="menuitem"
       >
         <SettingsIcon />
-      </Button>
+      </button>
     </div>
   </Popover>
 </div>
+
+<!-- Font Settings Modal -->
+<FontSettingsIsland />
+
+<script>
+  let themeManager = null;
+
+  function waitForThemeCore() {
+    console.log('🎯 [ThemeSelector] Waiting for ThemeCore...');
+    
+    const initializeWithCore = (themeCore) => {
+      console.log('🎯 [ThemeSelector] Initializing with core:', themeCore);
+      if (themeCore?.themeManager) {
+        themeManager = themeCore.themeManager;
+        console.log('🎯 [ThemeSelector] ThemeManager obtained, loading themes...');
+        loadAvailableThemes();
+        updateCurrentThemeLabel();
+      } else {
+        console.error('❌ [ThemeSelector] ThemeCore missing themeManager');
+      }
+    };
+
+    if (window.themeCore?.themeManager) {
+      console.log('🎯 [ThemeSelector] ThemeCore already available');
+      initializeWithCore(window.themeCore);
+    } else {
+      console.log('🎯 [ThemeSelector] Listening for theme-core-ready event');
+      window.addEventListener('theme-core-ready', (event) => {
+        console.log('🎯 [ThemeSelector] Received theme-core-ready event');
+        initializeWithCore(event.detail.themeCore);
+      });
+    }
+  }
+
+  function loadAvailableThemes() {
+    if (!themeManager) {
+      console.error('❌ [ThemeSelector] loadAvailableThemes called but themeManager is null');
+      return;
+    }
+    
+    const themeList = document.getElementById('theme-list');
+    if (!themeList) {
+      console.error('❌ [ThemeSelector] theme-list element not found');
+      return;
+    }
+    
+    try {
+      console.log('🔍 [ThemeSelector] Loading available themes...');
+      
+      // Get all available themes (built-in + installed) from ThemeRegistry
+      const availableThemes = themeManager.getAvailableThemes();
+      const currentThemeId = themeManager.getCurrentTheme();
+      
+      console.log('🔍 [ThemeSelector] Found themes:', availableThemes.length);
+      console.log('🔍 [ThemeSelector] Current theme:', currentThemeId);
+      console.log('🔍 [ThemeSelector] Available themes:', availableThemes.map(t => `${t.id} (${t.category})`));
+      
+      // Clear existing options
+      themeList.innerHTML = '';
+      
+      // Render theme options
+      availableThemes.forEach(theme => {
+        const isActive = theme.id === currentThemeId;
+        const isBuiltIn = theme.category === 'built-in' || theme.source === 'local';
+        
+        const themeOption = document.createElement('button');
+        themeOption.type = 'button';
+        themeOption.className = 'theme-option relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground';
+        themeOption.setAttribute('data-theme', theme.id);
+        themeOption.setAttribute('data-theme-option', '');
+        themeOption.setAttribute('role', 'menuitem');
+        
+        themeOption.innerHTML = `
+          <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5H9a2 2 0 00-2 2v12a4 4 0 004 4h10a2 2 0 002-2V7a2 2 0 00-2-2z"></path>
+          </svg>
+          <span class="flex-1 text-left">${theme.label || theme.name || theme.id}</span>
+          ${!isBuiltIn ? '<span class="text-xs text-muted-foreground ml-1">(Installed)</span>' : ''}
+          <svg class="ml-auto h-4 w-4 ${isActive ? '' : 'hidden'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        `;
+        
+        // Add click handler
+        themeOption.addEventListener('click', () => {
+          selectTheme(theme.id);
+        });
+        
+        themeList.appendChild(themeOption);
+      });
+      
+    } catch (error) {
+      console.error('Failed to load available themes:', error);
+      
+      // Fallback to default theme
+      themeList.innerHTML = `
+        <button 
+          type="button"
+          class="theme-option relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+          data-theme="default"
+          data-theme-option
+          role="menuitem"
+        >
+          <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5H9a2 2 0 00-2 2v12a4 4 0 004 4h10a2 2 0 002-2V7a2 2 0 00-2-2z"></path>
+          </svg>
+          <span>Default</span>
+          <svg class="ml-auto h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </button>
+      `;
+    }
+  }
+
+  function selectTheme(themeId) {
+    if (!themeManager) return;
+    
+    // Apply theme
+    themeManager.setTheme(themeId);
+    
+    // Update UI
+    updateThemeSelection(themeId);
+    updateCurrentThemeLabel();
+    
+    // Close popover safely
+    const popover = document.getElementById('theme-selector-popover');
+    if (popover && popover.matches(':popover-open')) {
+      try {
+        popover.hidePopover();
+      } catch (error) {
+        console.warn('⚠️ ThemeSelector: Could not hide popover:', error);
+      }
+    }
+  }
+
+  function updateThemeSelection(activeThemeId) {
+    const themeOptions = document.querySelectorAll('[data-theme-option]');
+    
+    themeOptions.forEach(option => {
+      const themeId = option.getAttribute('data-theme');
+      const checkIcon = option.querySelector('.ml-auto');
+      
+      if (themeId === activeThemeId) {
+        checkIcon?.classList.remove('hidden');
+      } else {
+        checkIcon?.classList.add('hidden');
+      }
+    });
+  }
+
+  function updateCurrentThemeLabel() {
+    if (!themeManager) return;
+    
+    const currentThemeLabel = document.getElementById('current-theme-label');
+    if (!currentThemeLabel) return;
+    
+    try {
+      const currentThemeId = themeManager.getCurrentTheme();
+      const availableThemes = themeManager.getAvailableThemes();
+      const currentTheme = availableThemes.find(theme => theme.id === currentThemeId);
+      
+      if (currentTheme) {
+        currentThemeLabel.textContent = currentTheme.label || currentTheme.name || currentTheme.id;
+      } else {
+        currentThemeLabel.textContent = 'Default';
+      }
+    } catch (error) {
+      console.error('Failed to update current theme label:', error);
+      currentThemeLabel.textContent = 'Default';
+    }
+  }
+
+  function bindEvents() {
+    // Settings button
+    const settingsBtn = document.getElementById('theme-settings-btn');
+    settingsBtn?.addEventListener('click', () => {
+      if (window.openFontSettingsModal) {
+        window.openFontSettingsModal();
+      }
+    });
+
+    // Browse more themes button
+    const browseBtn = document.getElementById('browse-more-themes');
+    browseBtn?.addEventListener('click', () => {
+      if (window.openThemeManagementModal) {
+        window.openThemeManagementModal();
+      }
+    });
+  }
+
+  // Initialize
+  waitForThemeCore();
+  bindEvents();
+
+  // Listen for theme changes to update UI
+  document.addEventListener('DOMContentLoaded', () => {
+    // Refresh theme list when modal closes (themes may have been installed)
+    window.addEventListener('theme-installed', () => {
+      if (themeManager) {
+        loadAvailableThemes();
+        updateCurrentThemeLabel();
+      }
+    });
+  });
+</script>
