@@ -1,4 +1,5 @@
 // Core exports
+export { ThemeCore } from './core/theme-core';
 export { ThemeManager } from './core/theme-manager';
 export { FontManager } from './core/font-manager';
 export { FontLoader } from './core/font-loader';
@@ -13,6 +14,7 @@ export { ThemeListFetcher } from './installers/theme-list-fetcher';
 export * from './catalogs/font-catalog';
 
 // Types
+export type { ThemeCoreConfig, ThemeCoreInstance } from './core/theme-core';
 export type { ThemeConfig } from './core/theme-registry';
 export type { FontOverride } from './core/font-manager';
 export type { CachedTheme, FontOverrideConfig, ThemeModeConfig } from './core/storage-manager';

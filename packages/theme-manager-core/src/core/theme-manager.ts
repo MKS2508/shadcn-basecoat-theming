@@ -43,6 +43,9 @@ export class ThemeManager {
   private currentStyleElement: HTMLLinkElement | null = null;
   private fontLoader: FontLoader;
   
+  // Event system
+  private eventListeners: Map<string, Function[]> = new Map();
+  
   // Performance optimizations  
   private prefetchedThemes: Set<string> = new Set(); // Single-request prefetch tracking
   private readonly BUILTIN_THEMES = ['default', 'supabase']; // Built-in themes for preloading
@@ -164,6 +167,13 @@ export class ThemeManager {
     this.saveThemeSettings(theme, newMode);
 
     await this.applyTheme(theme, newMode, true); // Pass true to indicate real theme change
+    
+    // Dispatch theme change event
+    this.dispatchEvent('theme-changed', {
+      theme: this.currentTheme,
+      mode: this.currentMode,
+      effectiveMode: this.getEffectiveMode()
+    });
     
     // End performance timer and log metrics
     const duration = PerformanceMonitor.endTimer(timerLabel);
@@ -483,8 +493,8 @@ export class ThemeManager {
       const installedTheme = await this.themeRegistry.installTheme(themeData, sourceUrl || '');
       
       
-      // Trigger regeneration of theme dropdown
-      this.onThemeInstalled?.(installedTheme);
+      // Dispatch theme installed event
+      this.dispatchEvent('theme-installed', installedTheme);
       
       return installedTheme;
       
@@ -492,18 +502,6 @@ export class ThemeManager {
       console.error(`❌ Failed to install theme ${themeData.name}:`, error);
       throw error;
     }
-  }
-
-  /**
-   * Callback for when a theme is installed (for UI updates)
-   */
-  private onThemeInstalled?: (theme: ThemeConfig) => void;
-
-  /**
-   * Set callback for theme installation
-   */
-  setOnThemeInstalledCallback(callback: (theme: ThemeConfig) => void): void {
-    this.onThemeInstalled = callback;
   }
 
   /**
@@ -579,5 +577,62 @@ export class ThemeManager {
     } catch (error) {
       console.error('❌ ThemeManager: Failed to save settings', error);
     }
+  }
+
+  /**
+   * Event system methods
+   */
+  
+  /**
+   * Add event listener
+   */
+  addEventListener(event: string, callback: Function): void {
+    if (!this.eventListeners.has(event)) {
+      this.eventListeners.set(event, []);
+    }
+    this.eventListeners.get(event)!.push(callback);
+  }
+
+  /**
+   * Remove event listener
+   */
+  removeEventListener(event: string, callback: Function): void {
+    const listeners = this.eventListeners.get(event);
+    if (listeners) {
+      const index = listeners.indexOf(callback);
+      if (index > -1) {
+        listeners.splice(index, 1);
+      }
+    }
+  }
+
+  /**
+   * Dispatch event to listeners
+   */
+  private dispatchEvent(event: string, data?: any): void {
+    const listeners = this.eventListeners.get(event);
+    if (listeners) {
+      listeners.forEach(callback => {
+        try {
+          callback(data);
+        } catch (error) {
+          console.error(`❌ ThemeManager: Event listener error for ${event}:`, error);
+        }
+      });
+    }
+  }
+
+  /**
+   * Add theme change listener (convenience method)
+   */
+  onThemeChange(callback: (themeData: { theme: string; mode: 'light' | 'dark' | 'auto'; effectiveMode: 'light' | 'dark' }) => void): void {
+    this.addEventListener('theme-changed', callback);
+  }
+
+  /**
+   * Remove theme change listener
+   */
+  offThemeChange(callback: Function): void {
+    this.removeEventListener('theme-changed', callback);
   }
 }

@@ -17,20 +17,12 @@ interface ThemeData {
 export class ThemeInstaller {
   private storageManager: StorageManager;
   private themeListFetcher: ThemeListFetcher;
-  private onThemeInstalled?: () => void;
   private themeManager: ThemeManager;
 
   constructor(themeManager: ThemeManager) {
     this.themeManager = themeManager;
     this.storageManager = StorageManager.getInstance();
     this.themeListFetcher = new ThemeListFetcher();
-  }
-
-  /**
-   * Set callback for when a theme is installed
-   */
-  setOnThemeInstalledCallback(callback: () => void): void {
-    this.onThemeInstalled = callback;
   }
 
   /**

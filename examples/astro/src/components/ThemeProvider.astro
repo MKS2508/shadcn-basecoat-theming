@@ -1,116 +1,28 @@
-<!-- Initialize core managers on client-side -->
+<!-- Initialize ThemeCore using simplified API -->
 <script>
-  import { 
-    ThemeManager, 
-    ThemeInstaller, 
-    ThemeListFetcher,
-    getFontsByCategory
-  } from '@mks2508/shadcn-basecoat-theme-manager';
-
-  // Create global instances - ThemeManager includes its own ThemeRegistry and FontManager
-  let themeManager = null;
-  let themeInstaller = null;
-  let themeListFetcher = null;
+  import { ThemeCore } from '@mks2508/shadcn-basecoat-theme-manager';
 
   async function initializeThemeCore() {
     try {
-      console.log('🎨 Initializing Theme Core v3 (Fixed Architecture)...');
-
-      // Initialize core managers - ThemeManager handles its own ThemeRegistry internally
-      console.log('📦 Creating ThemeManager instance...');
-      themeManager = new ThemeManager();
-      console.log('✅ ThemeManager created');
-
-      console.log('📦 Creating ThemeInstaller instance...');
-      themeInstaller = new ThemeInstaller(themeManager);
-      console.log('✅ ThemeInstaller created');
-
-      console.log('📦 Creating ThemeListFetcher instance...');
-      themeListFetcher = new ThemeListFetcher();
-      console.log('✅ ThemeListFetcher created');
-
-      // Initialize all systems in correct order with individual error handling
-      console.log('🔄 Initializing ThemeManager...');
+      console.log('🎨 Initializing ThemeCore (Simplified API)...');
       
-      // Add timeout to detect if it hangs
-      const themeManagerInitPromise = themeManager.init();
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('ThemeManager.init() timeout after 10 seconds')), 10000);
+      // Single line initialization - all complexity handled by ThemeCore
+      const themeCore = await ThemeCore.init();
+      
+      console.log('✅ ThemeCore initialized successfully:', themeCore);
+      console.log('📊 Available managers:', {
+        themeManager: !!themeCore.themeManager,
+        fontManager: !!themeCore.fontManager, 
+        themeInstaller: !!themeCore.themeInstaller,
+        themeListFetcher: !!themeCore.themeListFetcher
       });
-      
-      await Promise.race([themeManagerInitPromise, timeoutPromise]);
-      console.log('✅ ThemeManager initialized');
 
-
-      console.log('🔄 Initializing ThemeInstaller...');
-      await themeInstaller.init();
-      console.log('✅ ThemeInstaller initialized');
-
-      console.log('🔄 Initializing ThemeListFetcher...');
-      await themeListFetcher.init();
-      console.log('✅ ThemeListFetcher initialized');
-
-      // Make instances globally available
-      console.log('🌐 Setting up window.themeCore...');
-      window.themeCore = {
-        themeManager,
-        fontManager: themeManager.getFontManager(), // Use FontManager from ThemeManager
-        themeInstaller,
-        themeListFetcher,
-        // Access ThemeRegistry through ThemeManager
-        getThemeRegistry: () => themeManager.getThemeRegistry(),
-        // Also expose the catalog function
-        getFontsByCategory
-      };
-      console.log('✅ window.themeCore created');
-
-      console.log('📊 Getting registry stats...');
-      const stats = themeManager.getThemeRegistry().getStats();
-      console.log('📊 Registry stats:', stats);
+      // Get some stats for debugging
+      const availableThemes = themeCore.themeManager.getAvailableThemes();
+      console.log('🎨 Available themes:', availableThemes.length);
       
-      console.log('🔍 Getting available themes...');
-      const availableThemes = themeManager.getAvailableThemes();
-      console.log('🔧 Available themes:', availableThemes.length);
-      
-      console.log('🏠 Getting built-in themes...');
-      const builtInThemes = themeManager.getThemeRegistry().getBuiltInThemes();
-      console.log('🏠 Built-in themes:', builtInThemes.length);
-      
-      console.log('📦 Getting installed themes...');
-      const installedThemes = themeManager.getThemeRegistry().getInstalledThemes();
-      console.log('📦 Installed themes:', installedThemes.length);
-
-      console.log('✅ Theme Core initialized successfully');
-      console.log('🔧 ThemeManager methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(themeManager)));
-      
-      // Dispatch event for other components
-      console.log('🚀 Dispatching theme-core-ready event...');
-      console.log('🔍 About to dispatch with themeCore:', window.themeCore);
-      
-      const event = new CustomEvent('theme-core-ready', {
-        detail: { themeCore: window.themeCore }
-      });
-      
-      console.log('📤 Event created:', event);
-      window.dispatchEvent(event);
-      console.log('✅ theme-core-ready event dispatched');
-
     } catch (error) {
-      console.error('❌ Failed to initialize Theme Core:', error);
-      console.error('❌ Error details:', error.message);
-      console.error('❌ Error stack:', error.stack);
-      
-      // Even if core fails, we should still provide basic functionality
-      window.themeCore = null;
-      window.dispatchEvent(new CustomEvent('theme-core-error', {
-        detail: { error }
-      }));
-      
-      // Also dispatch the ready event with null so components don't hang
-      console.log('🚨 Dispatching theme-core-ready with null due to error');
-      window.dispatchEvent(new CustomEvent('theme-core-ready', {
-        detail: { themeCore: null, error: true }
-      }));
+      console.error('❌ Failed to initialize ThemeCore:', error);
     }
   }
 

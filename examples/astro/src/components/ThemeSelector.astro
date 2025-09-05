@@ -72,32 +72,31 @@ import FontSettingsIsland from './FontSettingsIsland.astro';
 <FontSettingsIsland />
 
 <script>
+  import { ThemeCore } from '@mks2508/shadcn-basecoat-theme-manager';
+  
   let themeManager = null;
 
-  function waitForThemeCore() {
-    console.log('🎯 [ThemeSelector] Waiting for ThemeCore...');
+  async function initializeThemeSelector() {
+    console.log('🎯 [ThemeSelector] Initializing with ThemeCore...');
     
-    const initializeWithCore = (themeCore) => {
-      console.log('🎯 [ThemeSelector] Initializing with core:', themeCore);
-      if (themeCore?.themeManager) {
-        themeManager = themeCore.themeManager;
-        console.log('🎯 [ThemeSelector] ThemeManager obtained, loading themes...');
-        loadAvailableThemes();
+    try {
+      // Using ThemeCore helper - much simpler
+      const themeCore = await ThemeCore.waitForReady();
+      
+      themeManager = themeCore.themeManager;
+      console.log('🎯 [ThemeSelector] ThemeManager ready, loading themes...');
+      
+      loadAvailableThemes();
+      updateCurrentThemeLabel();
+      
+      // Listen for theme changes using new event system
+      ThemeCore.onThemeChange((themeData) => {
+        console.log('🎯 [ThemeSelector] Theme changed:', themeData);
         updateCurrentThemeLabel();
-      } else {
-        console.error('❌ [ThemeSelector] ThemeCore missing themeManager');
-      }
-    };
-
-    if (window.themeCore?.themeManager) {
-      console.log('🎯 [ThemeSelector] ThemeCore already available');
-      initializeWithCore(window.themeCore);
-    } else {
-      console.log('🎯 [ThemeSelector] Listening for theme-core-ready event');
-      window.addEventListener('theme-core-ready', (event) => {
-        console.log('🎯 [ThemeSelector] Received theme-core-ready event');
-        initializeWithCore(event.detail.themeCore);
       });
+      
+    } catch (error) {
+      console.error('❌ [ThemeSelector] Failed to initialize:', error);
     }
   }
 
@@ -259,17 +258,15 @@ import FontSettingsIsland from './FontSettingsIsland.astro';
   }
 
   // Initialize
-  waitForThemeCore();
+  initializeThemeSelector();
   bindEvents();
 
-  // Listen for theme changes to update UI
-  document.addEventListener('DOMContentLoaded', () => {
-    // Refresh theme list when modal closes (themes may have been installed)
-    window.addEventListener('theme-installed', () => {
-      if (themeManager) {
-        loadAvailableThemes();
-        updateCurrentThemeLabel();
-      }
-    });
+  // Listen for theme installations using new event system
+  ThemeCore.onThemeInstalled((theme) => {
+    console.log('🎯 [ThemeSelector] New theme installed:', theme);
+    if (themeManager) {
+      loadAvailableThemes();
+      updateCurrentThemeLabel();
+    }
   });
 </script>
