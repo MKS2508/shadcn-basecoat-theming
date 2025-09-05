@@ -17,34 +17,55 @@ import { Separator } from "./components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "./components/ui/avatar";
 import { Progress } from "./components/ui/progress";
 import { Slider } from "./components/ui/slider";
-import { Moon, Sun, AlertCircle, Heart, Star } from "lucide-react";
+import { AlertCircle, Heart, Star, Settings, Palette } from "lucide-react";
+
+// Theme Components
+import { ThemeProvider } from "./components/ThemeProvider";
+import { ThemeSelector } from "./components/ThemeSelector";
+import { ThemeManagementModal } from "./components/ThemeManagementModal";
+import { FontSettingsModal } from "./components/FontSettingsModal";
 
 function App() {
-  const [darkMode, setDarkMode] = useState(false);
   const [progress, setProgress] = useState(50);
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    document.documentElement.classList.toggle('dark');
-  };
+  const [showThemeManagement, setShowThemeManagement] = useState(false);
+  const [showFontSettings, setShowFontSettings] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="container mx-auto p-8 space-y-8">
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold">shadcn/ui Kitchen Sink</h1>
-          <p className="text-lg text-muted-foreground">
-            Complete component showcase with Quantum Rose theme
-          </p>
-          <div className="flex justify-center gap-2">
-            <Toggle pressed={darkMode} onPressedChange={toggleDarkMode}>
-              {darkMode ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-            </Toggle>
-            <Badge variant="secondary">React + TypeScript</Badge>
-            <Badge variant="outline">Tailwind CSS v4</Badge>
+    <ThemeProvider>
+      <div className="min-h-screen bg-background text-foreground">
+        <div className="container mx-auto p-8 space-y-8">
+          {/* Header */}
+          <div className="text-center space-y-4">
+            <h1 className="text-4xl font-bold">shadcn/ui + ThemeCore</h1>
+            <p className="text-lg text-muted-foreground">
+              Complete component showcase with dynamic theme management
+            </p>
+            <div className="flex justify-center gap-2 flex-wrap">
+              <ThemeSelector 
+                onThemeManagement={() => setShowThemeManagement(true)}
+                onFontSettings={() => setShowFontSettings(true)}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowThemeManagement(true)}
+              >
+                <Palette className="h-4 w-4 mr-2" />
+                Theme Manager
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFontSettings(true)}
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Font Settings
+              </Button>
+              <Badge variant="secondary">React + TypeScript</Badge>
+              <Badge variant="outline">Tailwind CSS v4</Badge>
+              <Badge variant="outline">ThemeCore</Badge>
+            </div>
           </div>
-        </div>
 
         <Separator />
 
@@ -263,14 +284,27 @@ function App() {
                   ))}
                 </div>
                 <p className="text-muted-foreground">
-                  Amazing theme! The Quantum Rose colors are beautiful.
+                  Amazing theme system! Dynamic theme switching works perfectly.
                 </p>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
+        </div>
+
+        {/* Theme Management Modal */}
+        <ThemeManagementModal
+          open={showThemeManagement}
+          onOpenChange={setShowThemeManagement}
+        />
+
+        {/* Font Settings Modal */}
+        <FontSettingsModal
+          open={showFontSettings}
+          onOpenChange={setShowFontSettings}
+        />
       </div>
-    </div>
+    </ThemeProvider>
   );
 }
 

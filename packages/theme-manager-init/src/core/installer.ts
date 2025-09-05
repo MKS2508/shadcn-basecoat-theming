@@ -102,33 +102,34 @@ async function generateThemeFiles(
   themeDir: string, 
   verbose: boolean
 ): Promise<void> {
-  console.log(chalk.blue('🎨 Generating default theme files...'));
+  console.log(chalk.blue('🎨 Generating builtin theme files...'));
 
   const currentDir = path.dirname(new URL(import.meta.url).pathname);
   const templateDir = path.join(currentDir, '../templates');
 
-  // Generate light theme
-  const lightThemeTemplate = await fs.readFile(
-    path.join(templateDir, 'default-light.css.template'), 
-    'utf8'
-  );
-  const lightThemePath = path.join(cwd, themeDir, 'default-light.css');
-  await fs.writeFile(lightThemePath, lightThemeTemplate);
+  // All theme files to copy
+  const themeFiles = [
+    'default-light.css',
+    'default-dark.css',
+    'supabase-light.css',
+    'supabase-dark.css',
+    'tangerine-light.css',
+    'tangerine-dark.css',
+    'base.css'
+  ];
 
-  // Generate dark theme
-  const darkThemeTemplate = await fs.readFile(
-    path.join(templateDir, 'default-dark.css.template'), 
-    'utf8'
-  );
-  const darkThemePath = path.join(cwd, themeDir, 'default-dark.css');
-  await fs.writeFile(darkThemePath, darkThemeTemplate);
+  for (const fileName of themeFiles) {
+    const templatePath = path.join(templateDir, `${fileName}.template`);
+    const themeTemplate = await fs.readFile(templatePath, 'utf8');
+    const themePath = path.join(cwd, themeDir, fileName);
+    await fs.writeFile(themePath, themeTemplate);
 
-  if (verbose) {
-    console.log(`  Generated: ${themeDir}/default-light.css`);
-    console.log(`  Generated: ${themeDir}/default-dark.css`);
+    if (verbose) {
+      console.log(`  Generated: ${themeDir}/${fileName}`);
+    }
   }
 
-  console.log(chalk.green('✅ Theme files generated'));
+  console.log(chalk.green(`✅ Generated ${themeFiles.length} theme files`));
 }
 
 async function generateRegistry(
