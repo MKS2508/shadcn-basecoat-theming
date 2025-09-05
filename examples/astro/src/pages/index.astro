@@ -1,44 +1,20 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Tabs from '../components/ui/Tabs.astro';
 import ThemeSelector from '../components/ThemeSelector.astro';
 
-// Form Controls components
-import Button from '../components/ui/Button.astro';
-import Input from '../components/ui/Input.astro';
-import Label from '../components/ui/Label.astro';
-import Select from '../components/ui/Select.astro';
-import Textarea from '../components/ui/Textarea.astro';
-import Checkbox from '../components/ui/Checkbox.astro';
-import Switch from '../components/ui/Switch.astro';
-import RadioGroup from '../components/ui/RadioGroup.astro';
-
-// Icons
-import SunIcon from '../components/icons/SunIcon.astro';
-import MoonIcon from '../components/icons/MoonIcon.astro';
-import MonitorIcon from '../components/icons/MonitorIcon.astro';
-
-// Display components
-import Card from '../components/ui/Card.astro';
-import Alert from '../components/ui/Alert.astro';
-import Badge from '../components/ui/Badge.astro';
-import Avatar from '../components/ui/Avatar.astro';
-import Progress from '../components/ui/Progress.astro';
-import Skeleton from '../components/ui/Skeleton.astro';
-import Toast from '../components/ui/Toast.astro';
-import Breadcrumb from '../components/ui/Breadcrumb.astro';
-
-// Navigation components
-import Accordion from '../components/ui/Accordion.astro';
-import DropdownMenu from '../components/ui/DropdownMenu.astro';
-import Table from '../components/ui/Table.astro';
-
-// Overlay components
-import AlertDialog from '../components/ui/AlertDialog.astro';
-import Modal from '../components/ui/Modal.astro';
-import Popover from '../components/ui/Popover.astro';
-import Tooltip from '../components/ui/Tooltip.astro';
-import Toggle from '../components/ui/Toggle.astro';
+// Import all UI components from the NPM package
+import {
+  // Form Controls
+  Button, Input, Label, Select, Textarea, Checkbox, Switch, RadioGroup, Toggle,
+  // Display
+  Card, Alert, Badge, Avatar, Progress, Skeleton, Toast, Breadcrumb,
+  // Navigation
+  Tabs, Accordion, DropdownMenu, Table,
+  // Overlays
+  AlertDialog, Modal, Popover, Tooltip,
+  // Icons
+  SunIcon, MoonIcon, MonitorIcon
+} from '@mks2508/basecoat-astro-components';
 
 // Kitchen Sink sections
 const kitchenSinkSections = [

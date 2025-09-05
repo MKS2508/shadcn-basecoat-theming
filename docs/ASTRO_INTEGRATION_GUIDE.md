@@ -3,15 +3,27 @@
 ## Overview
 Complete guide for integrating `@mks2508/shadcn-basecoat-theme-manager` into an Astro project. This serves as both documentation and blueprint for a future CLI tool.
 
-## 📦 Package Dependencies
+## 📦 Prerequisites & Dependencies
 
+### 🔍 Required Prerequisites (CLI will verify)
+- **Astro**: `^5.0.0` (proyecto Astro existente)
+- **Tailwind CSS**: `^4.0.0` (debe estar instalado y configurado)
+- **Basecoat CSS**: `latest` (debe estar instalado)
+
+### 📋 CLI Verification Steps
+```bash
+# El CLI verificará automáticamente:
+1. ✅ Proyecto Astro (astro.config.mjs existe)
+2. ✅ Tailwind CSS v4 instalado
+3. ✅ Basecoat CSS instalado
+4. ✅ Gestor de paquetes (npm/pnpm/yarn)
+```
+
+### 📦 Dependencies Added by CLI
 ```json
 {
   "dependencies": {
-    "@mks2508/shadcn-basecoat-theme-manager": "workspace:*",
-    "astro": "^5.0.0",
-    "tailwindcss": "^4.0.0",
-    "basecoat-css": "latest"
+    "@mks2508/shadcn-basecoat-theme-manager": "latest"
   }
 }
 ```
@@ -52,14 +64,21 @@ project/
 <script>
   import { ThemeCore } from '@mks2508/shadcn-basecoat-theme-manager';
 
-  // Inicializar con configuración específica de Astro
-  ThemeCore.init({ framework: 'astro' })
-    .then(themeCore => {
-      console.log('✅ ThemeCore initialized:', themeCore);
-    })
-    .catch(error => {
+  async function initializeThemeCore() {
+    try {
+      console.log('🎨 Initializing ThemeCore (Simplified API)...');
+      
+      // Single line initialization - framework agnostic
+      const themeCore = await ThemeCore.init();
+      
+      console.log('✅ ThemeCore initialized successfully:', themeCore);
+    } catch (error) {
       console.error('❌ Failed to initialize ThemeCore:', error);
-    });
+    }
+  }
+
+  // Initialize immediately
+  initializeThemeCore();
 </script>
 ```
 
@@ -403,10 +422,27 @@ import ThemeProvider from '../components/ThemeProvider.astro'
 - [ ] ThemeManagementIsland.astro (full UI)
 - [ ] FontSettingsIsland.astro (font customization)
 
-### Configuration Steps
+### CLI Setup Steps (Automated)
+```bash
+# Prerequisite checks (CLI verifies automatically)
+1. ✅ Verify Astro project exists
+2. ✅ Check Tailwind CSS v4 installed
+3. ✅ Check Basecoat CSS installed
+
+# Setup process (CLI executes automatically)  
+4. 📦 Install theme manager package
+5. 📁 Create theme directory structure
+6. 📄 Generate ThemeProvider.astro
+7. ⚙️ Update Layout.astro (optional with --with-fouc)
+8. 🎨 Add global.css theme imports
+9. 📋 Create themes registry.json
+10. 🎯 Generate default theme CSS files
+```
+
+### Manual Setup Steps (Alternative)
 1. Install package: `npm install @mks2508/shadcn-basecoat-theme-manager`
 2. Create folder structure
-3. Copy ThemeProvider.astro
+3. Generate ThemeProvider.astro
 4. Update Layout.astro
 5. Add global.css imports
 6. Create registry.json
@@ -500,8 +536,8 @@ themeManager.onThemeChange((themeData) => {
 
 1. **Initialization Helper**
    ```javascript
-   // Inicialización simplificada con configuración específica de framework
-   const themeCore = await ThemeCore.init({ framework: 'astro' });
+   // Inicialización simplificada framework-agnostic
+   const themeCore = await ThemeCore.init();
    ```
 
 2. **FOUC Prevention Script Generator**
@@ -525,10 +561,10 @@ themeManager.onThemeChange((themeData) => {
    ThemeCore.waitForReady();
    ```
 
-5. **Astro Provider Generator**
+5. **Universal Init Script Generator**
    ```javascript
-   // Generar script de inicialización para Astro
-   const providerScript = ThemeCore.getAstroProvider();
+   // Generar script de inicialización universal (framework-agnostic)
+   const initScript = ThemeCore.getInitScript();
    ```
 
 ### 🎯 Philosophy: Simple Helpers, Not Code Generators
