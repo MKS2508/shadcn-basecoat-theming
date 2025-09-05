@@ -1,7 +1,8 @@
 ---
 import '../styles/global.css'
 import { ViewTransitions } from 'astro:transitions'
-import ThemeManager from '../components/ThemeManager.astro'
+import ThemeProvider from '../components/ThemeProvider.astro'
+import ThemeManagementIsland from '../components/ThemeManagementIsland.astro'
 ---
 <!doctype html>
 <html lang="en">
@@ -54,14 +55,17 @@ import ThemeManager from '../components/ThemeManager.astro'
 					}
 				}
 				
-				// Reveal content - optimized for Astro
+				// Reveal content - optimized for Astro with CSS variable check
 				function revealContent() {
 					if (hasRevealed) return;
 					hasRevealed = true;
 					
-					document.body.style.visibility = 'visible';
-					document.body.style.opacity = '1';
-					document.body.style.transition = 'opacity 0.15s ease-out';
+					// Wait a frame to ensure CSS variables are applied
+					requestAnimationFrame(() => {
+						document.body.style.visibility = 'visible';
+						document.body.style.opacity = '1';
+						document.body.style.transition = 'opacity 0.15s ease-out';
+					});
 				}
 				
 				// Apply theme immediately
@@ -95,8 +99,11 @@ import ThemeManager from '../components/ThemeManager.astro'
 		<!-- Toast container for Basecoat toasts -->
 		<div id="toaster" class="toaster" data-align="end"></div>
 		
-		<!-- Theme Provider Component -->
-		<ThemeManager />
+		<!-- Theme Core Provider (with integrated ThemeManager) -->
+		<ThemeProvider />
+		
+		<!-- Theme Management Modal Island -->
+		<ThemeManagementIsland />
 	</body>
 </html>
 

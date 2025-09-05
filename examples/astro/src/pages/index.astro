@@ -2,7 +2,6 @@
 import Layout from '../layouts/Layout.astro';
 import Tabs from '../components/ui/Tabs.astro';
 import ThemeSelector from '../components/ThemeSelector.astro';
-import ThemeManagementModal from '../components/ThemeManagementModal.astro';
 
 // Form Controls components
 import Button from '../components/ui/Button.astro';
@@ -620,6 +619,83 @@ const breadcrumbItems = [
 		</Tabs>
 	</main>
 
-	<!-- Theme Management Modal -->
-	<ThemeManagementModal />
 </Layout>
+
+<script>
+  // Setup mode toggle functionality
+  let toggleSetupComplete = false;
+  
+  function setupModeToggle() {
+    console.log('🎯 Setting up mode toggle...');
+    
+    // Listen for theme-core-ready event (primary method)
+    window.addEventListener('theme-core-ready', (event: any) => {
+      console.log('📡 Received theme-core-ready event');
+      const themeCore = event.detail?.themeCore || (window as any).themeCore;
+      if (themeCore?.themeManager && !toggleSetupComplete) {
+        setupModeToggleWithCore(themeCore);
+      }
+    });
+    
+    // Single fallback check in case event already fired
+    setTimeout(() => {
+      if (!toggleSetupComplete) {
+        const themeCore = (window as any).themeCore;
+        if (themeCore?.themeManager) {
+          console.log('⚡ ThemeCore already available (fallback)');
+          setupModeToggleWithCore(themeCore);
+        }
+      }
+    }, 100);
+  }
+  
+  function setupModeToggleWithCore(themeCore: any) {
+    if (toggleSetupComplete) return;
+    toggleSetupComplete = true;
+    
+    console.log('🔧 Setting up mode toggle with ThemeCore');
+    
+    const modeToggle = document.getElementById('mode-toggle');
+    const lightIcon = document.getElementById('light-icon');
+    const darkIcon = document.getElementById('dark-icon');
+    const autoIcon = document.getElementById('auto-icon');
+    
+    if (!modeToggle || !themeCore?.themeManager) {
+      console.error('❌ Mode toggle button or themeManager not found');
+      return;
+    }
+    
+    function updateModeIcon(mode: string) {
+      [lightIcon, darkIcon, autoIcon].forEach(icon => icon?.classList.add('hidden'));
+      const iconMap: { [key: string]: HTMLElement | null } = { light: lightIcon, dark: darkIcon, auto: autoIcon };
+      iconMap[mode]?.classList.remove('hidden');
+    }
+    
+    async function toggleMode() {
+      console.log('🔄 Toggle clicked, switching mode...');
+      try {
+        await themeCore.themeManager.toggleMode();
+        const newMode = themeCore.themeManager.getCurrentMode();
+        updateModeIcon(newMode);
+        console.log(`✅ Switched to mode: ${newMode}`);
+      } catch (error) {
+        console.error('❌ Error toggling mode:', error);
+      }
+    }
+    
+    // Set initial icon and add event listener
+    const currentMode = themeCore.themeManager.getCurrentMode();
+    updateModeIcon(currentMode);
+    modeToggle.addEventListener('click', toggleMode);
+    
+    console.log('✅ Mode toggle setup complete');
+  }
+  
+  // Run when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupModeToggle);
+  } else {
+    // DOM already loaded
+    setupModeToggle();
+  }
+</script>
