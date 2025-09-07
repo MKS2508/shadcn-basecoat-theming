@@ -319,7 +319,7 @@ export class StorageManager {
     const legacyThemes: CachedTheme[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && key.startsWith('theme-cache-') && !Object.values(StorageManager.FOUC_KEYS).includes(key)) {
+      if (key && key.startsWith('theme-cache-') && !(Object.values(StorageManager.FOUC_KEYS) as string[]).includes(key)) {
         const data = localStorage.getItem(key);
         if (data) {
           try {

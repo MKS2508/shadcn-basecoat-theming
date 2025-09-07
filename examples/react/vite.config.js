@@ -5,6 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: process.env.NODE_ENV === 'production' ? '/themes/react/' : '/',
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
@@ -12,6 +13,7 @@ export default defineConfig({
     },
   },
   build: {
+    outDir: process.env.NODE_ENV === 'production' ? '../../dist/react' : 'dist',
     rollupOptions: {
       output: {
         manualChunks: {

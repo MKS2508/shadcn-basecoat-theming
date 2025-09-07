@@ -1,0 +1,738 @@
+---
+// Professional Astro benchmark component with comprehensive test scenarios
+---
+
+<div class="professional-benchmark-container">
+  <h3>🏆 Professional Performance Benchmark Suite</h3>
+  
+  <div class="button-group">
+    <button id="run-professional-benchmark">🏆 Run Full Benchmark Suite</button>
+    <button id="export-professional-results" style="display: none;">📊 Export Professional Report</button>
+  </div>
+  
+  <!-- Device Information -->
+  <div id="device-info" class="device-info-container" style="display: none;"></div>
+  
+  <!-- Test Scenarios Status -->
+  <div id="scenario-status" class="scenario-status-container" style="display: none;">
+    <h4>📋 Test Scenarios Status</h4>
+    <div id="scenario-grid" class="scenario-grid"></div>
+  </div>
+  
+  <div id="professional-status" class="status-message"></div>
+  <div id="professional-results" class="results-container" style="display: none;"></div>
+</div>
+
+<script>
+  interface BenchmarkResults {
+    scenario_results: Record<string, any>;
+    performance_metrics: Record<string, any>;
+    cache_metrics: {
+      hit_rates: Record<string, { hitRate: string; hits: number; total: number }>;
+      overall_cache_efficiency: string;
+    };
+    storage_metrics: {
+      operations: {
+        localStorage: { reads: number; writes: number; total: number };
+        indexedDB: { reads: number; writes: number; total: number };
+      };
+      efficiency: { ratio: string; recommendation: string };
+    };
+    performance_score: number;
+    budget_violations: string[];
+    total_operations: number;
+  }
+
+  interface DeviceInfo {
+    memory: string;
+    connection: string;
+    hardwareConcurrency: number;
+    devicePixelRatio: number;
+  }
+
+  let professionalBenchmarkResults: BenchmarkResults | null = null;
+  let isRunningProfessional = false;
+  let scenarioProgress: Record<string, 'pending' | 'running' | 'completed' | 'failed'> = {};
+  let deviceInfo: DeviceInfo | null = null;
+
+  const PROFESSIONAL_TEST_SCENARIOS = [
+    {
+      id: 'cold_start_test',
+      name: '🧊 Cold Start Test',
+      description: 'Tests performance after clearing all caches',
+      operation: 'cold_start'
+    },
+    {
+      id: 'hot_switching_test', 
+      name: '🔥 Hot Switching Test',
+      description: 'Rapid theme switches (realistic user behavior)',
+      operation: 'hot_switching'
+    },
+    {
+      id: 'stress_test',
+      name: '⚡ Stress Test', 
+      description: 'Maximum speed theme switching (edge case testing)',
+      operation: 'stress_test'
+    },
+    {
+      id: 'font_combination_test',
+      name: '🔤 Font Combination Test',
+      description: 'Multiple font family switches and loading',
+      operation: 'font_combinations'
+    },
+    {
+      id: 'storage_performance_test',
+      name: '💾 Storage Performance Test',
+      description: 'localStorage vs IndexedDB performance comparison',
+      operation: 'storage_performance'
+    },
+    {
+      id: 'memory_leak_test',
+      name: '🧠 Memory Leak Detection',
+      description: 'Multiple operations with memory monitoring',
+      operation: 'memory_leak_detection'
+    },
+    {
+      id: 'cache_effectiveness_test',
+      name: '🔄 Cache Effectiveness Test',
+      description: 'Cache hit/miss ratio analysis',
+      operation: 'cache_effectiveness'
+    }
+  ];
+  
+  const runProfessionalButton = document.getElementById('run-professional-benchmark') as HTMLButtonElement;
+  const exportProfessionalButton = document.getElementById('export-professional-results') as HTMLButtonElement;
+  const professionalStatusDiv = document.getElementById('professional-status') as HTMLDivElement;
+  const professionalResultsDiv = document.getElementById('professional-results') as HTMLDivElement;
+  const deviceInfoDiv = document.getElementById('device-info') as HTMLDivElement;
+  const scenarioStatusDiv = document.getElementById('scenario-status') as HTMLDivElement;
+  const scenarioGridDiv = document.getElementById('scenario-grid') as HTMLDivElement;
+
+  // Collect device information
+  const collectDeviceInfo = (): DeviceInfo => {
+    return {
+      memory: (navigator as any).deviceMemory ? `${(navigator as any).deviceMemory}GB` : 'Unknown',
+      connection: (navigator as any).connection?.effectiveType || 'Unknown',
+      hardwareConcurrency: navigator.hardwareConcurrency || 0,
+      devicePixelRatio: window.devicePixelRatio || 1
+    };
+  };
+
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+  const updateScenarioStatus = (scenarioId: string, status: 'pending' | 'running' | 'completed' | 'failed') => {
+    scenarioProgress[scenarioId] = status;
+    updateScenarioDisplay();
+  };
+
+  const updateScenarioDisplay = () => {
+    const grid = scenarioGridDiv;
+    grid.innerHTML = '';
+    
+    PROFESSIONAL_TEST_SCENARIOS.forEach(scenario => {
+      const status = scenarioProgress[scenario.id] || 'pending';
+      const scenarioEl = document.createElement('div');
+      scenarioEl.className = 'scenario-item';
+      scenarioEl.innerHTML = `
+        <div class="scenario-header">
+          <span class="scenario-icon">${getScenarioIcon(status)}</span>
+          <span class="scenario-name">${scenario.name}</span>
+        </div>
+        <div class="scenario-description">${scenario.description}</div>
+      `;
+      grid.appendChild(scenarioEl);
+    });
+  };
+
+  const getScenarioIcon = (status: 'pending' | 'running' | 'completed' | 'failed') => {
+    switch (status) {
+      case 'running': return '🔄';
+      case 'completed': return '✅';
+      case 'failed': return '❌';
+      default: return '⏳';
+    }
+  };
+
+  const displayDeviceInfo = (info: DeviceInfo) => {
+    deviceInfoDiv.innerHTML = `
+      <h4>🖥️ Device Information</h4>
+      <div class="device-grid">
+        <div>💾 Memory: ${info.memory}</div>
+        <div>🌐 Connection: ${info.connection}</div>
+        <div>🔧 CPU Cores: ${info.hardwareConcurrency}</div>
+        <div>🖼️ Pixel Ratio: ${info.devicePixelRatio}x</div>
+      </div>
+    `;
+    deviceInfoDiv.style.display = 'block';
+  };
+
+  const runColdStartTest = async (themeCore: any) => {
+    updateScenarioStatus('cold_start_test', 'running');
+    console.log('🧊 Starting Cold Start Test - clearing all caches...');
+    
+    try {
+      // Clear all caches using PerformanceTracker
+      await (window as any).PerformanceTracker?.clearAllCaches();
+      await delay(1000); // Let caches clear completely
+      
+      // Test theme loading from cold state
+      const themes = ['default', 'supabase'];
+      const modes = ['light', 'dark'] as const;
+      
+      for (const theme of themes) {
+        for (const mode of modes) {
+          console.log(`❄️ Cold load: ${theme}-${mode}`);
+          await themeCore.themeManager.setTheme(theme, mode);
+          await delay(100); // Let DOM settle
+        }
+      }
+      
+      updateScenarioStatus('cold_start_test', 'completed');
+      console.log('✅ Cold Start Test completed');
+    } catch (error) {
+      console.error('❌ Cold Start Test failed:', error);
+      updateScenarioStatus('cold_start_test', 'failed');
+    }
+  };
+
+  const runHotSwitchingTest = async (themeCore: any) => {
+    updateScenarioStatus('hot_switching_test', 'running');
+    console.log('🔥 Starting Hot Switching Test - realistic user behavior...');
+    
+    try {
+      // Simulate realistic user theme switching patterns
+      const userScenarios = [
+        ['default', 'light'], ['default', 'dark'], // User explores default theme
+        ['supabase', 'light'], ['supabase', 'dark'], // User tries supabase theme  
+        ['default', 'light'], ['supabase', 'dark'], // User compares themes
+        ['default', 'dark'], ['supabase', 'light']  // More exploration
+      ];
+      
+      for (const [theme, mode] of userScenarios) {
+        console.log(`🔥 Hot switch: ${theme}-${mode}`);
+        await themeCore.themeManager.setTheme(theme, mode);
+        await delay(200 + Math.random() * 300); // Simulate realistic user timing
+      }
+      
+      updateScenarioStatus('hot_switching_test', 'completed');
+      console.log('✅ Hot Switching Test completed');
+    } catch (error) {
+      console.error('❌ Hot Switching Test failed:', error);
+      updateScenarioStatus('hot_switching_test', 'failed');
+    }
+  };
+
+  const runStressTest = async (themeCore: any) => {
+    updateScenarioStatus('stress_test', 'running');
+    console.log('⚡ Starting Stress Test - rapid theme changes...');
+    
+    try {
+      const themes = ['default', 'supabase'];
+      const modes = ['light', 'dark'] as const;
+      
+      // Rapid fire theme changes
+      for (let iteration = 0; iteration < 3; iteration++) {
+        console.log(`⚡ Stress iteration ${iteration + 1}/3`);
+        for (const theme of themes) {
+          for (const mode of modes) {
+            await themeCore.themeManager.setTheme(theme, mode);
+            await delay(50); // Minimal delay - stress the system
+          }
+        }
+      }
+      
+      updateScenarioStatus('stress_test', 'completed');
+      console.log('✅ Stress Test completed');
+    } catch (error) {
+      console.error('❌ Stress Test failed:', error);
+      updateScenarioStatus('stress_test', 'failed');
+    }
+  };
+
+  const runFontCombinationTest = async (themeCore: any) => {
+    updateScenarioStatus('font_combination_test', 'running');
+    console.log('🔤 Starting Font Combination Test...');
+    
+    try {
+      const fontManager = themeCore.themeManager.getFontManager();
+      
+      // Test different font combinations
+      const fontCombinations = [
+        { sans: 'Inter', serif: 'Playfair Display', mono: 'Fira Code' },
+        { sans: 'Roboto', serif: 'Lora', mono: 'Source Code Pro' },
+        { sans: 'Open Sans', serif: 'Merriweather', mono: 'Monaco' }
+      ];
+      
+      for (const [index, fonts] of fontCombinations.entries()) {
+        console.log(`🔤 Testing font combination ${index + 1}:`, fonts);
+        
+        // Apply font overrides
+        await fontManager.setFontOverride('sans', fonts.sans);
+        await fontManager.setFontOverride('serif', fonts.serif);
+        await fontManager.setFontOverride('mono', fonts.mono);
+        
+        // Switch themes to test font loading with different themes
+        await themeCore.themeManager.setTheme('default', 'light');
+        await delay(150);
+        await themeCore.themeManager.setTheme('supabase', 'dark');
+        await delay(150);
+      }
+      
+      updateScenarioStatus('font_combination_test', 'completed');
+      console.log('✅ Font Combination Test completed');
+    } catch (error) {
+      console.error('❌ Font Combination Test failed:', error);
+      updateScenarioStatus('font_combination_test', 'failed');
+    }
+  };
+
+  const runStoragePerformanceTest = async (themeCore: any) => {
+    updateScenarioStatus('storage_performance_test', 'running');
+    console.log('💾 Starting Storage Performance Test...');
+    
+    try {
+      // Test multiple theme changes to generate storage operations
+      const testOperations = [
+        ['default', 'light'], ['default', 'dark'],
+        ['supabase', 'light'], ['supabase', 'dark'],
+        ['default', 'light'], // Back to start for comparison
+      ];
+      
+      for (const [theme, mode] of testOperations) {
+        console.log(`💾 Storage test: ${theme}-${mode}`);
+        await themeCore.themeManager.setTheme(theme, mode);
+        await delay(100); // Allow storage operations to complete
+      }
+      
+      updateScenarioStatus('storage_performance_test', 'completed');
+      console.log('✅ Storage Performance Test completed');
+    } catch (error) {
+      console.error('❌ Storage Performance Test failed:', error);
+      updateScenarioStatus('storage_performance_test', 'failed');
+    }
+  };
+
+  const runMemoryLeakTest = async (themeCore: any) => {
+    updateScenarioStatus('memory_leak_test', 'running');
+    console.log('🧠 Starting Memory Leak Detection Test...');
+    
+    try {
+      const initialMemory = (performance as any).memory?.usedJSHeapSize || 0;
+      console.log(`🧠 Initial memory: ${(initialMemory / 1024 / 1024).toFixed(2)}MB`);
+      
+      // Perform many operations to detect memory leaks
+      for (let cycle = 0; cycle < 5; cycle++) {
+        console.log(`🧠 Memory test cycle ${cycle + 1}/5`);
+        
+        // Multiple theme operations per cycle
+        const operations = [
+          ['default', 'light'], ['supabase', 'dark'], 
+          ['default', 'dark'], ['supabase', 'light']
+        ];
+        
+        for (const [theme, mode] of operations) {
+          await themeCore.themeManager.setTheme(theme, mode);
+          await delay(25);
+        }
+        
+        // Check memory after each cycle
+        const currentMemory = (performance as any).memory?.usedJSHeapSize || 0;
+        console.log(`🧠 Memory after cycle ${cycle + 1}: ${(currentMemory / 1024 / 1024).toFixed(2)}MB`);
+      }
+      
+      updateScenarioStatus('memory_leak_test', 'completed');
+      console.log('✅ Memory Leak Test completed');
+    } catch (error) {
+      console.error('❌ Memory Leak Test failed:', error);
+      updateScenarioStatus('memory_leak_test', 'failed');
+    }
+  };
+
+  const runCacheEffectivenessTest = async (themeCore: any) => {
+    updateScenarioStatus('cache_effectiveness_test', 'running');
+    console.log('🔄 Starting Cache Effectiveness Test...');
+    
+    try {
+      // First, clear caches to start fresh
+      await (window as any).PerformanceTracker?.clearAllCaches();
+      await delay(500);
+      
+      // Test cache misses (first loads)
+      console.log('🔄 Testing cache misses...');
+      await themeCore.themeManager.setTheme('default', 'light'); // Cache miss
+      await themeCore.themeManager.setTheme('supabase', 'dark'); // Cache miss
+      await delay(200);
+      
+      // Test cache hits (repeat loads)
+      console.log('🔄 Testing cache hits...');
+      await themeCore.themeManager.setTheme('default', 'light'); // Should be cache hit
+      await themeCore.themeManager.setTheme('supabase', 'dark'); // Should be cache hit
+      await themeCore.themeManager.setTheme('default', 'light'); // Should be cache hit
+      
+      updateScenarioStatus('cache_effectiveness_test', 'completed');
+      console.log('✅ Cache Effectiveness Test completed');
+    } catch (error) {
+      console.error('❌ Cache Effectiveness Test failed:', error);
+      updateScenarioStatus('cache_effectiveness_test', 'failed');
+    }
+  };
+
+  const getPerformanceGrade = (score: number): string => {
+    if (score >= 9) return 'A+ (Excellent)';
+    if (score >= 8) return 'A (Very Good)';
+    if (score >= 7) return 'B+ (Good)';
+    if (score >= 6) return 'B (Acceptable)';
+    if (score >= 5) return 'C (Needs Improvement)';
+    return 'D (Poor)';
+  };
+
+  const getCacheEfficiencyGrade = (efficiency: string): string => {
+    const value = parseFloat(efficiency);
+    if (value >= 90) return 'A+ (Excellent Cache Performance)';
+    if (value >= 80) return 'A (Very Good Cache Performance)';
+    if (value >= 70) return 'B+ (Good Cache Performance)';
+    if (value >= 60) return 'B (Acceptable Cache Performance)';
+    return 'C (Cache Needs Optimization)';
+  };
+
+  const getStorageEfficiencyGrade = (ratio: string): string => {
+    const [local, indexed] = ratio.split(':').map(Number);
+    const total = local + indexed;
+    if (total === 0) return 'No Data';
+    
+    const indexedDBRatio = indexed / total;
+    if (indexedDBRatio >= 0.7) return 'A (Optimal IndexedDB Usage)';
+    if (indexedDBRatio >= 0.5) return 'B (Good Storage Mix)';
+    if (indexedDBRatio >= 0.3) return 'C (Consider More IndexedDB)';
+    return 'D (Over-reliance on localStorage)';
+  };
+
+  const generateDetailedRecommendations = (results: BenchmarkResults): string[] => {
+    const recommendations: string[] = [...results.budget_violations];
+    
+    // Add performance-specific recommendations
+    if (results.performance_score < 7) {
+      recommendations.push('🚨 Overall performance score below 7.0 - consider optimization');
+    }
+    
+    const cacheEfficiency = parseFloat(results.cache_metrics.overall_cache_efficiency);
+    if (cacheEfficiency < 80) {
+      recommendations.push('📈 Cache hit rate below 80% - implement better caching strategy');
+    }
+    
+    return recommendations;
+  };
+
+  runProfessionalButton?.addEventListener('click', async () => {
+    console.log('🚀 Starting Professional Benchmark Suite...');
+    
+    // Get ThemeCore instance
+    const themeCore = (window as any).themeCore;
+    if (!themeCore) {
+      professionalStatusDiv.textContent = '❌ ThemeCore not available';
+      professionalStatusDiv.style.color = 'var(--destructive)';
+      return;
+    }
+
+    if (isRunningProfessional) return;
+
+    isRunningProfessional = true;
+    
+    // Collect and display device info
+    deviceInfo = collectDeviceInfo();
+    displayDeviceInfo(deviceInfo);
+    console.log('📊 Device Info:', deviceInfo);
+    
+    // Initialize scenario progress
+    scenarioProgress = PROFESSIONAL_TEST_SCENARIOS.reduce((acc, scenario) => {
+      acc[scenario.id] = 'pending';
+      return acc;
+    }, {} as Record<string, 'pending' | 'running' | 'completed' | 'failed'>);
+    
+    scenarioStatusDiv.style.display = 'block';
+    updateScenarioDisplay();
+    
+    // Disable button and show status
+    runProfessionalButton.disabled = true;
+    runProfessionalButton.textContent = '⏳ Running Professional Benchmark...';
+    professionalStatusDiv.textContent = '🔄 Running comprehensive benchmark tests...';
+    professionalStatusDiv.style.color = 'var(--muted-foreground)';
+    professionalResultsDiv.style.display = 'none';
+    exportProfessionalButton.style.display = 'none';
+    
+    try {
+      // Reset performance tracker
+      (window as any).PerformanceTracker?.reset();
+      
+      // Run all test scenarios
+      await runColdStartTest(themeCore);
+      await runHotSwitchingTest(themeCore);
+      await runStressTest(themeCore);
+      await runFontCombinationTest(themeCore);
+      await runStoragePerformanceTest(themeCore);
+      await runMemoryLeakTest(themeCore);
+      await runCacheEffectivenessTest(themeCore);
+      
+      // Get comprehensive results
+      const stats = (window as any).PerformanceTracker?.getAllStats();
+      professionalBenchmarkResults = {
+        framework: 'Astro',
+        timestamp: new Date().toISOString(),
+        user_agent: navigator.userAgent,
+        device_info: deviceInfo!,
+        test_scenarios_completed: Object.values(scenarioProgress).filter(s => s === 'completed').length,
+        test_scenarios_failed: Object.values(scenarioProgress).filter(s => s === 'failed').length,
+        scenario_status: scenarioProgress,
+        ...stats,
+        quality_assessment: {
+          overall_performance_grade: getPerformanceGrade(stats.performance_score),
+          cache_efficiency_grade: getCacheEfficiencyGrade(stats.cache_metrics.overall_cache_efficiency),
+          storage_efficiency_grade: getStorageEfficiencyGrade(stats.storage_metrics.efficiency.ratio),
+          recommendations: generateDetailedRecommendations(stats)
+        }
+      };
+      
+      // Display results with enhanced formatting
+      professionalResultsDiv.innerHTML = `
+        <h4>📊 Professional Benchmark Results</h4>
+        
+        <!-- Performance Summary -->
+        <div class="performance-summary">
+          <div class="metric-card">
+            <div class="metric-value">${stats.performance_score}/10</div>
+            <div class="metric-label">Performance Score</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">${stats.cache_metrics.overall_cache_efficiency}</div>
+            <div class="metric-label">Cache Efficiency</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">${stats.total_operations}</div>
+            <div class="metric-label">Total Operations</div>
+          </div>
+        </div>
+        
+        <!-- Detailed Results -->
+        <pre class="results-json">${JSON.stringify(professionalBenchmarkResults, null, 2)}</pre>
+        <div class="results-note">💡 Professional benchmark results include cache metrics, storage analysis, and performance budgets</div>
+      `;
+      
+      professionalResultsDiv.style.display = 'block';
+      exportProfessionalButton.style.display = 'inline-block';
+      
+      professionalStatusDiv.textContent = '🎉 Professional Benchmark Suite completed successfully!';
+      professionalStatusDiv.style.color = 'var(--success)';
+      
+      console.log('🎉 Professional Benchmark Suite completed!');
+      console.log('📊 Final Results:', professionalBenchmarkResults);
+      
+    } catch (error) {
+      console.error('❌ Professional benchmark suite failed:', error);
+      professionalStatusDiv.textContent = '❌ Benchmark suite failed - check console for details';
+      professionalStatusDiv.style.color = 'var(--destructive)';
+    } finally {
+      isRunningProfessional = false;
+      runProfessionalButton.disabled = false;
+      runProfessionalButton.textContent = '🏆 Run Full Benchmark Suite';
+    }
+  });
+  
+  exportProfessionalButton?.addEventListener('click', () => {
+    if (!professionalBenchmarkResults) return;
+    
+    const dataStr = JSON.stringify(professionalBenchmarkResults, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `astro-professional-benchmark-${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    console.log('📁 Professional benchmark results exported');
+  });
+
+  // Initialize device info display on load
+  deviceInfo = collectDeviceInfo();
+  displayDeviceInfo(deviceInfo);
+</script>
+
+<style>
+  .professional-benchmark-container {
+    padding: 1.5rem;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    margin: 1rem 0;
+    background-color: var(--card);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+  
+  .professional-benchmark-container h3 {
+    margin: 0 0 1rem 0;
+    color: var(--foreground);
+    font-size: 1.25rem;
+  }
+  
+  .button-group {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  
+  .professional-benchmark-container button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+  }
+  
+  #run-professional-benchmark {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+  
+  #run-professional-benchmark:disabled {
+    background: var(--muted);
+    color: var(--muted-foreground);
+    cursor: not-allowed;
+  }
+  
+  #export-professional-results {
+    background: var(--secondary);
+    color: var(--secondary-foreground);
+  }
+  
+  .professional-benchmark-container button:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+  
+  .device-info-container {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: var(--muted);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  
+  .device-info-container h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--foreground);
+    font-size: 1rem;
+  }
+  
+  .device-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+  }
+  
+  .scenario-status-container {
+    margin-bottom: 1.5rem;
+  }
+  
+  .scenario-status-container h4 {
+    margin: 0 0 1rem 0;
+    color: var(--foreground);
+    font-size: 1rem;
+  }
+  
+  .scenario-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 0.5rem;
+  }
+  
+  .scenario-item {
+    padding: 0.75rem;
+    background-color: var(--muted);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    font-size: 0.875rem;
+  }
+  
+  .scenario-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .scenario-name {
+    font-weight: 600;
+    color: var(--foreground);
+  }
+  
+  .scenario-description {
+    color: var(--muted-foreground);
+    font-size: 0.8rem;
+  }
+  
+  .status-message {
+    font-size: 14px;
+    margin-bottom: 0.5rem;
+    font-style: italic;
+  }
+  
+  .results-container {
+    margin-top: 1.5rem;
+  }
+  
+  .results-container h4 {
+    margin: 0 0 1rem 0;
+    color: var(--foreground);
+    font-size: 1.1rem;
+  }
+  
+  .performance-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .metric-card {
+    padding: 1rem;
+    background-color: var(--muted);
+    border-radius: 8px;
+    text-align: center;
+  }
+  
+  .metric-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary);
+  }
+  
+  .metric-label {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+  }
+  
+  .results-json {
+    background: var(--muted);
+    color: var(--muted-foreground);
+    padding: 1.5rem;
+    border-radius: 8px;
+    font-size: 11px;
+    overflow: auto;
+    margin: 0 0 1rem 0;
+    border: 1px solid var(--border);
+    max-height: 400px;
+  }
+  
+  .results-note {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    text-align: center;
+  }
+</style>

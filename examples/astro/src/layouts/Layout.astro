@@ -27,83 +27,10 @@ import ThemeManagementIsland from '../components/ThemeManagementIsland.astro'
 			}
 		</style>
 		
-		<!-- Unified ThemeCore Initialization - Optimized for Astro -->
-		<script is:inline type="module">
-			(async function() {
-				try {
-					console.log('🎨 Initializing ThemeCore (Astro Layout)...');
-					
-					const { ThemeCore } = await import('@mks2508/shadcn-basecoat-theme-manager');
-					
-					// Unified initialization with Astro-optimized configuration
-					await ThemeCore.init({
-						debug: true,
-						fouc: {
-							prevent: true,
-							method: 'auto', // Auto-detect based on document ready state
-							revealDelay: 50 // Small delay for Astro hydration
-						}
-						// Optional: Add default configuration
-						// defaults: {
-						//   theme: 'default',
-						//   mode: 'auto',
-						//   fonts: {
-						//     sans: 'Inter',
-						//     serif: 'Georgia', 
-						//     mono: 'JetBrains Mono'
-						//   }
-						// }
-					});
-					
-					console.log('✅ ThemeCore initialized successfully');
-					
-					// Astro-specific: Reinitialize on page navigation
-					document.addEventListener('astro:page-load', async function() {
-						console.log('🔄 Astro page load - reapplying theme...');
-						// ThemeCore will handle FOUC prevention automatically
-						try {
-							const instance = ThemeCore.getInstance();
-							if (instance) {
-								// Reapply current theme for new page
-								const currentTheme = instance.themeManager.getCurrentTheme();
-								if (currentTheme) {
-									await instance.themeManager.setTheme(currentTheme);
-								}
-							}
-						} catch (error) {
-							console.warn('⚠️ Failed to reapply theme on page load:', error);
-						}
-					});
-					
-				} catch (error) {
-					console.error('❌ Failed to initialize ThemeCore:', error);
-					
-					// Fallback: basic FOUC prevention if ThemeCore fails
-					try {
-						const savedTheme = localStorage.getItem('theme-current') || 'default';
-						const savedMode = localStorage.getItem('theme-mode') || 'auto';
-						
-						let resolvedMode = savedMode;
-						if (savedMode === 'auto') {
-							resolvedMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-						}
-						
-						document.documentElement.setAttribute('data-theme', savedTheme);
-						document.documentElement.setAttribute('data-mode', resolvedMode);
-						document.documentElement.classList.toggle('dark', resolvedMode === 'dark');
-						
-						// Reveal body
-						document.body.style.visibility = 'visible';
-						document.body.style.opacity = '1';
-						
-					} catch (fallbackError) {
-						console.error('❌ Fallback FOUC prevention also failed:', fallbackError);
-						// Last resort: just reveal the body
-						document.body.style.visibility = 'visible';
-						document.body.style.opacity = '1';
-					}
-				}
-			})();
+		<!-- Export PerformanceTracker for benchmarks -->
+		<script>
+			import { PerformanceTracker } from '@mks2508/shadcn-basecoat-theme-manager';
+			window.PerformanceTracker = PerformanceTracker;
 		</script>
 		
 		<!-- Basecoat JavaScript (all components included) -->

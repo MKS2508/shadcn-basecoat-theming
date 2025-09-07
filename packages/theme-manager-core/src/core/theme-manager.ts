@@ -49,7 +49,6 @@ export class ThemeManager {
   async init(): Promise<void> {
     try {
       console.log('🔄 [ThemeManager] Starting initialization...');
-      PerformanceMonitor.startTimer('theme-manager-init');
       
       // Initialize storage manager first
       console.log('🔄 [ThemeManager] Initializing StorageManager...');
@@ -80,7 +79,9 @@ export class ThemeManager {
       
       // Get saved theme and mode from StorageManager
       console.log('🔄 [ThemeManager] Getting saved theme from StorageManager...');
-      const savedConfig = await this.storageManager.getThemeModeConfig();
+      const savedConfig = await PerformanceTracker.measureStorageOperationAsync('indexedDB', 'read', async () => {
+        return await this.storageManager.getThemeModeConfig();
+      });
       const savedTheme = savedConfig?.currentTheme || 'default';
       const savedMode = savedConfig?.currentMode || 'auto';
       console.log('✅ [ThemeManager] Saved theme:', savedTheme, 'mode:', savedMode);
@@ -102,8 +103,6 @@ export class ThemeManager {
       this.preloadBuiltinThemes();
       console.log('✅ [ThemeManager] Theme preloading started');
       
-      // End initialization timer
-      PerformanceMonitor.endTimer('theme-manager-init');
       console.log('✅ [ThemeManager] Initialization completed successfully');
       
     } catch (error) {
@@ -242,22 +241,39 @@ export class ThemeManager {
       let cssVariables: Record<string, string> = {};
       
       if (cssPath.startsWith('blob:')) {
-        // Handle blob URLs (installed themes)
-        cssVariables = await PerformanceTracker.measureAsync('CSS Fetch (Blob)', async () => {
+        // Handle blob URLs (installed themes) - always cache miss
+        PerformanceTracker.trackCacheMiss('CSS Theme Data');
+        cssVariables = await PerformanceTracker.measureAsync('CSS Fetch (Cold)', async () => {
           const response = await fetch(cssPath);
           const cssContent = await response.text();
           return this.extractCSSVariables(cssContent);
         });
       } else {
-        // Handle static file themes
-        cssVariables = await PerformanceTracker.measureAsync('CSS Fetch (Static)', async () => {
-          const response = await fetch(cssPath);
-          if (!response.ok) {
-            throw new Error(`Failed to fetch CSS: ${response.status}`);
-          }
-          const cssContent = await response.text();
-          return this.extractCSSVariables(cssContent);
-        });
+        // Handle static file themes - check for cache hit/miss
+        const isCached = this.prefetchedThemes.has(`${themeName}-${resolvedMode}`);
+        
+        if (isCached) {
+          PerformanceTracker.trackCacheHit('CSS Theme Data');
+          cssVariables = await PerformanceTracker.measureAsync('CSS Fetch (Cached)', async () => {
+            const response = await fetch(cssPath);
+            if (!response.ok) {
+              throw new Error(`Failed to fetch CSS: ${response.status}`);
+            }
+            const cssContent = await response.text();
+            return this.extractCSSVariables(cssContent);
+          });
+        } else {
+          PerformanceTracker.trackCacheMiss('CSS Theme Data');
+          cssVariables = await PerformanceTracker.measureAsync('CSS Fetch (Cold)', async () => {
+            const response = await fetch(cssPath);
+            if (!response.ok) {
+              throw new Error(`Failed to fetch CSS: ${response.status}`);
+            }
+            const cssContent = await response.text();
+            this.prefetchedThemes.add(`${themeName}-${resolvedMode}`); // Mark as cached
+            return this.extractCSSVariables(cssContent);
+          });
+        }
       }
       
       // Apply CSS variables directly to document root
@@ -282,7 +298,17 @@ export class ThemeManager {
           
           // Load external fonts if defined
           if (themeConfig.externalFonts && themeConfig.externalFonts.length > 0) {
-            await PerformanceTracker.measureAsync('Font Loading', async () => {
+            const fontFamilyNames = themeConfig.externalFonts.map(font => font.family);
+            const fontLoadType = this.areFontsAlreadyLoaded(fontFamilyNames) ? 'Font Loading (Cached)' : 'Font Loading (Cold)';
+            const isCached = fontLoadType.includes('Cached');
+            
+            if (isCached) {
+              PerformanceTracker.trackCacheHit('Font Data');
+            } else {
+              PerformanceTracker.trackCacheMiss('Font Data');
+            }
+            
+            await PerformanceTracker.measureAsync(fontLoadType, async () => {
               // Convert to CSS vars format for font loader
               const fontVars = {
                 'font-sans': themeConfig.fonts.sans,
@@ -513,6 +539,23 @@ export class ThemeManager {
   }
 
   /**
+   * Check if fonts are already loaded in browser cache
+   */
+  private areFontsAlreadyLoaded(fontFamilies: string[]): boolean {
+    if (typeof document === 'undefined' || !document.fonts) return false;
+    
+    return fontFamilies.every(fontFamily => {
+      // Check if font is already loaded in document.fonts
+      for (const font of document.fonts) {
+        if (font.family.includes(fontFamily) && font.status === 'loaded') {
+          return true;
+        }
+      }
+      return false;
+    });
+  }
+
+  /**
    * Save theme settings with debouncing (optimized)
    */
   private saveThemeSettings(theme: string, mode: 'light' | 'dark' | 'auto'): void {
@@ -563,7 +606,9 @@ export class ThemeManager {
           timestamp: Date.now()
         };
         
-        await this.storageManager.storeThemeModeConfig(config);
+        await PerformanceTracker.measureStorageOperationAsync('indexedDB', 'write', async () => {
+          await this.storageManager.storeThemeModeConfig(config);
+        });
       }
       
       // Clear pending saves

@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import ThemeSelector from '../components/ThemeSelector.astro';
 import SimpleBenchmark from '../components/SimpleBenchmark.astro';
+import ProfessionalBenchmark from '../components/ProfessionalBenchmark.astro';
 
 // Import all UI components from the NPM package
 import {
@@ -82,8 +83,11 @@ const breadcrumbItems = [
 			</p>
 		</div>
 
-		<!-- Performance Benchmark -->
-		<SimpleBenchmark />
+		<!-- Performance Benchmarks -->
+		<div class="benchmark-grid">
+			<SimpleBenchmark />
+			<ProfessionalBenchmark />
+		</div>
 
 		<Tabs id="kitchen-sink-tabs" tabs={kitchenSinkSections}>
 			<!-- Form Controls Tab -->
@@ -679,3 +683,17 @@ const breadcrumbItems = [
     setupModeToggle();
   }
 </script>
+
+<style>
+  .benchmark-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+  }
+  
+  @media (min-width: 768px) {
+    .benchmark-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

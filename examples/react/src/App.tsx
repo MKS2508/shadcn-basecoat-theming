@@ -8,6 +8,7 @@ import { Settings, Palette } from "lucide-react";
 import { ThemeSelector } from "./components/ThemeSelector";
 import { ModeToggle } from "./components/ModeToggle";
 import { SimpleBenchmark } from "./components/SimpleBenchmark";
+import { ProfessionalBenchmark } from "./components/ProfessionalBenchmark";
 
 const ThemeManagementModal = lazy(() => import("./components/ThemeManagementModal"));
 const FontSettingsModal = lazy(() => import("./components/FontSettingsModal"));
@@ -60,8 +61,11 @@ function App() {
           </div>
         </div>
 
-        {/* Performance Benchmark */}
-        <SimpleBenchmark />
+        {/* Performance Benchmarks */}
+        <div className="grid gap-4">
+          <SimpleBenchmark />
+          <ProfessionalBenchmark />
+        </div>
 
       <Separator />
 
