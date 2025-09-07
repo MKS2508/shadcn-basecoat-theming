@@ -63,6 +63,12 @@ jobs:
           node-version: "20"
           cache: ${{ steps.detect-package-manager.outputs.manager }}
           cache-dependency-path: ${{ env.BUILD_PATH }}/${{ steps.detect-package-manager.outputs.lockfile }}
+          registry-url: 'https://registry.npmjs.org'
+      
+      - name: Configure NPM for GitHub Packages
+        run: |
+          echo "@mks2508:registry=https://npm.pkg.github.com" > .npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
