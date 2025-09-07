@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",
-    "@mks2508/shadcn-basecoat-theme-manager": "^1.1.0",
-    "@mks2508/basecoat-astro-components": "^1.0.0",
+    "@mks2508/shadcn-basecoat-theme-manager": "workspace:*",
+    "@mks2508/basecoat-astro-components": "file:../../../basecoat-and-custom-astro-components",
     "@mks2508/better-logger": "^0.3.0",
     "@tailwindcss/vite": "^4.1.12",
     "astro": "^5.13.5",

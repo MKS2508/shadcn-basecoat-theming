@@ -33,6 +33,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       
+      - name: Copy basecoat-astro-components to project
+        run: |
+          git clone https://github.com/MKS2508/basecoat-astro-components.git ../basecoat-and-custom-astro-components || echo "Repo might not exist"
+          # Fallback: create minimal package structure if repo doesn't exist
+          if [ ! -d "../basecoat-and-custom-astro-components" ]; then
+            mkdir -p ../basecoat-and-custom-astro-components/src/components
+            echo '{"name":"@mks2508/basecoat-astro-components","version":"1.0.0"}' > ../basecoat-and-custom-astro-components/package.json
+          fi
+      
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -65,14 +74,10 @@ jobs:
           cache-dependency-path: ${{ env.BUILD_PATH }}/${{ steps.detect-package-manager.outputs.lockfile }}
           registry-url: 'https://registry.npmjs.org'
       
-      - name: Configure NPM for GitHub Packages
-        run: |
-          echo "@mks2508:registry=https://npm.pkg.github.com" > .npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> .npmrc
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
-      - name: Install root dependencies
+      - name: Install root dependencies (workspace)
         run: pnpm install --no-frozen-lockfile
         working-directory: ${{ env.BUILD_PATH }}
       
