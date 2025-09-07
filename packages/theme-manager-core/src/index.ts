@@ -6,6 +6,15 @@ export { FontLoader } from './core/font-loader';
 export { ThemeRegistry } from './core/theme-registry';
 export { StorageManager } from './core/storage-manager';
 
+// Utilities
+export { PerformanceTracker } from './utils/performance-tracker';
+
+// Make PerformanceTracker available globally for examples
+import { PerformanceTracker } from './utils/performance-tracker';
+if (typeof window !== 'undefined') {
+  (window as any).PerformanceTracker = PerformanceTracker;
+}
+
 // Installers
 export { ThemeInstaller } from './installers/theme-installer';
 export { ThemeListFetcher } from './installers/theme-list-fetcher';

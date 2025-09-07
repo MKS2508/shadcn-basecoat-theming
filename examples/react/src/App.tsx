@@ -7,6 +7,7 @@ import { Settings, Palette } from "lucide-react";
 
 import { ThemeSelector } from "./components/ThemeSelector";
 import { ModeToggle } from "./components/ModeToggle";
+import { SimpleBenchmark } from "./components/SimpleBenchmark";
 
 const ThemeManagementModal = lazy(() => import("./components/ThemeManagementModal"));
 const FontSettingsModal = lazy(() => import("./components/FontSettingsModal"));
@@ -58,6 +59,9 @@ function App() {
             <Badge variant="outline">ThemeCore</Badge>
           </div>
         </div>
+
+        {/* Performance Benchmark */}
+        <SimpleBenchmark />
 
       <Separator />
 

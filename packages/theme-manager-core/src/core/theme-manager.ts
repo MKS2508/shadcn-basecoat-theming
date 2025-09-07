@@ -2,34 +2,8 @@ import { FontLoader } from './font-loader';
 import { ThemeRegistry, ThemeConfig } from './theme-registry';
 import { FontManager } from './font-manager';
 import { StorageManager, ThemeModeConfig } from './storage-manager';
+import { PerformanceTracker } from '../utils/performance-tracker';
 
-/**
- * Performance monitoring utility
- */
-class PerformanceMonitor {
-  private static metrics: Map<string, number> = new Map();
-  
-  static startTimer(label: string): void {
-    this.metrics.set(label, performance.now());
-  }
-  
-  static endTimer(label: string): number {
-    const startTime = this.metrics.get(label);
-    if (startTime) {
-      const duration = performance.now() - startTime;
-      this.metrics.delete(label);
-      return duration;
-    }
-    return 0;
-  }
-  
-  static measureThemeSwitch(themeName: string, mode: string, duration: number): void {
-    const target = duration < 16 ? '🚀' : duration < 50 ? '⚡' : '📈';
-    
-    if (duration > 50) {
-    }
-  }
-}
 
 /**
  * Manages theme loading, caching, and application
@@ -156,28 +130,22 @@ export class ThemeManager {
     const isThemeChange = theme !== this.currentTheme || newMode !== this.currentMode;
     if (!isThemeChange) return;
 
-    // Start performance timer
-    const timerLabel = `theme-switch-${theme}-${newMode}`;
-    PerformanceMonitor.startTimer(timerLabel);
+    return PerformanceTracker.measureAsync('Theme Switch Total', async () => {
+      this.currentTheme = theme;
+      this.currentMode = newMode;
+      
+      // Debounced storage save (non-blocking)
+      this.saveThemeSettings(theme, newMode);
 
-    this.currentTheme = theme;
-    this.currentMode = newMode;
-    
-    // Debounced storage save (non-blocking)
-    this.saveThemeSettings(theme, newMode);
-
-    await this.applyTheme(theme, newMode, true); // Pass true to indicate real theme change
-    
-    // Dispatch theme change event
-    this.dispatchEvent('theme-changed', {
-      theme: this.currentTheme,
-      mode: this.currentMode,
-      effectiveMode: this.getEffectiveMode()
+      await this.applyTheme(theme, newMode, true); // Pass true to indicate real theme change
+      
+      // Dispatch theme change event
+      this.dispatchEvent('theme-changed', {
+        theme: this.currentTheme,
+        mode: this.currentMode,
+        effectiveMode: this.getEffectiveMode()
+      });
     });
-    
-    // End performance timer and log metrics
-    const duration = PerformanceMonitor.endTimer(timerLabel);
-    PerformanceMonitor.measureThemeSwitch(theme, newMode, duration);
   }
 
   /**
@@ -275,23 +243,27 @@ export class ThemeManager {
       
       if (cssPath.startsWith('blob:')) {
         // Handle blob URLs (installed themes)
-        const response = await fetch(cssPath);
-        const cssContent = await response.text();
-        cssVariables = this.extractCSSVariables(cssContent);
+        cssVariables = await PerformanceTracker.measureAsync('CSS Fetch (Blob)', async () => {
+          const response = await fetch(cssPath);
+          const cssContent = await response.text();
+          return this.extractCSSVariables(cssContent);
+        });
       } else {
         // Handle static file themes
-        const response = await fetch(cssPath);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch CSS: ${response.status}`);
-        }
-        const cssContent = await response.text();
-        cssVariables = this.extractCSSVariables(cssContent);
+        cssVariables = await PerformanceTracker.measureAsync('CSS Fetch (Static)', async () => {
+          const response = await fetch(cssPath);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch CSS: ${response.status}`);
+          }
+          const cssContent = await response.text();
+          return this.extractCSSVariables(cssContent);
+        });
       }
       
       // Apply CSS variables directly to document root
-      const startTime = performance.now();
-      this.applyCSSVariables(cssVariables, enableTransition);
-      const applyTime = performance.now() - startTime;
+      PerformanceTracker.measure('CSS Variables Apply', () => {
+        this.applyCSSVariables(cssVariables, enableTransition);
+      });
       
       // Remove any previous theme CSS link
       if (this.currentStyleElement) {
@@ -310,13 +282,15 @@ export class ThemeManager {
           
           // Load external fonts if defined
           if (themeConfig.externalFonts && themeConfig.externalFonts.length > 0) {
-            // Convert to CSS vars format for font loader
-            const fontVars = {
-              'font-sans': themeConfig.fonts.sans,
-              'font-serif': themeConfig.fonts.serif,
-              'font-mono': themeConfig.fonts.mono
-            };
-            await this.fontLoader.loadThemeFonts(fontVars);
+            await PerformanceTracker.measureAsync('Font Loading', async () => {
+              // Convert to CSS vars format for font loader
+              const fontVars = {
+                'font-sans': themeConfig.fonts.sans,
+                'font-serif': themeConfig.fonts.serif,
+                'font-mono': themeConfig.fonts.mono
+              };
+              await this.fontLoader.loadThemeFonts(fontVars);
+            });
           }
         }
       } catch (fontError) {

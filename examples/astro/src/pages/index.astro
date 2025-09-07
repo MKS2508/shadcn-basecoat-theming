@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import ThemeSelector from '../components/ThemeSelector.astro';
+import SimpleBenchmark from '../components/SimpleBenchmark.astro';
 
 // Import all UI components from the NPM package
 import {
@@ -80,6 +81,9 @@ const breadcrumbItems = [
 				Comprehensive showcase of all 24 Basecoat UI components organized by category
 			</p>
 		</div>
+
+		<!-- Performance Benchmark -->
+		<SimpleBenchmark />
 
 		<Tabs id="kitchen-sink-tabs" tabs={kitchenSinkSections}>
 			<!-- Form Controls Tab -->
