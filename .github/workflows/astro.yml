@@ -1,8 +1,6 @@
-# Sample workflow for building and deploying an Astro site to GitHub Pages
+# Workflow for building and deploying React and Astro examples to GitHub Pages
 #
-# To get started with Astro see: https://docs.astro.build/en/getting-started/
-#
-name: Deploy Astro site to Pages
+name: Deploy Examples to GitHub Pages
 
 on:
   # Runs on pushes targeting the default branch
@@ -25,8 +23,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  BUILD_PATH: "." # default value when not using subfolders
-  # BUILD_PATH: subfolder
+  BUILD_PATH: "." # Root directory for multi-site build
 
 jobs:
   build:
@@ -63,15 +60,185 @@ jobs:
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
-      - name: Install dependencies
-        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+      - name: Install root dependencies
+        run: pnpm install --no-frozen-lockfile
         working-directory: ${{ env.BUILD_PATH }}
-      - name: Build with Astro
+      
+      - name: Install React example dependencies
         run: |
-          ${{ steps.detect-package-manager.outputs.runner }} astro build \
-            --site "${{ steps.pages.outputs.origin }}" \
-            --base "${{ steps.pages.outputs.base_path }}"
-        working-directory: ${{ env.BUILD_PATH }}
+          cd examples/react
+          npm install --no-frozen-lockfile
+      
+      - name: Install Astro example dependencies  
+        run: |
+          cd examples/astro
+          npm install --no-frozen-lockfile
+
+      - name: Build React example
+        run: |
+          cd examples/react
+          NODE_ENV=production npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Build Astro example
+        run: |
+          cd examples/astro  
+          NODE_ENV=production npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Create unified deployment structure
+        run: |
+          mkdir -p dist
+          cp -r examples/react/dist dist/react
+          cp -r examples/astro/dist dist/astro
+          
+          # Create landing page
+          cat > dist/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Theme Manager Examples</title>
+              <style>
+                  * { margin: 0; padding: 0; box-sizing: border-box; }
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      min-height: 100vh;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      color: white;
+                  }
+                  .container {
+                      text-align: center;
+                      max-width: 800px;
+                      padding: 2rem;
+                      background: rgba(255, 255, 255, 0.1);
+                      border-radius: 20px;
+                      backdrop-filter: blur(10px);
+                      border: 1px solid rgba(255, 255, 255, 0.2);
+                      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+                  }
+                  h1 {
+                      font-size: 3rem;
+                      margin-bottom: 1rem;
+                      background: linear-gradient(45deg, #fff, #f0f0f0);
+                      -webkit-background-clip: text;
+                      -webkit-text-fill-color: transparent;
+                      background-clip: text;
+                  }
+                  .subtitle {
+                      font-size: 1.2rem;
+                      margin-bottom: 3rem;
+                      opacity: 0.9;
+                  }
+                  .examples {
+                      display: grid;
+                      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                      gap: 2rem;
+                      margin-top: 2rem;
+                  }
+                  .example-card {
+                      background: rgba(255, 255, 255, 0.1);
+                      border-radius: 15px;
+                      padding: 2rem;
+                      text-decoration: none;
+                      color: inherit;
+                      transition: all 0.3s ease;
+                      border: 1px solid rgba(255, 255, 255, 0.2);
+                  }
+                  .example-card:hover {
+                      transform: translateY(-5px);
+                      background: rgba(255, 255, 255, 0.2);
+                      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+                  }
+                  .example-title {
+                      font-size: 1.8rem;
+                      font-weight: bold;
+                      margin-bottom: 1rem;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      gap: 0.5rem;
+                  }
+                  .example-desc {
+                      opacity: 0.8;
+                      line-height: 1.6;
+                  }
+                  .features {
+                      margin: 3rem 0;
+                      display: grid;
+                      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                      gap: 1rem;
+                  }
+                  .feature {
+                      background: rgba(255, 255, 255, 0.1);
+                      padding: 1rem;
+                      border-radius: 10px;
+                      font-size: 0.9rem;
+                  }
+                  .github-link {
+                      display: inline-block;
+                      margin-top: 2rem;
+                      padding: 0.75rem 2rem;
+                      background: rgba(255, 255, 255, 0.2);
+                      color: white;
+                      text-decoration: none;
+                      border-radius: 50px;
+                      border: 1px solid rgba(255, 255, 255, 0.3);
+                      transition: all 0.3s ease;
+                  }
+                  .github-link:hover {
+                      background: rgba(255, 255, 255, 0.3);
+                      transform: translateY(-2px);
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <h1>🎨 Theme Manager Examples</h1>
+                  <p class="subtitle">Professional theme management system with dynamic switching, font customization, and performance benchmarking</p>
+                  
+                  <div class="features">
+                      <div class="feature">⚡ Professional Benchmarking</div>
+                      <div class="feature">🎯 Cache Performance Analysis</div>
+                      <div class="feature">🔤 Font Management</div>
+                      <div class="feature">🌓 Dynamic Theme Switching</div>
+                      <div class="feature">📊 Performance Budgets</div>
+                      <div class="feature">💾 Storage Optimization</div>
+                  </div>
+                  
+                  <div class="examples">
+                      <a href="./react/" class="example-card">
+                          <div class="example-title">
+                              ⚛️ React Example
+                          </div>
+                          <p class="example-desc">
+                              Full-featured React application with shadcn/ui components, professional benchmark suite, and comprehensive theme management. Includes real-time performance monitoring and detailed analytics.
+                          </p>
+                      </a>
+                      
+                      <a href="./astro/" class="example-card">
+                          <div class="example-title">
+                              🚀 Astro Example
+                          </div>
+                          <p class="example-desc">
+                              High-performance Astro application with Basecoat UI components, vanilla JavaScript implementation, and the same professional benchmarking capabilities as the React version.
+                          </p>
+                      </a>
+                  </div>
+                  
+                  <a href="https://github.com/mks2508/shadcn-basecoat-theming" class="github-link">
+                      🔗 View on GitHub
+                  </a>
+              </div>
+          </body>
+          </html>
+          EOF
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
