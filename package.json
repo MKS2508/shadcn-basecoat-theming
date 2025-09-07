@@ -24,7 +24,7 @@
     "build:web-components": "pnpm --filter @mks2508/theme-manager-web-components run build"
   },
   "dependencies": {
-    "@mks2508/better-logger": "^0.3.0",
+    "@mks2508/better-logger": "^0.0.1",
     "@mks2508/shadcn-basecoat-theme-manager": "^1.1.2",
     "@radix-ui/react-slot": "^1.2.3",
     "basecoat-css": "^0.3.0",
