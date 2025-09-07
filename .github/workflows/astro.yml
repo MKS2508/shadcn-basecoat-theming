@@ -33,15 +33,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       
-      - name: Copy basecoat-astro-components to project
-        run: |
-          git clone https://github.com/MKS2508/basecoat-astro-components.git ../basecoat-and-custom-astro-components || echo "Repo might not exist"
-          # Fallback: create minimal package structure if repo doesn't exist
-          if [ ! -d "../basecoat-and-custom-astro-components" ]; then
-            mkdir -p ../basecoat-and-custom-astro-components/src/components
-            echo '{"name":"@mks2508/basecoat-astro-components","version":"1.0.0"}' > ../basecoat-and-custom-astro-components/package.json
-          fi
-      
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
