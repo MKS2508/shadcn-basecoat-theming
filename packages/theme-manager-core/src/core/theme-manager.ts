@@ -505,6 +505,26 @@ export class ThemeManager {
   }
 
   /**
+   * Uninstall a theme
+   */
+  async uninstallTheme(themeId: string): Promise<void> {
+    try {
+      // Get theme info before uninstalling for event
+      const theme = this.themeRegistry.getTheme(themeId);
+      
+      // Uninstall theme through registry
+      await this.themeRegistry.uninstallTheme(themeId);
+      
+      // Dispatch theme uninstalled event
+      this.dispatchEvent('theme-uninstalled', { themeId, theme });
+      
+    } catch (error) {
+      console.error(`❌ Failed to uninstall theme ${themeId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Get theme registry for advanced operations
    */
   getThemeRegistry(): ThemeRegistry {

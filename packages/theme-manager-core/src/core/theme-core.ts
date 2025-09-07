@@ -12,8 +12,25 @@ import { getFontsByCategory } from '../catalogs/font-catalog';
 export interface ThemeCoreConfig {
   registryPath?: string;
   themesPath?: string;
-  autoFOUC?: boolean;
   debug?: boolean;
+  
+  // FOUC prevention
+  fouc?: {
+    prevent?: boolean;
+    method?: 'auto' | 'inline' | 'programmatic';
+    revealDelay?: number;
+  };
+  
+  // Default configuration (hardcoded)
+  defaults?: {
+    theme?: string;
+    mode?: 'auto' | 'light' | 'dark';
+    fonts?: {
+      sans?: string;
+      serif?: string;
+      mono?: string;
+    };
+  };
 }
 
 export interface ThemeCoreInstance {
@@ -54,6 +71,9 @@ export class ThemeCore {
 
   private static async performInit(): Promise<ThemeCoreInstance> {
     try {
+      // Handle FOUC prevention first (if needed)
+      this.handleFOUCPrevention();
+
       // Create core instances
       const themeManager = new ThemeManager();
       const themeInstaller = new ThemeInstaller(themeManager);
@@ -67,6 +87,9 @@ export class ThemeCore {
       await Promise.race([themeManager.init(), timeoutPromise]);
       await themeInstaller.init();
       await themeListFetcher.init();
+
+      // Apply default configuration if provided
+      await this.applyDefaultConfiguration(themeManager);
 
       // Create instance object
       this.coreInstance = {
@@ -120,6 +143,149 @@ export class ThemeCore {
   }
 
   /**
+   * Handle FOUC prevention based on configuration
+   */
+  private static handleFOUCPrevention(): void {
+    // Skip if not in browser or FOUC prevention is disabled
+    if (typeof window === 'undefined' || this.config.fouc?.prevent === false) {
+      return;
+    }
+
+    const method = this.config.fouc?.method || 'auto';
+    
+    // Auto-detect method based on timing
+    if (method === 'auto') {
+      // If document is still loading, we can apply sync FOUC prevention
+      if (document.readyState === 'loading') {
+        this.applySyncFOUCPrevention();
+      } else {
+        // Document already loaded, apply programmatic prevention
+        this.applyProgrammaticFOUCPrevention();
+      }
+    } else if (method === 'programmatic') {
+      this.applyProgrammaticFOUCPrevention();
+    }
+    // 'inline' method is handled externally (in HTML)
+  }
+
+  /**
+   * Apply synchronous FOUC prevention (ideal for early initialization)
+   */
+  private static applySyncFOUCPrevention(): void {
+    try {
+      const storage = StorageManager.getInstance();
+      const savedTheme = storage.getCurrentTheme() || this.config.defaults?.theme || 'default';
+      const savedMode = storage.getCurrentMode() || this.config.defaults?.mode || 'auto';
+      
+      let resolvedMode = savedMode;
+      if (savedMode === 'auto') {
+        resolvedMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      
+      // Apply theme and mode attributes immediately
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.documentElement.setAttribute('data-mode', resolvedMode);
+      document.documentElement.classList.toggle('dark', resolvedMode === 'dark');
+      
+      if (this.config.debug) {
+        console.log('🎨 FOUC prevention applied:', { theme: savedTheme, mode: resolvedMode });
+      }
+    } catch (error) {
+      console.warn('⚠️ FOUC prevention failed:', error);
+    }
+  }
+
+  /**
+   * Apply programmatic FOUC prevention (for late initialization)
+   */
+  private static applyProgrammaticFOUCPrevention(): void {
+    // Reveal body with transition if it's hidden
+    const body = document.body;
+    if (!body) return;
+
+    const delay = this.config.fouc?.revealDelay || 0;
+    
+    // Check both inline styles and computed styles
+    const computedStyle = window.getComputedStyle(body);
+    const isHidden = 
+      body.style.visibility === 'hidden' || 
+      body.style.opacity === '0' ||
+      computedStyle.visibility === 'hidden' ||
+      computedStyle.opacity === '0';
+    
+    if (isHidden) {
+      setTimeout(() => {
+        body.style.visibility = 'visible';
+        body.style.opacity = '1';
+        body.style.transition = 'opacity 0.15s ease-out';
+        
+        if (this.config.debug) {
+          console.log('🎨 Body revealed after ThemeCore init (programmatic)');
+        }
+      }, delay);
+    } else {
+      // Even if not explicitly hidden, ensure it's visible
+      if (this.config.debug) {
+        console.log('🎨 Body already visible, ensuring styles are applied');
+      }
+      body.style.visibility = 'visible';
+      body.style.opacity = '1';
+    }
+  }
+
+  /**
+   * Apply default configuration if provided
+   */
+  private static async applyDefaultConfiguration(themeManager: ThemeManager): Promise<void> {
+    const defaults = this.config.defaults;
+    if (!defaults) return;
+
+    try {
+      const storage = StorageManager.getInstance();
+      
+      // Apply default theme if specified and no theme is currently set
+      if (defaults.theme && !storage.getCurrentTheme()) {
+        await themeManager.setTheme(defaults.theme);
+        if (this.config.debug) {
+          console.log('🎨 Applied default theme:', defaults.theme);
+        }
+      }
+
+      // Apply default mode if specified and no mode is currently set
+      if (defaults.mode && !storage.getCurrentMode()) {
+        storage.setCurrentMode(defaults.mode);
+        if (this.config.debug) {
+          console.log('🎨 Applied default mode:', defaults.mode);
+        }
+      }
+
+      // Apply default fonts if specified
+      if (defaults.fonts) {
+        const fontManager = themeManager.getFontManager();
+        
+        // Check if fonts are already configured
+        const currentConfig = fontManager.getOverrideConfiguration();
+        const hasExistingFonts = currentConfig.fonts.sans || currentConfig.fonts.serif || currentConfig.fonts.mono;
+        
+        if (!hasExistingFonts) {
+          // Apply default fonts
+          for (const [category, fontId] of Object.entries(defaults.fonts)) {
+            if (fontId && ['sans', 'serif', 'mono'].includes(category)) {
+              await fontManager.setFontOverride(category as 'sans' | 'serif' | 'mono', fontId);
+            }
+          }
+          
+          if (this.config.debug) {
+            console.log('🎨 Applied default fonts:', defaults.fonts);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to apply default configuration:', error);
+    }
+  }
+
+  /**
    * Wait for ThemeCore to be ready
    */
   static async waitForReady(): Promise<ThemeCoreInstance> {
@@ -144,7 +310,7 @@ export class ThemeCore {
   // Apply saved theme immediately to prevent flash
   function applyThemeVariables() {
     try {
-      const savedTheme = localStorage.getItem('theme') || 'default';
+      const savedTheme = localStorage.getItem('theme-current') || 'default';
       const savedMode = localStorage.getItem('theme-mode') || 'auto';
       
       // Apply mode class
@@ -308,6 +474,15 @@ export class ThemeCore {
   static onThemeInstalled(callback: (theme: any) => void): void {
     this.onReady((themeCore) => {
       themeCore.themeManager.addEventListener('theme-installed', callback);
+    });
+  }
+
+  /**
+   * Event helper - theme uninstalled listener
+   */
+  static onThemeUninstalled(callback: (data: { themeId: string; theme: any }) => void): void {
+    this.onReady((themeCore) => {
+      themeCore.themeManager.addEventListener('theme-uninstalled', callback);
     });
   }
 }

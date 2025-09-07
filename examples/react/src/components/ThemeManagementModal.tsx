@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from './ThemeProvider';
+import { useTheme } from '../hooks/useTheme';
 import { Button } from './ui/button';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { X, Search, RefreshCw, Eye, Download, Trash2, Loader2 } from 'lucide-react';
+import { 
+  type ThemeConfig,
+  type RegistryTheme
+} from '@mks2508/shadcn-basecoat-theme-manager';
 import { cn } from '../lib/utils';
 
 interface ThemeManagementModalProps {
@@ -17,16 +21,16 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
   open,
   onOpenChange,
 }) => {
-  const { themeManager, themeCore, isLoaded } = useTheme();
+  const { themeManager, installer, isLoaded } = useTheme();
   const [activeTab, setActiveTab] = useState<'installed' | 'browse'>('installed');
-  const [installedThemes, setInstalledThemes] = useState<any[]>([]);
-  const [registryThemes, setRegistryThemes] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isLoadingInstalled, setIsLoadingInstalled] = useState(true);
-  const [isLoadingRegistry, setIsLoadingRegistry] = useState(false);
+  const [installedThemes, setInstalledThemes] = useState<ThemeConfig[]>([]);
+  const [registryThemes, setRegistryThemes] = useState<RegistryTheme[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isLoadingInstalled, setIsLoadingInstalled] = useState<boolean>(true);
+  const [isLoadingRegistry, setIsLoadingRegistry] = useState<boolean>(false);
   const [previewTimer, setPreviewTimer] = useState<NodeJS.Timeout | null>(null);
-  const [previewCountdown, setPreviewCountdown] = useState(0);
-  const [originalTheme, setOriginalTheme] = useState<any>(null);
+  const [previewCountdown, setPreviewCountdown] = useState<number>(0);
+  const [originalTheme, setOriginalTheme] = useState<{id: string; mode: 'auto' | 'light' | 'dark'} | null>(null);
   const [isPreviewActive, setIsPreviewActive] = useState(false);
 
   // Load installed themes
@@ -124,7 +128,7 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
       // Store original theme for revert
       setOriginalTheme({
         id: themeManager.getCurrentTheme(),
-        mode: themeManager.getCurrentMode?.() || 'light',
+        mode: (themeManager.getCurrentMode?.() || 'light') as 'auto' | 'light' | 'dark',
       });
 
       if (isRegistry) {
@@ -159,6 +163,9 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
       const timer = setInterval(() => {
         setPreviewCountdown((prev) => {
           if (prev <= 1) {
+            // Clear timer before reverting to avoid conflicts
+            clearInterval(timer);
+            setPreviewTimer(null);
             revertPreview();
             return 0;
           }
@@ -177,9 +184,38 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
     if (!originalTheme || !themeManager) return;
 
     try {
-      console.log('🔄 Reverting preview to:', originalTheme);
+      console.log('🔄 [ThemeManagement] Reverting preview to:', originalTheme);
+      
+      // Clear timer first to prevent multiple calls
+      if (previewTimer) {
+        clearInterval(previewTimer);
+        setPreviewTimer(null);
+      }
+      
+      // Revert to original theme
       await themeManager.setTheme(originalTheme.id, originalTheme.mode);
       
+      // Clean up preview state
+      setIsPreviewActive(false);
+      setPreviewCountdown(0);
+      setOriginalTheme(null);
+      
+      console.log('✅ [ThemeManagement] Preview reverted successfully');
+      
+    } catch (error) {
+      console.error('❌ [ThemeManagement] Failed to revert preview:', error);
+    }
+  };
+
+  const keepPreview = async () => {
+    if (!themeManager) return;
+    
+    try {
+      // Get current theme (which is the previewed one)
+      const currentThemeId = themeManager.getCurrentTheme();
+      console.log('✅ [ThemeManagement] Keeping previewed theme:', currentThemeId);
+      
+      // The theme is already applied and installed, just clean up preview state
       if (previewTimer) {
         clearInterval(previewTimer);
         setPreviewTimer(null);
@@ -189,24 +225,15 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
       setPreviewCountdown(0);
       setOriginalTheme(null);
       
+      // Refresh installed themes list to show it's now permanent
+      const themes = themeManager.getThemeRegistry().getInstalledThemes();
+      setInstalledThemes(themes || []);
+      
+      console.log('✅ [ThemeManagement] Preview theme kept successfully');
+      
     } catch (error) {
-      console.error('Failed to revert preview:', error);
+      console.error('❌ [ThemeManagement] Failed to keep preview theme:', error);
     }
-  };
-
-  const keepPreview = () => {
-    if (previewTimer) {
-      clearInterval(previewTimer);
-      setPreviewTimer(null);
-    }
-    
-    setIsPreviewActive(false);
-    setPreviewCountdown(0);
-    setOriginalTheme(null);
-    
-    // Refresh installed themes as the preview theme is now permanent
-    const themes = themeManager?.getThemeRegistry().getInstalledThemes();
-    setInstalledThemes(themes || []);
   };
 
   const installTheme = async (themeId: string) => {
@@ -235,11 +262,39 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
       const themes = themeManager.getThemeRegistry().getInstalledThemes();
       setInstalledThemes(themes || []);
       
-      // Notify other components
-      window.dispatchEvent(new CustomEvent('theme-installed', { detail: { themeName: themeId } }));
+      // No manual event dispatch needed - ThemeCore handles this via themeManager.installTheme()
       
     } catch (error) {
       console.error('Failed to install theme:', error);
+    }
+  };
+
+  const uninstallTheme = async (themeId: string) => {
+    if (!themeManager) return;
+
+    try {
+      console.log('🗑️ [ThemeManagement] Uninstalling theme:', themeId);
+      
+      // Check if it's the currently active theme
+      const currentThemeId = themeManager.getCurrentTheme();
+      if (currentThemeId === themeId) {
+        console.log('⚠️ [ThemeManagement] Cannot uninstall active theme, switching to default first');
+        await themeManager.setTheme('default');
+      }
+      
+      // Uninstall theme using theme manager (will dispatch event automatically)
+      await themeManager.uninstallTheme(themeId);
+      
+      console.log('✅ [ThemeManagement] Theme uninstalled successfully:', themeId);
+      
+      // Refresh installed themes list
+      const themes = themeManager.getThemeRegistry().getInstalledThemes();
+      setInstalledThemes(themes || []);
+      
+      // No manual event dispatch needed - ThemeCore handles this
+      
+    } catch (error) {
+      console.error('❌ [ThemeManagement] Failed to uninstall theme:', error);
     }
   };
 
@@ -354,6 +409,9 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
                                     size="sm"
                                     variant="destructive"
                                     className="px-2"
+                                    onClick={() => uninstallTheme(theme.id)}
+                                    disabled={isActive}
+                                    title={isActive ? "Cannot delete active theme" : "Delete theme"}
                                   >
                                     <Trash2 className="w-3 h-3" />
                                   </Button>

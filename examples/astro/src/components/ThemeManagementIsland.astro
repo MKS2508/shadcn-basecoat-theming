@@ -779,8 +779,7 @@ import SearchIcon from './icons/SearchIcon.astro';
       // Refresh installed themes tab
       loadInstalledThemes();
       
-      // Notify other components (like ThemeSelector) that a theme was installed
-      window.dispatchEvent(new CustomEvent('theme-installed', { detail: { themeName } }));
+      // No manual event dispatch needed - ThemeCore handles this via themeManager.installTheme()
       
     } catch (error) {
       console.error(`Failed to install registry theme ${themeName}:`, error);

@@ -269,4 +269,13 @@ import FontSettingsIsland from './FontSettingsIsland.astro';
       updateCurrentThemeLabel();
     }
   });
+
+  // Listen for theme uninstallations using new event system
+  ThemeCore.onThemeUninstalled((data) => {
+    console.log('🎯 [ThemeSelector] Theme uninstalled:', data.themeId);
+    if (themeManager) {
+      loadAvailableThemes();
+      updateCurrentThemeLabel();
+    }
+  });
 </script>

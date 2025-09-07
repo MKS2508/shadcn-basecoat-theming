@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from './ThemeProvider';
+import { useTheme } from '../hooks/useTheme';
 import { Button } from './ui/button';
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X, Settings, Trash2 } from 'lucide-react';
+import { 
+  type FontOption, 
+  type FontCategory 
+} from '@mks2508/shadcn-basecoat-theme-manager';
 import { cn } from '../lib/utils';
 
 interface FontSettingsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-type FontCategory = 'sans' | 'serif' | 'mono';
 
 export const FontSettingsModal: React.FC<FontSettingsModalProps> = ({
   open,
@@ -55,7 +57,11 @@ export const FontSettingsModal: React.FC<FontSettingsModalProps> = ({
         // Load current configuration
         const config = fontManager.getOverrideConfiguration();
         setIsEnabled(fontManager.isOverrideEnabled());
-        setSelectedFonts(config.fonts);
+        setSelectedFonts({
+          sans: config.fonts.sans || null,
+          serif: config.fonts.serif || null,
+          mono: config.fonts.mono || null,
+        });
         
       } catch (error) {
         console.error('Failed to load fonts:', error);
@@ -102,7 +108,11 @@ export const FontSettingsModal: React.FC<FontSettingsModalProps> = ({
     try {
       await fontManager.resetOverrides();
       const config = fontManager.getOverrideConfiguration();
-      setSelectedFonts(config.fonts);
+      setSelectedFonts({
+        sans: config.fonts.sans || null,
+        serif: config.fonts.serif || null,
+        mono: config.fonts.mono || null,
+      });
     } catch (error) {
       console.error('Failed to reset font overrides:', error);
     }

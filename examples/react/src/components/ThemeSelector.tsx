@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useTheme } from './ThemeProvider';
+import React, { useState, useEffect, useCallback, memo } from 'react';
+import { useTheme } from '../hooks/useTheme';
+import { ThemeCore } from '@mks2508/shadcn-basecoat-theme-manager';
 import { Button } from './ui/button';
 import * as Popover from '@radix-ui/react-popover';
 import { ChevronDown, Check, Search, Settings } from 'lucide-react';
@@ -10,7 +11,7 @@ interface ThemeSelectorProps {
   onFontSettings?: () => void;
 }
 
-export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
+export const ThemeSelector: React.FC<ThemeSelectorProps> = memo(({
   onThemeManagement,
   onFontSettings,
 }) => {
@@ -20,7 +21,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    if (!themeManager || !isLoaded) return;
+    if (!themeManager) return;
 
     const loadThemes = () => {
       try {
@@ -46,34 +47,35 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
       }
     };
 
+    // Initial load
     loadThemes();
     
-    // Listen for theme changes (if ThemeCore supports it)
+    // Use ThemeCore events API - cleaner than manual listeners
     const handleThemeChange = (themeData: any) => {
       console.log('🎯 [ThemeSelector] Theme changed:', themeData);
-      loadThemes(); // Reload themes and update current
-    };
-
-    // Try to set up theme change listener if available
-    if (window.ThemeCore?.onThemeChange) {
-      window.ThemeCore.onThemeChange(handleThemeChange);
-    }
-
-    // Listen for theme installations
-    const handleThemeInstalled = () => {
-      console.log('🎯 [ThemeSelector] Theme installed, reloading...');
       loadThemes();
     };
 
-    window.addEventListener('theme-installed', handleThemeInstalled);
-    
-    return () => {
-      window.removeEventListener('theme-installed', handleThemeInstalled);
+    const handleThemeInstalled = (theme: any) => {
+      console.log('🎯 [ThemeSelector] Theme installed:', theme);
+      loadThemes();
     };
-    
-  }, [themeManager, isLoaded]);
 
-  const selectTheme = (themeId: string) => {
+    const handleThemeUninstalled = (data: { themeId: string; theme: any }) => {
+      console.log('🎯 [ThemeSelector] Theme uninstalled:', data.themeId);
+      loadThemes();
+    };
+
+    // Use official ThemeCore event system
+    ThemeCore.onThemeChange && ThemeCore.onThemeChange(handleThemeChange);
+    ThemeCore.onThemeInstalled && ThemeCore.onThemeInstalled(handleThemeInstalled);
+    ThemeCore.onThemeUninstalled && ThemeCore.onThemeUninstalled(handleThemeUninstalled);
+    
+    // No cleanup needed - ThemeCore handles this internally
+    
+  }, [themeManager]);
+
+  const selectTheme = useCallback((themeId: string) => {
     if (!themeManager) return;
     
     console.log('🎯 [ThemeSelector] Selecting theme:', themeId);
@@ -94,9 +96,9 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
     } catch (error) {
       console.error('Failed to apply theme:', error);
     }
-  };
+  }, [themeManager, availableThemes]);
 
-  if (!isLoaded) {
+  if (!themeManager) {
     return (
       <Button variant="outline" disabled>
         Loading...
@@ -203,6 +205,8 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
       </Popover.Root>
     </div>
   );
-};
+});
+
+ThemeSelector.displayName = 'ThemeSelector';
 
 export default ThemeSelector;

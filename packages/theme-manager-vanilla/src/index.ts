@@ -639,13 +639,12 @@ export class VanillaThemeManager {
   }
 
   private setupThemeCallbacks(): void {
-    // Theme manager callback
-    this.themeManager.setOnThemeInstalledCallback(() => {
+    // Listen for theme events directly from the managers
+    document.addEventListener('theme-installed', () => {
       this.refreshAllThemeDropdowns();
     });
     
-    // Theme installer callback  
-    this.themeInstaller.setOnThemeInstalledCallback(() => {
+    document.addEventListener('theme-uninstalled', () => {
       this.refreshAllThemeDropdowns();
     });
   }

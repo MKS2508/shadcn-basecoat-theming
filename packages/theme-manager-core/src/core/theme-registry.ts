@@ -349,6 +349,7 @@ export class ThemeRegistry {
       // Remove from unified registry
       this.allThemes.delete(themeId);
       
+      console.log(`✅ ThemeRegistry: Theme ${themeId} uninstalled successfully`);
       
     } catch (error) {
       console.error(`❌ ThemeRegistry: Failed to uninstall theme ${themeId}:`, error);

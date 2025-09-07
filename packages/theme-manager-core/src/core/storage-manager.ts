@@ -44,11 +44,19 @@ export interface ThemeModeConfig {
 export class StorageManager {
   private static instance: StorageManager | null = null;
   private dbName = 'theme-installer-db';
-  private dbVersion = 4; // Increment version for cleanup and optimization
+  private dbVersion = 5; // Increment for migration
   private storeName = 'themes';
   private fontConfigStoreName = 'font-config';
+  private themeModeStoreName = 'theme-mode-config';
   private db: IDBDatabase | null = null;
   private indexedDBAvailable = false;
+  
+  // localStorage keys for FOUC-critical data only
+  private static readonly FOUC_KEYS = {
+    THEME: 'theme-current',
+    MODE: 'theme-mode', 
+    FONTS: 'fonts-active'
+  } as const;
   private initPromise: Promise<void> | null = null;
 
   /**
@@ -89,12 +97,16 @@ export class StorageManager {
     try {
       await this.initIndexedDB();
       this.indexedDBAvailable = true;
+      
+      // Run migration from legacy localStorage to IndexedDB
+      await this.migrateLegacyData();
+      
       console.log('✅ StorageManager: Singleton initialization completed successfully');
     } catch (error) {
       console.error('❌ StorageManager: Initialization failed, falling back to localStorage:', error);
       this.indexedDBAvailable = false;
     } finally {
-      this.initPromise = null; // Reset promise after completion
+      this.initPromise = null;
     }
   }
 
@@ -149,35 +161,37 @@ export class StorageManager {
   }
 
   /**
-   * Store theme data
+   * Store theme data (always in IndexedDB)
    */
   async storeTheme(theme: CachedTheme): Promise<void> {
     if (this.indexedDBAvailable && this.db) {
       await this.storeInIndexedDB(theme);
     } else {
-      this.storeInLocalStorage(theme);
+      console.warn('⚠️ IndexedDB not available, theme data cannot be persisted');
     }
   }
 
   /**
-   * Get theme by name
+   * Get theme by name (always from IndexedDB)
    */
   async getTheme(name: string): Promise<CachedTheme | null> {
     if (this.indexedDBAvailable && this.db) {
       return await this.getFromIndexedDB(name);
     } else {
-      return this.getFromLocalStorage(name);
+      console.warn('⚠️ IndexedDB not available, cannot retrieve theme data');
+      return null;
     }
   }
 
   /**
-   * Get all cached themes
+   * Get all cached themes (always from IndexedDB)
    */
   async getAllThemes(): Promise<CachedTheme[]> {
     if (this.indexedDBAvailable && this.db) {
       return await this.getAllFromIndexedDB();
     } else {
-      return this.getAllFromLocalStorage();
+      console.warn('⚠️ IndexedDB not available, cannot retrieve themes');
+      return [];
     }
   }
 
@@ -201,19 +215,135 @@ export class StorageManager {
   }
 
   /**
-   * Delete theme
+   * Delete theme (always from IndexedDB)
    */
   async deleteTheme(name: string): Promise<void> {
-    
     if (this.indexedDBAvailable && this.db) {
       await this.deleteFromIndexedDB(name);
     } else {
-      this.deleteFromLocalStorage(name);
+      console.warn('⚠️ IndexedDB not available, cannot delete theme');
     }
   }
 
-  // === FONT CACHE METHODS REMOVED ===
-  // Font caching is now handled by font-config store only
+  // ===== FOUC-CRITICAL LOCALSTORAGE METHODS =====
+  // Only for data needed before IndexedDB is available
+
+  /**
+   * Store current theme for FOUC prevention (localStorage only)
+   */
+  setCurrentTheme(theme: string): void {
+    try {
+      localStorage.setItem(StorageManager.FOUC_KEYS.THEME, theme);
+    } catch (error) {
+      console.error('❌ Failed to store current theme in localStorage:', error);
+    }
+  }
+
+  /**
+   * Get current theme for FOUC prevention (localStorage only)
+   */
+  getCurrentTheme(): string | null {
+    try {
+      return localStorage.getItem(StorageManager.FOUC_KEYS.THEME);
+    } catch (error) {
+      console.error('❌ Failed to get current theme from localStorage:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Store current mode for FOUC prevention (localStorage only)
+   */
+  setCurrentMode(mode: 'light' | 'dark' | 'auto'): void {
+    try {
+      localStorage.setItem(StorageManager.FOUC_KEYS.MODE, mode);
+    } catch (error) {
+      console.error('❌ Failed to store current mode in localStorage:', error);
+    }
+  }
+
+  /**
+   * Get current mode for FOUC prevention (localStorage only)
+   */
+  getCurrentMode(): 'light' | 'dark' | 'auto' | null {
+    try {
+      const mode = localStorage.getItem(StorageManager.FOUC_KEYS.MODE);
+      return mode as 'light' | 'dark' | 'auto' | null;
+    } catch (error) {
+      console.error('❌ Failed to get current mode from localStorage:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Store active fonts for FOUC prevention (localStorage only)
+   */
+  setActiveFonts(fonts: { sans?: string; serif?: string; mono?: string }): void {
+    try {
+      localStorage.setItem(StorageManager.FOUC_KEYS.FONTS, JSON.stringify(fonts));
+    } catch (error) {
+      console.error('❌ Failed to store active fonts in localStorage:', error);
+    }
+  }
+
+  /**
+   * Get active fonts for FOUC prevention (localStorage only)
+   */
+  getActiveFonts(): { sans?: string; serif?: string; mono?: string } | null {
+    try {
+      const data = localStorage.getItem(StorageManager.FOUC_KEYS.FONTS);
+      return data ? JSON.parse(data) : null;
+    } catch (error) {
+      console.error('❌ Failed to get active fonts from localStorage:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Migrate legacy localStorage data to IndexedDB (one-time operation)
+   */
+  async migrateLegacyData(): Promise<void> {
+    if (!this.indexedDBAvailable || !this.db) {
+      console.warn('⚠️ IndexedDB not available, skipping migration');
+      return;
+    }
+
+    const migrationKey = 'theme-migration-completed';
+    if (localStorage.getItem(migrationKey)) {
+      console.log('✅ Legacy data migration already completed');
+      return;
+    }
+
+    console.log('🔄 Migrating legacy localStorage data to IndexedDB...');
+
+    const legacyThemes: CachedTheme[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('theme-cache-') && !Object.values(StorageManager.FOUC_KEYS).includes(key)) {
+        const data = localStorage.getItem(key);
+        if (data) {
+          try {
+            const theme = JSON.parse(data);
+            legacyThemes.push(theme);
+            localStorage.removeItem(key);
+          } catch (error) {
+            console.warn(`⚠️ Failed to migrate theme data for key: ${key}`, error);
+          }
+        }
+      }
+    }
+
+    for (const theme of legacyThemes) {
+      try {
+        await this.storeTheme(theme);
+      } catch (error) {
+        console.error('❌ Failed to migrate theme to IndexedDB:', theme.name, error);
+      }
+    }
+
+    localStorage.setItem(migrationKey, 'true');
+    console.log(`✅ Migrated ${legacyThemes.length} themes to IndexedDB`);
+  }
 
   // IndexedDB implementations
   private storeInIndexedDB(theme: CachedTheme): Promise<void> {

@@ -18,3 +18,18 @@ export type { ThemeCoreConfig, ThemeCoreInstance } from './core/theme-core';
 export type { ThemeConfig } from './core/theme-registry';
 export type { FontOverride } from './core/font-manager';
 export type { CachedTheme, FontOverrideConfig, ThemeModeConfig } from './core/storage-manager';
+export type { ThemeGlobalWindow, ThemeHTMLDialogElement } from './types/global';
+
+// Font-related types
+export type FontCategory = 'sans' | 'serif' | 'mono';
+
+// Theme registry types
+export interface RegistryTheme {
+  id: string;
+  name: string;
+  label: string;
+  description: string;
+  source: string;
+  category: string;
+  fetcher?: any; // ThemeListFetcher reference
+}
