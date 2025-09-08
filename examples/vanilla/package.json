@@ -14,7 +14,7 @@
     "@mks2508/theme-manager-vanilla": "workspace:*",
     "@mks2508/shadcn-basecoat-theme-manager": "workspace:*",
     "@mks2508/simple-html-component-template-engine": "workspace:*",
-    "@mks2508/better-logger": "^0.0.1",
+    "@mks2508/better-logger": "^0.3.0",
     "basecoat-css": "^0.3.0"
   },
   "devDependencies": {
