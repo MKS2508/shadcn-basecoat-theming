@@ -1,4 +1,5 @@
 import { 
+  ThemeCore,
   ThemeManager, 
   FontManager,
   ThemeInstaller,
@@ -38,10 +39,10 @@ export class VanillaThemeManager {
       ...options 
     };
     
-    // Initialize core managers
-    this.themeManager = new ThemeManager();
-    this.fontManager = this.themeManager.getFontManager();
-    this.themeInstaller = new ThemeInstaller(this.themeManager);
+    // Managers will be initialized from ThemeCore in init()
+    this.themeManager = null as any;
+    this.fontManager = null as any;
+    this.themeInstaller = null as any;
   }
 
   /**
@@ -54,8 +55,12 @@ export class VanillaThemeManager {
     try {
       this.log('🚀 Initializing Vanilla Theme Manager');
 
-      // Initialize core theme system
-      await this.themeManager.init();
+      // Use ThemeCore global instance instead of creating local instances
+      const managers = await ThemeCore.waitForReady();
+      
+      this.themeManager = managers.themeManager;
+      this.fontManager = managers.fontManager;
+      this.themeInstaller = managers.themeInstaller;
       
       // Set up theme installation callbacks
       this.setupThemeCallbacks();
@@ -66,7 +71,7 @@ export class VanillaThemeManager {
       }
       
       this.initialized = true;
-      this.log('✅ Vanilla Theme Manager initialized');
+      this.log('✅ Vanilla Theme Manager initialized with ThemeCore');
       
       // Expose for debugging in development
       if (typeof window !== 'undefined' && this.options.enableLogging) {
@@ -157,7 +162,7 @@ export class VanillaThemeManager {
 
     this.log(`🌙 Configuring mode toggle at ${selector}`);
 
-    // Apply complete CSS classes to button (essential for styling)
+    // Apply Basecoat CSS classes to button
     const baseClasses = "btn-icon";
     const customClasses = options?.customClasses || '';
     modeToggle.className = baseClasses + (customClasses ? ` ${customClasses}` : '');
@@ -199,7 +204,7 @@ export class VanillaThemeManager {
 
     this.log(`🔤 Configuring font selector at ${selector}`);
 
-    // Apply complete CSS classes to button (essential for styling)
+    // Apply Basecoat CSS classes to button
     const baseClasses = "btn-icon";
     const customClasses = options?.customClasses || '';
     fontButton.className = baseClasses + (customClasses ? ` ${customClasses}` : '');
@@ -317,7 +322,8 @@ export class VanillaThemeManager {
   private generateThemeDropdownHTML(options?: any): string {
     return `<button 
           type="button"
-          class="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
+          id="theme-button"
+          class="btn-outline flex items-center justify-center"
           aria-haspopup="true"
           aria-expanded="false"
           aria-label="Select theme"
@@ -330,7 +336,7 @@ export class VanillaThemeManager {
         
         <div 
           id="theme-menu"
-          class="absolute right-0 z-50 mt-2 w-40 rounded-md border bg-popover p-1 shadow-lg animate-fade-in hidden"
+          class="dropdown-menu absolute right-0 z-50 mt-2 w-48 hidden"
           role="menu"
           aria-orientation="vertical"
         >
@@ -479,7 +485,7 @@ export class VanillaThemeManager {
       htmlContent += `
         <button 
           type="button"
-          class="theme-option relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+          class="dropdown-item ${theme.name === currentTheme ? 'dropdown-item-active' : ''}"
           data-theme="${theme.name}"
           role="menuitem"
           ${theme.name === currentTheme ? 'aria-selected="true"' : ''}
@@ -493,15 +499,15 @@ export class VanillaThemeManager {
     
     // Add separator and bottom section
     if (themes.length > 0) {
-      htmlContent += `<div class="h-px bg-border my-1"></div>
+      htmlContent += `<div class="dropdown-separator"></div>
                             <div class="flex">
-                                <button type="button" id="browse-more-themes" class="relative flex flex-1 cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-primary" role="menuitem">
+                                <button type="button" id="browse-more-themes" class="dropdown-item flex-1 text-primary" role="menuitem">
                                     <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                     </svg>
                                     Browse More...
                                 </button>
-                                <button type="button" id="theme-settings-btn" class="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground text-muted-foreground hover:text-accent-foreground" role="menuitem">
+                                <button type="button" id="theme-settings-btn" class="dropdown-item text-muted-foreground" role="menuitem">
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -553,9 +559,11 @@ export class VanillaThemeManager {
     // Use template engine to generate icon content
     const iconHTML = this.generateModeToggleIcon(mode);
     
-    // Update button content (like @src AppController)
+    // Update button content and classes for Basecoat
     button.innerHTML = iconHTML;
+    button.className = 'btn-icon';
     button.setAttribute('aria-label', `Current mode: ${mode}`);
+    button.setAttribute('title', `Current mode: ${mode}`);
   }
 
   /**
@@ -577,12 +585,12 @@ export class VanillaThemeManager {
     // Check if font override is enabled via core manager
     const hasOverrides = this.fontManager.isOverrideEnabled();
     
-    // Visual indication of active overrides (matching @src)
+    // Visual indication of active overrides using Basecoat classes
     if (hasOverrides) {
-      button.classList.add('text-primary', 'font-medium');
+      button.classList.add('btn-icon-active');
       button.setAttribute('title', 'Font overrides active - Click to configure');
     } else {
-      button.classList.remove('text-primary', 'font-medium');
+      button.classList.remove('btn-icon-active');
       button.setAttribute('title', 'Configure fonts');
     }
   }
@@ -593,19 +601,371 @@ export class VanillaThemeManager {
 
   private openThemeInstallerModal(): void {
     this.log('🌐 Opening theme installer modal');
-    // TODO: Implement with template engine when components are migrated
+    
+    let modalContainer = document.getElementById('theme-installer-modal');
+    if (!modalContainer) {
+      modalContainer = document.createElement('div');
+      modalContainer.id = 'theme-installer-modal';
+      modalContainer.className = 'fixed inset-0 z-60 bg-background/80 backdrop-blur-sm';
+      document.body.appendChild(modalContainer);
+    }
+    
+    modalContainer.innerHTML = `
+      <div class="fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2">
+        <div class="modal">
+          <header>
+            <h2 class="text-lg font-semibold">Install Theme</h2>
+            <p class="text-sm text-muted-foreground">Install themes from TweakCN or shadcn/ui compatible URLs</p>
+            <button type="button" id="installer-modal-close" class="btn-icon absolute right-4 top-4" aria-label="Close">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </header>
+          <section class="space-y-4">
+            <div class="space-y-2">
+              <label for="theme-url" class="text-sm font-medium">Theme URL</label>
+              <input id="theme-url" type="url" placeholder="https://tweakcn.com/r/themes/..." class="input w-full" />
+            </div>
+            <div class="text-xs text-muted-foreground">
+              <p>Supported sources:</p>
+              <ul class="list-disc list-inside ml-2 space-y-1">
+                <li>TweakCN themes (tweakcn.com/r/themes/...)</li>
+                <li>Direct JSON URLs</li>
+                <li>shadcn/ui compatible themes</li>
+              </ul>
+            </div>
+          </section>
+          <footer class="flex justify-end space-x-2">
+            <button type="button" id="installer-cancel" class="btn-outline">Cancel</button>
+            <button type="button" id="installer-install" class="btn" disabled>Install Theme</button>
+          </footer>
+        </div>
+      </div>
+    `;
+    
+    this.setupThemeInstallerEvents(modalContainer);
+    modalContainer.classList.remove('hidden');
   }
 
   private openFontSelectorModal(): void {
     this.log('🔤 Opening font selector modal');
-    // TODO: Implement with template engine when components are migrated
+    
+    let modalContainer = document.getElementById('font-selector-modal');
+    if (!modalContainer) {
+      modalContainer = document.createElement('div');
+      modalContainer.id = 'font-selector-modal';
+      modalContainer.className = 'fixed inset-0 z-60 bg-background/80 backdrop-blur-sm';
+      document.body.appendChild(modalContainer);
+    }
+    
+    // Get current font overrides from manager
+    const fontConfig = this.fontManager.getOverrideConfiguration();
+    
+    modalContainer.innerHTML = `
+      <div class="fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2">
+        <div class="modal">
+          <header>
+            <h2 class="text-lg font-semibold">Font Settings</h2>
+            <p class="text-sm text-muted-foreground">Customize fonts for your interface</p>
+            <button type="button" id="font-modal-close" class="btn-icon absolute right-4 top-4" aria-label="Close">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </header>
+          <section class="space-y-6">
+            ${this.generateFontCategorySelector('sans', 'Sans Serif', fontConfig.fonts.sans)}
+            ${this.generateFontCategorySelector('serif', 'Serif', fontConfig.fonts.serif)}
+            ${this.generateFontCategorySelector('mono', 'Monospace', fontConfig.fonts.mono)}
+          </section>
+          <footer class="flex justify-end space-x-2">
+            <button type="button" id="font-reset" class="btn-outline">Reset to Theme Defaults</button>
+            <button type="button" id="font-close" class="btn">Close</button>
+          </footer>
+        </div>
+      </div>
+    `;
+    
+    this.setupFontSelectorModalEvents(modalContainer);
+    modalContainer.classList.remove('hidden');
   }
 
   private openThemeManagementModal(): void {
     this.log('⚙️ Opening theme management modal');
-    // TODO: Implement with template engine when components are migrated
+    
+    let modalContainer = document.getElementById('theme-management-modal');
+    if (!modalContainer) {
+      modalContainer = document.createElement('div');
+      modalContainer.id = 'theme-management-modal';
+      modalContainer.className = 'fixed inset-0 z-60 bg-background/80 backdrop-blur-sm';
+      document.body.appendChild(modalContainer);
+    }
+    
+    const themes = this.themeManager.getAvailableThemes();
+    const installedCount = themes.filter(t => t.category !== 'built-in').length;
+    
+    modalContainer.innerHTML = `
+      <div class="fixed left-1/2 top-1/2 z-50 w-full max-w-4xl max-h-[90vh] -translate-x-1/2 -translate-y-1/2">
+        <div class="modal flex flex-col">
+          <header class="border-b pb-4">
+            <h2 class="text-lg font-semibold">Theme Management</h2>
+            <p class="text-sm text-muted-foreground">Manage your installed themes</p>
+            <button type="button" id="mgmt-modal-close" class="btn-icon absolute right-4 top-4" aria-label="Close">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </header>
+          
+          <div class="flex items-center justify-between py-4 border-b">
+            <div class="flex items-center space-x-4">
+              <div class="text-sm">
+                <span class="font-medium">${themes.length}</span>
+                <span class="text-muted-foreground">total themes</span>
+              </div>
+              <div class="text-sm">
+                <span class="font-medium">${installedCount}</span>
+                <span class="text-muted-foreground">installed</span>
+              </div>
+            </div>
+            <button type="button" id="refresh-themes" class="btn-outline btn-sm">Refresh</button>
+          </div>
+          
+          <section class="flex-1 overflow-auto py-4">
+            <div class="grid gap-4">
+              ${themes.map(theme => `
+                <div class="card card-compact border-l-4 border-l-${theme.name === this.themeManager.getCurrentTheme() ? 'primary' : 'transparent'}">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h3 class="font-medium">${theme.label}</h3>
+                      <p class="text-sm text-muted-foreground">${theme.name}</p>
+                      <div class="flex items-center space-x-2 mt-1">
+                        <span class="badge ${theme.category === 'built-in' ? 'badge-secondary' : 'badge-outline'}">
+                          ${theme.category}
+                        </span>
+                        ${theme.name === this.themeManager.getCurrentTheme() ? '<span class="badge">Active</span>' : ''}
+                      </div>
+                    </div>
+                    <div class="flex space-x-2">
+                      ${theme.name !== this.themeManager.getCurrentTheme() ? 
+                        `<button type="button" class="btn-sm btn-outline" data-action="apply" data-theme="${theme.name}">Apply</button>` : ''}
+                      ${theme.category !== 'built-in' ? 
+                        `<button type="button" class="btn-sm btn-destructive-outline" data-action="remove" data-theme="${theme.name}">Remove</button>` : ''}
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </section>
+          
+          <footer class="flex justify-between pt-4 border-t">
+            <button type="button" id="install-more-themes" class="btn-outline">Install More Themes</button>
+            <button type="button" id="mgmt-close" class="btn">Close</button>
+          </footer>
+        </div>
+      </div>
+    `;
+    
+    this.setupThemeManagementModalEvents(modalContainer);
+    modalContainer.classList.remove('hidden');
   }
 
+  // ===========================================
+  // MODAL EVENT HANDLERS
+  // ===========================================
+  
+  private generateFontCategorySelector(category: 'sans' | 'serif' | 'mono', label: string, currentFont?: string): string {
+    // Get available fonts for this category (simplified catalog)
+    const fontsByCategory = {
+      sans: [
+        { id: 'inter', name: 'Inter' },
+        { id: 'roboto', name: 'Roboto' },
+        { id: 'open-sans', name: 'Open Sans' },
+        { id: 'lato', name: 'Lato' }
+      ],
+      serif: [
+        { id: 'playfair', name: 'Playfair Display' },
+        { id: 'merriweather', name: 'Merriweather' },
+        { id: 'georgia', name: 'Georgia' }
+      ],
+      mono: [
+        { id: 'jetbrains-mono', name: 'JetBrains Mono' },
+        { id: 'fira-code', name: 'Fira Code' },
+        { id: 'source-code-pro', name: 'Source Code Pro' }
+      ]
+    };
+    
+    const fonts = fontsByCategory[category] || [];
+    
+    return `
+      <div class="space-y-2">
+        <label class="text-sm font-medium">${label}</label>
+        <select class="select w-full" data-category="${category}">
+          <option value="">Use theme default</option>
+          ${fonts.map(font => `
+            <option value="${font.id}" ${currentFont === font.id ? 'selected' : ''}>
+              ${font.name}
+            </option>
+          `).join('')}
+        </select>
+      </div>
+    `;
+  }
+  
+  private setupThemeInstallerEvents(modal: HTMLElement): void {
+    const closeBtn = modal.querySelector('#installer-modal-close, #installer-cancel');
+    const installBtn = modal.querySelector('#installer-install') as HTMLButtonElement;
+    const urlInput = modal.querySelector('#theme-url') as HTMLInputElement;
+    
+    // Close modal
+    closeBtn?.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+    
+    // Enable/disable install button based on URL input
+    urlInput?.addEventListener('input', () => {
+      installBtn.disabled = !urlInput.value.trim();
+    });
+    
+    // Install theme
+    installBtn?.addEventListener('click', async () => {
+      const url = urlInput.value.trim();
+      if (!url) return;
+      
+      installBtn.disabled = true;
+      installBtn.textContent = 'Installing...';
+      
+      try {
+        await this.themeInstaller.installFromUrl(url);
+        this.log('✅ Theme installed successfully');
+        modal.classList.add('hidden');
+        this.refreshAllThemeDropdowns();
+      } catch (error) {
+        this.logError('Failed to install theme', error as Error);
+        // Show error in UI
+        const errorDiv = modal.querySelector('.error-message') || document.createElement('div');
+        errorDiv.className = 'error-message text-destructive text-sm mt-2';
+        errorDiv.textContent = 'Failed to install theme. Please check the URL.';
+        urlInput.parentNode?.appendChild(errorDiv);
+      } finally {
+        installBtn.disabled = false;
+        installBtn.textContent = 'Install Theme';
+      }
+    });
+  }
+  
+  private setupFontSelectorModalEvents(modal: HTMLElement): void {
+    const closeBtn = modal.querySelector('#font-modal-close, #font-close');
+    const resetBtn = modal.querySelector('#font-reset');
+    const selects = modal.querySelectorAll('select[data-category]');
+    
+    // Close modal
+    closeBtn?.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+    
+    // Handle font selection changes
+    selects.forEach(select => {
+      select.addEventListener('change', async (e) => {
+        const target = e.target as HTMLSelectElement;
+        const category = target.dataset.category as 'sans' | 'serif' | 'mono';
+        const fontId = target.value;
+        
+        if (fontId) {
+          await this.fontManager.setFontOverride(category, fontId);
+        } else {
+          await this.fontManager.removeFontOverride(category);
+        }
+        
+        // Update font button states
+        this.updateAllFontButtonStates();
+      });
+    });
+    
+    // Reset to theme defaults
+    resetBtn?.addEventListener('click', async () => {
+      await this.fontManager.disableOverride();
+      
+      // Update selects to show no selection
+      selects.forEach(select => {
+        (select as HTMLSelectElement).value = '';
+      });
+      
+      this.updateAllFontButtonStates();
+    });
+  }
+  
+  private setupThemeManagementModalEvents(modal: HTMLElement): void {
+    const closeBtn = modal.querySelector('#mgmt-modal-close, #mgmt-close');
+    const refreshBtn = modal.querySelector('#refresh-themes');
+    const installMoreBtn = modal.querySelector('#install-more-themes');
+    
+    // Close modal
+    closeBtn?.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+    
+    // Refresh themes
+    refreshBtn?.addEventListener('click', () => {
+      this.refreshAllThemeDropdowns();
+      // Re-open modal with updated data
+      modal.classList.add('hidden');
+      setTimeout(() => this.openThemeManagementModal(), 100);
+    });
+    
+    // Install more themes
+    installMoreBtn?.addEventListener('click', () => {
+      modal.classList.add('hidden');
+      this.openThemeInstallerModal();
+    });
+    
+    // Handle theme actions
+    modal.addEventListener('click', async (e) => {
+      const target = e.target as HTMLElement;
+      const action = target.dataset.action;
+      const themeName = target.dataset.theme;
+      
+      if (!action || !themeName) return;
+      
+      if (action === 'apply') {
+        try {
+          const currentMode = this.themeManager.getCurrentMode();
+          await this.themeManager.setTheme(themeName, currentMode);
+          this.refreshAllThemeDropdowns();
+          // Re-open modal with updated data
+          modal.classList.add('hidden');
+          setTimeout(() => this.openThemeManagementModal(), 100);
+        } catch (error) {
+          this.logError('Failed to apply theme', error as Error);
+        }
+      } else if (action === 'remove') {
+        if (confirm(`Remove theme "${themeName}"? This cannot be undone.`)) {
+          try {
+            // Note: removeTheme method may not exist, using placeholder
+            console.warn('Theme removal not yet implemented in ThemeInstaller');
+            // await this.themeInstaller.removeTheme(themeName);
+            this.refreshAllThemeDropdowns();
+            // Re-open modal with updated data
+            modal.classList.add('hidden');
+            setTimeout(() => this.openThemeManagementModal(), 100);
+          } catch (error) {
+            this.logError('Failed to remove theme', error as Error);
+          }
+        }
+      }
+    });
+  }
+  
+  private updateAllFontButtonStates(): void {
+    // Update all rendered font selector buttons
+    this.renderedComponents.forEach((element, key) => {
+      if (key.includes('font-selector')) {
+        this.updateFontButtonState(element);
+      }
+    });
+  }
+  
   // ===========================================
   // CORE FUNCTIONALITY
   // ===========================================
@@ -720,6 +1080,22 @@ export class VanillaThemeManager {
   setFontOverride(category: 'sans' | 'serif' | 'mono', fontId: string): void {
     this.ensureInitialized();
     this.fontManager.setFontOverride(category, fontId);
+  }
+  
+  /**
+   * Remove font override for category
+   */
+  removeFontOverride(category: 'sans' | 'serif' | 'mono'): Promise<void> {
+    this.ensureInitialized();
+    return this.fontManager.removeFontOverride(category);
+  }
+  
+  /**
+   * Disable all font overrides
+   */
+  disableFontOverrides(): Promise<void> {
+    this.ensureInitialized();
+    return this.fontManager.disableOverride();
   }
 
   /**
