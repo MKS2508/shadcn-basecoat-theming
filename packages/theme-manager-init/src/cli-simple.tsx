@@ -15,19 +15,19 @@ program
 
 program
   .command('init')
-  .argument('<framework>', 'Framework target ("astro" or "react")')
+  .argument('<framework>', 'Framework target ("astro", "react", or "vanilla")')
   .option('--with-fouc', 'Add FOUC prevention to Layout.astro')
   .option('--theme-dir <dir>', 'Custom theme directory', 'public/src/themes')
   .option('--no-examples', 'Don\'t generate default theme examples')
   .option('--check-only', 'Only verify prerequisites without installing')
   .option('--force', 'Skip prerequisite checks and force installation')
   .option('--verbose', 'Detailed output')
-  .description('Initialize theme manager in an Astro project')
+  .description('Initialize theme manager in a project (supports Astro, React, and Vanilla)')
   .action(async (framework: string, options) => {
     try {
-      // Support Astro and React
-      if (framework !== 'astro' && framework !== 'react') {
-        console.error(chalk.red(`❌ Framework "${framework}" is not supported. Supported frameworks: astro, react`));
+      // Support Astro, React, and Vanilla
+      if (framework !== 'astro' && framework !== 'react' && framework !== 'vanilla') {
+        console.error(chalk.red(`❌ Framework "${framework}" is not supported. Supported frameworks: astro, react, vanilla`));
         process.exit(1);
       }
 
@@ -39,7 +39,7 @@ program
       console.log(chalk.dim('Debug: Starting prerequisites check...'));
 
       // Check prerequisites
-      const { ready, checks, projectInfo } = await checkProjectReadiness(cwd, options.verbose || options.checkOnly, framework as 'astro' | 'react');
+      const { ready, checks, projectInfo } = await checkProjectReadiness(cwd, options.verbose || options.checkOnly, framework as 'astro' | 'react' | 'vanilla');
 
       if (options.checkOnly) {
         console.log(chalk.dim('Debug: Check-only mode, displaying results...'));
@@ -78,7 +78,8 @@ program
         cwd,
         themeDir: options.themeDir,
         noExamples: options.noExamples,
-        verbose: options.verbose || true // Force verbose for debugging
+        verbose: options.verbose || true, // Force verbose for debugging
+        framework: framework as 'astro' | 'react' | 'vanilla'
       });
 
     } catch (error) {

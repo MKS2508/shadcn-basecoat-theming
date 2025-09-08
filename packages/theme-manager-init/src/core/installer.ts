@@ -9,18 +9,19 @@ export interface InstallOptions {
   themeDir?: string;
   noExamples?: boolean;
   verbose?: boolean;
+  framework?: 'astro' | 'react' | 'vanilla';
 }
 
 export async function installThemeManager(
   projectInfo: ProjectInfo, 
   options: InstallOptions
 ): Promise<void> {
-  const { cwd, themeDir = 'public/src/themes', verbose } = options;
+  const { cwd, themeDir = 'public/src/themes', verbose, framework } = options;
 
   console.log(chalk.bold('\n📦 Installing Theme Manager...\n'));
 
   // 1. Install the package
-  await installPackage(projectInfo.packageManager || 'npm', cwd, verbose);
+  await installPackage(projectInfo.packageManager || 'npm', cwd, verbose, framework);
 
   // 2. Create directories
   await createDirectories(cwd, themeDir, verbose);
@@ -41,18 +42,39 @@ export async function installThemeManager(
 async function installPackage(
   packageManager: string, 
   cwd: string, 
-  verbose: boolean
+  verbose: boolean,
+  framework?: 'astro' | 'react' | 'vanilla'
 ): Promise<void> {
-  console.log(chalk.blue('📦 Installing @mks2508/shadcn-basecoat-theme-manager@0.1.0...'));
-
-  const commands = {
-    npm: ['install', '@mks2508/shadcn-basecoat-theme-manager@0.1.0'],
-    pnpm: ['add', '@mks2508/shadcn-basecoat-theme-manager@0.1.0'],
-    yarn: ['add', '@mks2508/shadcn-basecoat-theme-manager@0.1.0'],
-    bun: ['add', '@mks2508/shadcn-basecoat-theme-manager@0.1.0']
+  
+  // Determine packages to install based on framework
+  const packagesToInstall = {
+    astro: [
+      '@mks2508/shadcn-basecoat-theme-manager',
+      '@mks2508/theme-manager-astro'
+    ],
+    react: [
+      '@mks2508/shadcn-basecoat-theme-manager',
+      '@mks2508/theme-manager-react'
+    ],
+    vanilla: [
+      '@mks2508/shadcn-basecoat-theme-manager',
+      '@mks2508/theme-manager-vanilla'
+    ]
   };
 
-  const args = commands[packageManager as keyof typeof commands] || commands.npm;
+  const packages = packagesToInstall[framework || 'astro'] || packagesToInstall.astro;
+  
+  console.log(chalk.blue(`📦 Installing packages for ${framework}: ${packages.join(', ')}...`));
+
+  const baseCommands = {
+    npm: ['install'],
+    pnpm: ['add'],
+    yarn: ['add'],
+    bun: ['add']
+  };
+
+  const baseArgs = baseCommands[packageManager as keyof typeof baseCommands] || baseCommands.npm;
+  const args = [...baseArgs, ...packages];
 
   return new Promise((resolve, reject) => {
     const proc = spawn(packageManager, args, { 

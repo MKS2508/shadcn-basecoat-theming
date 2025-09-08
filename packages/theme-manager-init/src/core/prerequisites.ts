@@ -263,7 +263,7 @@ export function displayPrerequisiteResults(checks: PrerequisiteCheck[]): void {
   }
 }
 
-export async function checkProjectReadiness(cwd: string = process.cwd(), verbose: boolean = false, framework?: 'astro' | 'react'): Promise<{ 
+export async function checkProjectReadiness(cwd: string = process.cwd(), verbose: boolean = false, framework?: 'astro' | 'react' | 'vanilla'): Promise<{ 
   ready: boolean; 
   checks: PrerequisiteCheck[];
   projectInfo: ProjectInfo;
