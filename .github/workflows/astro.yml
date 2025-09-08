@@ -75,24 +75,24 @@ jobs:
       - name: Install React example dependencies
         run: |
           cd examples/react
-          npm install --no-frozen-lockfile
+          pnpm install --no-frozen-lockfile
       
       - name: Install Astro example dependencies  
         run: |
           cd examples/astro
-          npm install --no-frozen-lockfile
+          pnpm install --no-frozen-lockfile
 
       - name: Build React example
         run: |
           cd examples/react
-          NODE_ENV=production npm run build
+          NODE_ENV=production pnpm run build
         env:
           NODE_ENV: production
 
       - name: Build Astro example
         run: |
           cd examples/astro  
-          NODE_ENV=production npm run build
+          NODE_ENV=production pnpm run build
         env:
           NODE_ENV: production
 
