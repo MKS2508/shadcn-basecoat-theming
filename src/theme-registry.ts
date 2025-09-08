@@ -98,7 +98,7 @@ export class ThemeRegistry {
   private async loadBuiltInThemes(): Promise<void> {
     try {
       
-      const response = await fetch('/themes/registry.json');
+      const response = await fetch('/shadcn-basecoat-theming/registry.json');
       if (!response.ok) {
         throw new Error(`Failed to fetch registry.json: ${response.status}`);
       }

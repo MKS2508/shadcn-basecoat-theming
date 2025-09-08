@@ -1,0 +1,115 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-09-01T15:30:00Z",
+  "themes": [
+    {
+      "id": "default",
+      "name": "default", 
+      "label": "Default",
+      "description": "Clean default theme with system fonts",
+      "author": "System",
+      "version": "1.0.0",
+      "source": "local",
+      "category": "built-in",
+      "modes": {
+        "light": "/src/themes/default-light.css",
+        "dark": "/src/themes/default-dark.css"
+      },
+      "fonts": {
+        "sans": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans\", sans-serif",
+        "serif": "Georgia, Cambria, \"Times New Roman\", Times, serif",
+        "mono": "\"Fira Code\", Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace"
+      },
+      "preview": {
+        "primary": "oklch(0.3527 0.1722 263.94)",
+        "background": "oklch(1.0000 0 0)",
+        "accent": "oklch(0.9702 0 0)"
+      },
+      "config": {
+        "radius": "0.5rem"
+      }
+    },
+    {
+      "id": "supabase",
+      "name": "supabase",
+      "label": "Supabase", 
+      "description": "Supabase brand theme with Outfit font",
+      "author": "Supabase Team",
+      "version": "1.0.0",
+      "source": "local",
+      "category": "built-in",
+      "modes": {
+        "light": "/src/themes/supabase-light.css",
+        "dark": "/src/themes/supabase-dark.css"
+      },
+      "fonts": {
+        "sans": "Outfit, sans-serif",
+        "serif": "ui-serif, Georgia, Cambria, \"Times New Roman\", Times, serif", 
+        "mono": "monospace"
+      },
+      "preview": {
+        "primary": "oklch(0.8348 0.1302 160.9080)",
+        "background": "oklch(0.9911 0 0)",
+        "accent": "oklch(0.9461 0 0)"
+      },
+      "config": {
+        "radius": "0.5rem"
+      },
+      "externalFonts": [
+        {
+          "family": "Outfit",
+          "source": "google-fonts",
+          "weights": [400, 500, 600, 700],
+          "styles": ["normal"]
+        }
+      ]
+    },
+    {
+      "id": "tangerine", 
+      "name": "tangerine",
+      "label": "Tangerine",
+      "description": "Warm tangerine theme with Inter and Source Serif",
+      "author": "Design System",
+      "version": "1.0.0", 
+      "source": "local",
+      "category": "built-in",
+      "modes": {
+        "light": "/src/themes/tangerine-light.css",
+        "dark": "/src/themes/tangerine-dark.css"
+      },
+      "fonts": {
+        "sans": "Inter, sans-serif",
+        "serif": "Source Serif 4, serif",
+        "mono": "JetBrains Mono, monospace"
+      },
+      "preview": {
+        "primary": "oklch(0.6397 0.1720 36.4421)",
+        "background": "oklch(0.9383 0.0042 236.4993)",
+        "accent": "oklch(0.9119 0.0222 243.8174)"
+      },
+      "config": {
+        "radius": "0.75rem"
+      },
+      "externalFonts": [
+        {
+          "family": "Inter",
+          "source": "google-fonts", 
+          "weights": [400, 500, 600, 700],
+          "styles": ["normal"]
+        },
+        {
+          "family": "Source Serif 4",
+          "source": "google-fonts",
+          "weights": [400, 600, 700],
+          "styles": ["normal"]
+        },
+        {
+          "family": "JetBrains Mono",
+          "source": "google-fonts",
+          "weights": [400, 500, 600, 700], 
+          "styles": ["normal"]
+        }
+      ]
+    }
+  ]
+}

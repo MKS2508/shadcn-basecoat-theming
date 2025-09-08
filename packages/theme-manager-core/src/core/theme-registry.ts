@@ -102,8 +102,8 @@ export class ThemeRegistry {
    */
   private async loadBuiltInThemes(): Promise<void> {
     try {
-      console.log('🔄 [ThemeRegistry] Fetching /themes/registry.json...');
-      const response = await fetch('/themes/registry.json');
+      console.log('🔄 [ThemeRegistry] Fetching /shadcn-basecoat-theming/registry.json...');
+      const response = await fetch('/shadcn-basecoat-theming/registry.json');
       console.log('✅ [ThemeRegistry] Fetch response received:', response.status);
       
       if (!response.ok) {
