@@ -106,6 +106,9 @@ jobs:
           cp -r dist/react deployment/
           cp -r dist/astro deployment/
           
+          # Copy registry.json to deployment root
+          cp public/registry.json deployment/
+          
           # Create landing page
           cat > deployment/index.html << 'EOF'
           <!DOCTYPE html>
