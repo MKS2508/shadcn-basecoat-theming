@@ -10,9 +10,9 @@
     "theme-manager-cli": "./src/cli-simple.tsx"
   },
   "scripts": {
-    "build": "bun build src/cli.tsx --outdir dist --target node",
-    "dev": "bun run src/cli.tsx",
-    "test": "bun run src/cli.tsx init astro --check-only"
+    "build": "tsup",
+    "dev": "node src/cli.tsx",
+    "test": "node src/cli.tsx init astro --check-only"
   },
   "files": [
     "src/**/*",
@@ -32,7 +32,9 @@
   "license": "MIT",
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/fs-extra": "^11.0.4"
+    "@types/fs-extra": "^11.0.4",
+    "tsup": "^8.0.0",
+    "typescript": "^5.6.2"
   },
   "peerDependencies": {
     "typescript": "^5"
