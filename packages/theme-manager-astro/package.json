@@ -29,7 +29,7 @@
   "author": "MKS2508",
   "license": "MIT",
   "dependencies": {
-    "@mks2508/shadcn-basecoat-theme-manager": "workspace:*"
+    "@mks2508/shadcn-basecoat-theme-manager": "^1.1.2"
   },
   "peerDependencies": {
     "astro": "^5.0.0",

@@ -26,8 +26,8 @@
   "author": "MKS2508",
   "license": "MIT",
   "dependencies": {
-    "@mks2508/shadcn-basecoat-theme-manager": "workspace:*",
-    "@mks2508/simple-html-component-template-engine": "workspace:*"
+    "@mks2508/shadcn-basecoat-theme-manager": "^1.1.2",
+    "@mks2508/simple-html-component-template-engine": "^0.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
