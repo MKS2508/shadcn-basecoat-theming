@@ -11,6 +11,9 @@
   <link rel="preload" href="/src/style.css" as="style">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   
+  <!-- Basecoat UI CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/basecoat-css@0.3.2/dist/basecoat.cdn.min.css">
+  
   <!-- FOUC Prevention - visibility hidden method -->
   <style>
     /* Hide body until CSS is loaded to prevent flash */
@@ -109,7 +112,7 @@
         <div class="container mx-auto px-4 flex h-16 items-center justify-between">
           <div class="flex items-center space-x-4">
             <h1 class="text-xl font-bold text-foreground">Theme Demo</h1>
-            <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full font-medium">
+            <span class="badge-outline">
               Tailwind v4 + Basecoat
             </span>
           </div>
@@ -193,22 +196,34 @@
           
           <!-- Theme preview cards -->
           <div class="grid md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-card border rounded-lg p-6 hover:shadow-lg transition-shadow">
-              <div class="w-12 h-12 bg-primary rounded-lg mb-4 mx-auto"></div>
-              <h3 class="text-lg font-semibold text-card-foreground mb-2">Primary Colors</h3>
-              <p class="text-muted-foreground text-sm">Dynamic color adaptation across all themes</p>
+            <div class="card hover:shadow-lg transition-shadow">
+              <header class="text-center">
+                <div class="w-12 h-12 bg-primary rounded-lg mb-4 mx-auto"></div>
+                <h3 class="text-lg font-semibold text-card-foreground mb-2">Primary Colors</h3>
+              </header>
+              <section>
+                <p class="text-muted-foreground text-sm text-center">Dynamic color adaptation across all themes</p>
+              </section>
             </div>
             
-            <div class="bg-card border rounded-lg p-6 hover:shadow-lg transition-shadow">
-              <div class="w-12 h-12 bg-accent rounded-lg mb-4 mx-auto"></div>
-              <h3 class="text-lg font-semibold text-card-foreground mb-2">Accent System</h3>
-              <p class="text-muted-foreground text-sm">Cohesive accent colors for interactive elements</p>
+            <div class="card hover:shadow-lg transition-shadow">
+              <header class="text-center">
+                <div class="w-12 h-12 bg-accent rounded-lg mb-4 mx-auto"></div>
+                <h3 class="text-lg font-semibold text-card-foreground mb-2">Accent System</h3>
+              </header>
+              <section>
+                <p class="text-muted-foreground text-sm text-center">Cohesive accent colors for interactive elements</p>
+              </section>
             </div>
             
-            <div class="bg-card border rounded-lg p-6 hover:shadow-lg transition-shadow">
-              <div class="w-12 h-12 bg-secondary rounded-lg mb-4 mx-auto"></div>
-              <h3 class="text-lg font-semibold text-card-foreground mb-2">Secondary Tones</h3>
-              <p class="text-muted-foreground text-sm">Balanced secondary colors for content hierarchy</p>
+            <div class="card hover:shadow-lg transition-shadow">
+              <header class="text-center">
+                <div class="w-12 h-12 bg-secondary rounded-lg mb-4 mx-auto"></div>
+                <h3 class="text-lg font-semibold text-card-foreground mb-2">Secondary Tones</h3>
+              </header>
+              <section>
+                <p class="text-muted-foreground text-sm text-center">Balanced secondary colors for content hierarchy</p>
+              </section>
             </div>
           </div>
         </section>
@@ -216,51 +231,59 @@
         <!-- Interactive components showcase -->
         <section class="grid lg:grid-cols-2 gap-8 mb-12">
           <!-- Form components -->
-          <div class="bg-card border rounded-lg p-6">
-            <h3 class="text-xl font-semibold text-card-foreground mb-4">Form Components</h3>
-            <div class="space-y-4">
-              <div>
-                <label for="sample-input" class="block text-sm font-medium text-foreground mb-2">
-                  Sample Input
-                </label>
-                <input 
-                  type="text" 
-                  id="sample-input"
-                  placeholder="Enter some text..."
-                  class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                />
+          <div class="card">
+            <header>
+              <h3 class="text-xl font-semibold text-card-foreground mb-4">Form Components</h3>
+            </header>
+            <section>
+              <div class="space-y-4">
+                <div>
+                  <label for="sample-input" class="block text-sm font-medium text-foreground mb-2">
+                    Sample Input
+                  </label>
+                  <input 
+                    type="text" 
+                    id="sample-input"
+                    placeholder="Enter some text..."
+                    class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  />
+                </div>
+                
+                <div class="flex space-x-2">
+                  <button type="button" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                    Primary Button
+                  </button>
+                  <button type="button" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                    Secondary
+                  </button>
+                </div>
               </div>
-              
-              <div class="flex space-x-2">
-                <button type="button" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
-                  Primary Button
-                </button>
-                <button type="button" class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
-                  Secondary
-                </button>
-              </div>
-            </div>
+            </section>
           </div>
 
           <!-- Status indicators -->
-          <div class="bg-card border rounded-lg p-6">
-            <h3 class="text-xl font-semibold text-card-foreground mb-4">Status Indicators</h3>
-            <div class="space-y-3">
-              <div class="flex items-center space-x-3 p-3 bg-accent/10 rounded-md">
-                <div class="w-2 h-2 bg-accent rounded-full"></div>
-                <span class="text-accent-foreground">Accent state indicator</span>
+          <div class="card">
+            <header>
+              <h3 class="text-xl font-semibold text-card-foreground mb-4">Status Indicators</h3>
+            </header>
+            <section>
+              <div class="space-y-3">
+                <div class="flex items-center space-x-3 p-3 bg-accent/10 rounded-md">
+                  <div class="w-2 h-2 bg-accent rounded-full"></div>
+                  <span class="text-accent-foreground">Accent state indicator</span>
+                </div>
+                
+                <div class="flex items-center space-x-3 p-3 bg-destructive/10 rounded-md">
+                  <div class="w-2 h-2 bg-destructive rounded-full"></div>
+                  <span class="text-destructive-foreground">Error state indicator</span>
+                </div>
+                
+                <div class="flex items-center space-x-3 p-3 bg-muted rounded-md">
+                  <div class="w-2 h-2 bg-muted-foreground rounded-full"></div>
+                  <span class="text-muted-foreground">Muted state indicator</span>
+                </div>
               </div>
-              
-              <div class="flex items-center space-x-3 p-3 bg-destructive/10 rounded-md">
-                <div class="w-2 h-2 bg-destructive rounded-full"></div>
-                <span class="text-destructive-foreground">Error state indicator</span>
-              </div>
-              
-              <div class="flex items-center space-x-3 p-3 bg-muted rounded-md">
-                <div class="w-2 h-2 bg-muted-foreground rounded-full"></div>
-                <span class="text-muted-foreground">Muted state indicator</span>
-              </div>
-            </div>
+            </section>
           </div>
         </section>
 
