@@ -3,6 +3,7 @@ import { ThemePreview } from './theme-preview';
 import { ThemeRegistryList } from './theme-registry-list';
 import { ThemeManager } from '../theme-manager';
 import themeInstallerTemplate from '../templates/modals/theme-installer-modal.html?raw';
+import { uiLogger } from '../utils/logger';
 
 export class ThemeInstallerModal extends ModalComponent {
   private form: HTMLFormElement | null = null;
@@ -68,7 +69,7 @@ export class ThemeInstallerModal extends ModalComponent {
         }, 800);
       });
     } else {
-      console.error('❌ URL input not found during event binding');
+      uiLogger.error('URL input not found during event binding');
     }
 
     // Form submission - use bindEvent for cleanup tracking
@@ -159,7 +160,7 @@ export class ThemeInstallerModal extends ModalComponent {
       this.installButton.disabled = false;
 
     } catch (error: any) {
-      console.error('Theme validation error:', error);
+      uiLogger.error('Theme validation error:', error);
       let message = 'Failed to load theme';
       
       if (error.message.includes('HTTP 404')) {
@@ -206,7 +207,7 @@ export class ThemeInstallerModal extends ModalComponent {
       }
 
     } catch (error) {
-      console.error('❌ Installation error:', error);
+      uiLogger.error('Installation error:', error);
       alert('Failed to install theme. Please try again.');
     } finally {
       this.installButton.disabled = false;
@@ -216,7 +217,7 @@ export class ThemeInstallerModal extends ModalComponent {
 
   private async showRegistryList(): Promise<void> {
     if (!this.themePreview || !this.registryList) {
-      console.error('❌ showRegistryList: Missing components', { themePreview: !!this.themePreview, registryList: !!this.registryList });
+      uiLogger.error('showRegistryList: Missing components', { themePreview: !!this.themePreview, registryList: !!this.registryList });
       return;
     }
 
@@ -241,10 +242,10 @@ export class ThemeInstallerModal extends ModalComponent {
           previewContainer.innerHTML = '';
           previewContainer.appendChild(registryElement);
         } else {
-          console.error('❌ ThemeRegistryList element not found after loadThemes()')
+          uiLogger.error('ThemeRegistryList element not found after loadThemes()');
         }
       } catch (error) {
-        console.error('Failed to load theme registry:', error);
+        uiLogger.error('Failed to load theme registry:', error);
         previewContainer.innerHTML = `
           <div class="text-center py-8">
             <p class="text-destructive text-sm mb-2">Failed to load themes</p>
@@ -289,7 +290,7 @@ export class ThemeInstallerModal extends ModalComponent {
       }
 
     } catch (error: any) {
-      console.error('Registry theme preview error:', error);
+      uiLogger.error('Registry theme preview error:', error);
       await this.themePreview.showError('Failed to preview theme', error.message);
     }
   }
@@ -317,7 +318,7 @@ export class ThemeInstallerModal extends ModalComponent {
       }
 
     } catch (error) {
-      console.error('❌ Registry installation error:', error);
+      uiLogger.error('Registry installation error:', error);
       alert('Failed to install theme. Please try again.');
     } finally {
       this.installButton.disabled = false;

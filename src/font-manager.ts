@@ -1,4 +1,5 @@
 import { getFontById, buildFontFamily, needsGoogleFontsLoad, FontOption } from './font-catalog';
+import { fontLogger } from './utils/logger';
 
 /**
  * Font override configuration
@@ -119,7 +120,7 @@ export class FontManager {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.pendingConfig));
       this.pendingConfig = null;
     } catch (error) {
-      console.error('❌ FontManager: Failed to save configuration', error);
+      fontLogger.error('Failed to save configuration:', error);
     }
   }
 
@@ -345,8 +346,8 @@ export class FontManager {
       };
 
       link.onerror = () => {
-        console.error(`❌ FontManager: Batch load failed for URL: ${batchUrl}`);
-        console.error(`❌ FontManager: Failed fonts: ${fontsToLoad.join(', ')}`);
+        fontLogger.error(`Batch load failed for URL: ${batchUrl}`);
+        fontLogger.error(`Failed fonts: ${fontsToLoad.join(', ')}`);
         reject(new Error(`Failed to load font batch: ${batchUrl}`));
       };
 

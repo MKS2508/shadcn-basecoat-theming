@@ -1,6 +1,7 @@
 /**
  * Storage abstraction for theme caching with IndexedDB + localStorage fallback
  */
+import { storageLogger } from './utils/logger';
 
 export interface CachedTheme {
   name: string;
@@ -143,7 +144,7 @@ export class StorageManager {
         resolve();
       };
       request.onerror = () => {
-        console.error(`❌ StorageManager: Failed to store theme: ${theme.name}`, request.error);
+        storageLogger.error(`Failed to store theme: ${theme.name}`, request.error);
         reject(request.error);
       };
     });
@@ -182,7 +183,7 @@ export class StorageManager {
         resolve();
       };
       request.onerror = () => {
-        console.error(`❌ StorageManager: Failed to delete theme from IndexedDB: ${name}`, request.error);
+        storageLogger.error(`Failed to delete theme from IndexedDB: ${name}`, request.error);
         reject(request.error);
       };
     });

@@ -3,6 +3,7 @@
  */
 
 import { StorageManager } from './storage-manager';
+import { registryLogger } from './utils/logger';
 
 export interface ExternalThemeItem {
   name: string;
@@ -47,7 +48,7 @@ export class ThemeListFetcher {
       const cached = localStorage.getItem(this.STORAGE_KEY);
       return cached ? JSON.parse(cached) : [];
     } catch (error) {
-      console.error('❌ Failed to parse cached theme names:', error);
+      registryLogger.error('Failed to parse cached theme names:', error);
       return [];
     }
   }
@@ -108,7 +109,7 @@ export class ThemeListFetcher {
       return themeNames;
 
     } catch (error) {
-      console.error('❌ ThemeListFetcher: Failed to fetch themes:', error);
+      registryLogger.error('Failed to fetch themes:', error);
       
       // Return cached data if available
       const cached = this.getCachedThemeNames();
@@ -140,7 +141,7 @@ export class ThemeListFetcher {
     await this.fetchAndCacheThemeNames();
     
     if (!this.cache || !this.cache.items) {
-      console.error('❌ ThemeListFetcher: Cache still empty after fetch');
+      registryLogger.error('Cache still empty after fetch');
       return [];
     }
     

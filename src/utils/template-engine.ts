@@ -2,6 +2,7 @@
  * Simple Template Engine for HTML templates with Mustache-like syntax
  * Supports: {{variable}}, {{{rawHTML}}}, {{#section}}, {{^inverted}}, {{/section}}
  */
+import { templateLogger } from './logger';
 
 interface TemplateData {
   [key: string]: any;
@@ -37,7 +38,7 @@ export class TemplateEngine {
       return template;
       
     } catch (error) {
-      console.error(`❌ TemplateEngine: Failed to load template: ${templatePath}`, error);
+      templateLogger.error(`Failed to load template: ${templatePath}`, error);
       throw error;
     }
   }

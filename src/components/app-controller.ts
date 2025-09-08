@@ -141,7 +141,7 @@ export class AppController {
     const modeToggle = document.getElementById('mode-toggle');
     
     if (!modeToggle) {
-      console.error('setupModeToggle: mode-toggle button not found!');
+      componentLogger.error('setupModeToggle: mode-toggle button not found!');
       return;
     }
 
@@ -247,7 +247,7 @@ export class AppController {
         this.themeInstaller.openModal();
       }, 100);
     } else {
-      console.error('AppController: themeInstaller is null');
+      componentLogger.error('AppController: themeInstaller is null');
     }
   }
 

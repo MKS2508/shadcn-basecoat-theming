@@ -1,34 +1,8 @@
 import { FontLoader } from './font-loader';
 import { ThemeRegistry, ThemeConfig } from './theme-registry';
 import { FontManager } from './font-manager';
+import { themeLogger, time, timeEnd } from './utils/logger';
 
-/**
- * Performance monitoring utility
- */
-class PerformanceMonitor {
-  private static metrics: Map<string, number> = new Map();
-  
-  static startTimer(label: string): void {
-    this.metrics.set(label, performance.now());
-  }
-  
-  static endTimer(label: string): number {
-    const startTime = this.metrics.get(label);
-    if (startTime) {
-      const duration = performance.now() - startTime;
-      this.metrics.delete(label);
-      return duration;
-    }
-    return 0;
-  }
-  
-  static measureThemeSwitch(themeName: string, mode: string, duration: number): void {
-    const target = duration < 16 ? '🚀' : duration < 50 ? '⚡' : '📈';
-    
-    if (duration > 50) {
-    }
-  }
-}
 
 /**
  * Manages theme loading, caching, and application
@@ -68,7 +42,7 @@ export class ThemeManager {
    */
   async init(): Promise<void> {
     try {
-      PerformanceMonitor.startTimer('theme-manager-init');
+      time('theme-manager-init');
       
       // Initialize theme registry first
       await this.themeRegistry.init();
@@ -93,10 +67,10 @@ export class ThemeManager {
       this.preloadBuiltinThemes();
       
       // End initialization timer
-      PerformanceMonitor.endTimer('theme-manager-init');
+      timeEnd('theme-manager-init');
       
     } catch (error) {
-      console.error('❌ ThemeManager: Failed to initialize:', error);
+      themeLogger.error('Failed to initialize:', error);
       
       // Fallback to basic initialization
       this.currentTheme = 'default';
@@ -116,7 +90,7 @@ export class ThemeManager {
 
     // Start performance timer
     const timerLabel = `theme-switch-${theme}-${newMode}`;
-    PerformanceMonitor.startTimer(timerLabel);
+    time(timerLabel);
 
     this.currentTheme = theme;
     this.currentMode = newMode;
@@ -127,8 +101,7 @@ export class ThemeManager {
     await this.applyTheme(theme, newMode);
     
     // End performance timer and log metrics
-    const duration = PerformanceMonitor.endTimer(timerLabel);
-    PerformanceMonitor.measureThemeSwitch(theme, newMode, duration);
+    timeEnd(timerLabel);
   }
 
   /**
@@ -279,7 +252,7 @@ export class ThemeManager {
       }, 50);
       
     } catch (error) {
-      console.error(`Failed to load theme "${themeName}" (${resolvedMode}):`, error);
+      themeLogger.error(`Failed to load theme "${themeName}" (${resolvedMode}):`, error);
       document.documentElement.classList.remove('theme-switching');
       throw error;
     }
@@ -365,7 +338,7 @@ export class ThemeManager {
       this.onThemeInstalled?.(installedTheme);
       
     } catch (error) {
-      console.error(`❌ Failed to install theme ${themeData.name}:`, error);
+      themeLogger.error(`Failed to install theme ${themeData.name}:`, error);
       throw error;
     }
   }
@@ -451,7 +424,7 @@ export class ThemeManager {
       // Clear pending saves
       this.themeStorage.pending = {};
     } catch (error) {
-      console.error('❌ ThemeManager: Failed to save settings', error);
+      themeLogger.error('Failed to save settings:', error);
     }
   }
 }

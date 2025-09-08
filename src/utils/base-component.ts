@@ -1,4 +1,5 @@
 import { TemplateEngine, templateEngine } from './template-engine';
+import { componentLogger } from './logger';
 
 /**
  * Base Component class for creating reusable UI components
@@ -51,7 +52,7 @@ export abstract class BaseComponent {
       }
       
     } catch (error) {
-      console.error(`❌ BaseComponent: Failed to render ${this.constructor.name}:`, error);
+      componentLogger.error(`Failed to render ${this.constructor.name}:`, error);
       throw error;
     }
   }

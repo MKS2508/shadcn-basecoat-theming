@@ -2,6 +2,7 @@ import { StorageManager, CachedTheme } from './storage-manager';
 import { ThemeManager } from './theme-manager';
 import { ThemeListFetcher } from './theme-list-fetcher';
 import { ThemeInstallerModal } from './components/theme-installer-modal';
+import { installerLogger } from './utils/logger';
 
 interface ThemeData {
   name: string;
@@ -97,7 +98,7 @@ export class ThemeInstaller {
       await this.processAndInstallTheme(themeData, url);
       
     } catch (error) {
-      console.error('❌ Theme installation failed:', error);
+      installerLogger.error('Theme installation failed:', error);
       throw error;
     }
   }
@@ -120,7 +121,7 @@ export class ThemeInstaller {
       await this.installThemeFromUrl(themeUrl);
       
     } catch (error) {
-      console.error('❌ Registry theme installation failed:', error);
+      installerLogger.error('Registry theme installation failed:', error);
       throw error;
     }
   }

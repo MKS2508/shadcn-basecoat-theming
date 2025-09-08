@@ -1,4 +1,5 @@
 import { ThemeManager } from '../theme-manager';
+import { uiLogger } from '../utils/logger';
 
 interface ThemeOption {
   name: string;
@@ -41,7 +42,7 @@ export class ThemeDropdown {
 
   private bindEvents(): void {
     if (!this.dropdownMenu) {
-      console.error('bindEvents: No dropdown menu element!');
+      uiLogger.error('bindEvents: No dropdown menu element!');
       return;
     }
 
@@ -111,7 +112,7 @@ export class ThemeDropdown {
   async render(): Promise<void> {
     
     if (!this.dropdownMenu) {
-      console.error('No dropdown menu element found!');
+      uiLogger.error('No dropdown menu element found!');
       return;
     }
 
@@ -132,7 +133,7 @@ export class ThemeDropdown {
       await this.renderWithTemplateEngine(themeOptions);
       
     } catch (error) {
-      console.error('Failed to render theme dropdown:', error);
+      uiLogger.error('Failed to render theme dropdown:', error);
       this.renderFallback();
     }
   }
@@ -142,7 +143,7 @@ export class ThemeDropdown {
    */
   private async renderWithTemplateEngine(themeOptions: ThemeOption[]): Promise<void> {
     if (!this.dropdownMenu) {
-      console.error('renderWithTemplateEngine: No dropdown menu element');
+      uiLogger.error('renderWithTemplateEngine: No dropdown menu element');
       return;
     }
 
@@ -211,7 +212,7 @@ export class ThemeDropdown {
    */
   private renderFallback(): void {
     if (!this.dropdownMenu) {
-      console.error('renderFallback: No dropdown menu element');
+      uiLogger.error('renderFallback: No dropdown menu element');
       return;
     }
 
