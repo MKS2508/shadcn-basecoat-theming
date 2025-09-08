@@ -114,14 +114,16 @@ export async function checkPrerequisites(cwd: string = process.cwd(), framework?
       required: true
     });
   } else {
-    // Auto-detect framework
-    const hasFramework = projectInfo.isAstroProject || projectInfo.isReactProject;
+    // Auto-detect framework or allow vanilla
+    const hasFramework = projectInfo.isAstroProject || projectInfo.isReactProject || framework === 'vanilla';
     checks.push({
       name: 'Framework Detection',
       status: hasFramework ? 'pass' : 'fail',
       message: hasFramework 
-        ? `Found ${projectInfo.isAstroProject ? 'Astro' : 'React'} project`
-        : 'No supported framework detected. Make sure you have Astro or React installed.',
+        ? framework === 'vanilla' 
+          ? 'Vanilla JavaScript project detected'
+          : `Found ${projectInfo.isAstroProject ? 'Astro' : 'React'} project`
+        : 'No supported framework detected. Make sure you have Astro, React installed, or use vanilla.',
       required: true
     });
   }
@@ -174,7 +176,7 @@ export async function checkPrerequisites(cwd: string = process.cwd(), framework?
       });
     }
 
-    // 5. Check for UI framework (Basecoat CSS for Astro, shadcn/ui for React)
+    // 5. Check for UI framework (Basecoat CSS for Astro, shadcn/ui for React, optional for vanilla)
     if (framework === 'astro') {
       const basecoatVersion = allDeps['basecoat-css'];
       checks.push({
@@ -206,6 +208,17 @@ export async function checkPrerequisites(cwd: string = process.cwd(), framework?
           ? `Found shadcn/ui: ${hasComponentsJson ? 'components.json' : ''}${hasComponentsJson && hasShadcnDeps ? ' + ' : ''}${hasShadcnDeps ? `${shadcnComponents.length}/4 typical packages` : ''}`
           : 'shadcn/ui components not detected. Make sure you have components.json or shadcn dependencies installed.',
         required: false // Made optional since user might be using other component libraries
+      });
+    } else if (framework === 'vanilla') {
+      // For vanilla, UI framework is optional (user might want Basecoat or just CSS)
+      const basecoatVersion = allDeps['basecoat-css'];
+      checks.push({
+        name: 'UI Framework (Optional)',
+        status: basecoatVersion ? 'pass' : 'warning', 
+        message: basecoatVersion 
+          ? `Found Basecoat CSS: ${basecoatVersion} (recommended for vanilla)`
+          : 'No UI framework detected. Basecoat CSS is recommended but optional for vanilla projects.',
+        required: false
       });
     }
 
