@@ -5,13 +5,12 @@ import { Badge } from "./components/ui/badge";
 import { Separator } from "./components/ui/separator";
 import { Settings, Palette } from "lucide-react";
 
-import { ThemeSelector } from "./components/ThemeSelector";
-import { ModeToggle } from "./components/ModeToggle";
+import { ThemeProvider, ThemeSelector, ModeToggle } from "@mks2508/theme-manager-react";
 import { SimpleBenchmark } from "./components/SimpleBenchmark";
 import { ProfessionalBenchmark } from "./components/ProfessionalBenchmark";
 
-const ThemeManagementModal = lazy(() => import("./components/ThemeManagementModal"));
-const FontSettingsModal = lazy(() => import("./components/FontSettingsModal"));
+const ThemeManagementModal = lazy(() => import("@mks2508/theme-manager-react").then(m => ({ default: m.ThemeManagementModal })));
+const FontSettingsModal = lazy(() => import("@mks2508/theme-manager-react").then(m => ({ default: m.FontSettingsModal })));
 const ComponentsTab = lazy(() => import("./components/tabs/ComponentsTab"));
 const FormsTab = lazy(() => import("./components/tabs/FormsTab"));
 const LayoutTab = lazy(() => import("./components/tabs/LayoutTab"));
@@ -25,8 +24,9 @@ function App() {
   const [showFontSettings, setShowFontSettings] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="container mx-auto p-8 space-y-8">
+    <ThemeProvider>
+      <div className="min-h-screen bg-background text-foreground">
+        <div className="container mx-auto p-8 space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold">shadcn/ui + ThemeCore</h1>
@@ -88,7 +88,8 @@ function App() {
           />
         )}
       </Suspense>
-    </div>
+      </div>
+    </ThemeProvider>
   );
 }
 

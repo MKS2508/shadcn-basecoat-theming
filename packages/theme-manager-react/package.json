@@ -22,7 +22,9 @@
     "theme",
     "shadcn",
     "hooks",
-    "dark-mode"
+    "dark-mode",
+    "radix-ui",
+    "lucide-react"
   ],
   "author": "MKS2508",
   "license": "MIT",
@@ -31,7 +33,13 @@
   },
   "peerDependencies": {
     "react": ">=16.8.0",
-    "react-dom": ">=16.8.0"
+    "react-dom": ">=16.8.0",
+    "@radix-ui/react-popover": "^1.0.0",
+    "@radix-ui/react-dialog": "^1.0.0",
+    "lucide-react": "^0.400.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
+    "tailwind-merge": "^2.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
@@ -42,6 +50,7 @@
   },
   "files": [
     "dist",
+    "src",
     "README.md"
   ]
 }

@@ -262,8 +262,6 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
       const themes = themeManager.getThemeRegistry().getInstalledThemes();
       setInstalledThemes(themes || []);
       
-      // No manual event dispatch needed - ThemeCore handles this via themeManager.installTheme()
-      
     } catch (error) {
       console.error('Failed to install theme:', error);
     }
@@ -290,8 +288,6 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
       // Refresh installed themes list
       const themes = themeManager.getThemeRegistry().getInstalledThemes();
       setInstalledThemes(themes || []);
-      
-      // No manual event dispatch needed - ThemeCore handles this
       
     } catch (error) {
       console.error('❌ [ThemeManagement] Failed to uninstall theme:', error);

@@ -1,0 +1,47 @@
+{
+  "name": "@mks2508/theme-manager-astro",
+  "version": "0.1.0",
+  "description": "Astro components and islands for theme management (basecoat compatible)",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    },
+    "./components/*": {
+      "types": "./src/components/*.astro",
+      "import": "./src/components/*.astro"
+    }
+  },
+  "scripts": {
+    "build": "echo 'Astro components ready - no build needed'",
+    "dev": "echo 'Astro components ready - no dev server needed'",
+    "type-check": "echo 'Type checking skipped for Astro components'"
+  },
+  "keywords": [
+    "astro",
+    "theme",
+    "basecoat",
+    "components",
+    "islands",
+    "dark-mode"
+  ],
+  "author": "MKS2508",
+  "license": "MIT",
+  "dependencies": {
+    "@mks2508/shadcn-basecoat-theme-manager": "workspace:*"
+  },
+  "peerDependencies": {
+    "astro": "^5.0.0",
+    "@mks2508/basecoat-astro-components": "^1.0.0",
+    "basecoat-css": "^0.3.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "typescript": "^5.6.2"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ]
+}

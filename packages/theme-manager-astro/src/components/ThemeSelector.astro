@@ -1,11 +1,12 @@
 ---
-import Popover from './ui/Popover.astro';
-import Button from './ui/Button.astro';
-import ChevronDownIcon from './icons/ChevronDownIcon.astro';
-import CheckIcon from './icons/CheckIcon.astro';
-import SearchIcon from './icons/SearchIcon.astro';
-import SettingsIcon from './icons/SettingsIcon.astro';
-import FontSettingsIsland from './FontSettingsIsland.astro';
+import { 
+  Popover, 
+  Button,
+  ChevronDownIcon,
+  CheckIcon,
+  SearchIcon,
+  SettingsIcon
+} from '@mks2508/basecoat-astro-components';
 ---
 
 <div class="relative" data-theme-selector>
@@ -67,9 +68,6 @@ import FontSettingsIsland from './FontSettingsIsland.astro';
     </div>
   </Popover>
 </div>
-
-<!-- Font Settings Modal -->
-<FontSettingsIsland />
 
 <script>
   import { ThemeCore } from '@mks2508/shadcn-basecoat-theme-manager';

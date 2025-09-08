@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '@mks2508/theme-manager-react';
 
 export const SimpleBenchmark: React.FC = () => {
-  const { themeManager } = useTheme();
+  const { setTheme, initialized } = useTheme();
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<any>(null);
   
   const runBenchmark = async () => {
-    if (!themeManager || isRunning) return;
+    if (!initialized || isRunning) return;
     
     setIsRunning(true);
     setResults(null);
@@ -29,7 +29,7 @@ export const SimpleBenchmark: React.FC = () => {
         for (const theme of themes) {
           for (const mode of modes) {
             try {
-              await themeManager.setTheme(theme, mode);
+              await setTheme(theme, mode);
               // Small delay to let UI update
               await new Promise(resolve => setTimeout(resolve, 50));
             } catch (error) {
@@ -90,7 +90,7 @@ export const SimpleBenchmark: React.FC = () => {
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
         <button 
           onClick={runBenchmark}
-          disabled={isRunning || !themeManager}
+          disabled={isRunning || !initialized}
           style={{ 
             padding: '0.5rem 1rem',
             backgroundColor: isRunning ? 'var(--muted)' : 'var(--primary)',
@@ -122,13 +122,13 @@ export const SimpleBenchmark: React.FC = () => {
         )}
       </div>
       
-      {!themeManager && (
+      {!initialized && (
         <p style={{ 
           color: 'var(--muted-foreground)',
           fontStyle: 'italic',
           margin: 0
         }}>
-          Theme manager not available
+          Theme manager not initialized
         </p>
       )}
       

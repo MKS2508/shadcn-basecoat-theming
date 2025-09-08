@@ -71,8 +71,6 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = memo(({
     ThemeCore.onThemeInstalled && ThemeCore.onThemeInstalled(handleThemeInstalled);
     ThemeCore.onThemeUninstalled && ThemeCore.onThemeUninstalled(handleThemeUninstalled);
     
-    // No cleanup needed - ThemeCore handles this internally
-    
   }, [themeManager]);
 
   const selectTheme = useCallback((themeId: string) => {

@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@mks2508/shadcn-basecoat-theme-manager": "^1.1.2",
+    "@mks2508/theme-manager-react": "workspace:*",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-checkbox": "^1.3.3",
     "@radix-ui/react-dialog": "^1.1.15",

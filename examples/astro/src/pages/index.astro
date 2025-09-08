@@ -1,6 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import ThemeSelector from '../components/ThemeSelector.astro';
+import { ThemeSelector, FontSettingsIsland, ThemeManagementIsland } from '@mks2508/theme-manager-astro';
 import SimpleBenchmark from '../components/SimpleBenchmark.astro';
 import ProfessionalBenchmark from '../components/ProfessionalBenchmark.astro';
 
@@ -11,7 +11,7 @@ import {
   // Display
   Card, Alert, Badge, Avatar, Progress, Skeleton, Toast, Breadcrumb,
   // Navigation
-  Tabs, Accordion, DropdownMenu, Table,
+  Tabs, Accordion, DropdownMenu, Table, Sidebar,
   // Overlays
   AlertDialog, Modal, Popover, Tooltip,
   // Icons
@@ -429,6 +429,36 @@ const breadcrumbItems = [
 										</tr>
 									</tbody>
 								</Table>
+							</Card>
+
+							<!-- Sidebar -->
+							<Card title="Sidebar Navigation" class="p-6 md:col-span-2">
+								<div class="relative border rounded-lg overflow-hidden bg-background h-64">
+									<Sidebar id="demo-sidebar" class="w-64">
+										<div class="p-4">
+											<h3 class="font-semibold text-foreground mb-4">Navigation</h3>
+											<nav class="space-y-2">
+												<a href="#" class="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-accent transition-colors">
+													<span>Dashboard</span>
+												</a>
+												<a href="#" class="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-accent transition-colors">
+													<span>Projects</span>
+												</a>
+												<a href="#" class="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-accent transition-colors bg-accent text-accent-foreground">
+													<span>Settings</span>
+												</a>
+												<a href="#" class="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-accent transition-colors">
+													<span>Help</span>
+												</a>
+											</nav>
+										</div>
+									</Sidebar>
+									<div class="ml-64 p-4 bg-muted/10">
+										<p class="text-sm text-muted-foreground">
+											This is the main content area. The sidebar can be collapsed or expanded.
+										</p>
+									</div>
+								</div>
 							</Card>
 						</div>
 					</div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '@mks2508/theme-manager-react';
 
 interface BenchmarkResults {
   scenario_results: Record<string, any>;
@@ -28,7 +28,7 @@ interface DeviceInfo {
 }
 
 export const ProfessionalBenchmark: React.FC = () => {
-  const { themeManager } = useTheme();
+  const { setTheme, initialized, fontManager } = useTheme();
   const [isRunning, setIsRunning] = useState(false);
   const [currentScenario, setCurrentScenario] = useState<string>('');
   const [results, setResults] = useState<BenchmarkResults | null>(null);
@@ -113,7 +113,7 @@ export const ProfessionalBenchmark: React.FC = () => {
       for (const theme of themes) {
         for (const mode of modes) {
           console.log(`❄️ Cold load: ${theme}-${mode}`);
-          await themeManager.setTheme(theme, mode);
+          await setTheme(theme, mode);
           await delay(100); // Let DOM settle
         }
       }
@@ -141,7 +141,7 @@ export const ProfessionalBenchmark: React.FC = () => {
       
       for (const [theme, mode] of userScenarios) {
         console.log(`🔥 Hot switch: ${theme}-${mode}`);
-        await themeManager.setTheme(theme, mode as 'light' | 'dark');
+        await setTheme(theme, mode as 'light' | 'dark');
         await delay(200 + Math.random() * 300); // Simulate realistic user timing
       }
       
@@ -166,7 +166,7 @@ export const ProfessionalBenchmark: React.FC = () => {
         console.log(`⚡ Stress iteration ${iteration + 1}/3`);
         for (const theme of themes) {
           for (const mode of modes) {
-            await themeManager.setTheme(theme, mode);
+            await setTheme(theme, mode);
             await delay(50); // Minimal delay - stress the system
           }
         }
@@ -185,7 +185,11 @@ export const ProfessionalBenchmark: React.FC = () => {
     console.log('🔤 Starting Font Combination Test...');
     
     try {
-      const fontManager = themeManager.getFontManager();
+      if (!fontManager) {
+        console.warn('FontManager not available, skipping font tests');
+        updateScenarioStatus('font_combination_test', 'skipped');
+        return;
+      }
       
       // Test different font combinations
       const fontCombinations = [
@@ -203,9 +207,9 @@ export const ProfessionalBenchmark: React.FC = () => {
         await fontManager.setFontOverride('mono', fonts.mono);
         
         // Switch themes to test font loading with different themes
-        await themeManager.setTheme('default', 'light');
+        await setTheme('default', 'light');
         await delay(150);
-        await themeManager.setTheme('supabase', 'dark');
+        await setTheme('supabase', 'dark');
         await delay(150);
       }
       
@@ -231,7 +235,7 @@ export const ProfessionalBenchmark: React.FC = () => {
       
       for (const [theme, mode] of testOperations) {
         console.log(`💾 Storage test: ${theme}-${mode}`);
-        await themeManager.setTheme(theme, mode as 'light' | 'dark');
+        await setTheme(theme, mode as 'light' | 'dark');
         await delay(100); // Allow storage operations to complete
       }
       
@@ -262,7 +266,7 @@ export const ProfessionalBenchmark: React.FC = () => {
         ];
         
         for (const [theme, mode] of operations) {
-          await themeManager.setTheme(theme, mode as 'light' | 'dark');
+          await setTheme(theme, mode as 'light' | 'dark');
           await delay(25);
         }
         
@@ -290,15 +294,15 @@ export const ProfessionalBenchmark: React.FC = () => {
       
       // Test cache misses (first loads)
       console.log('🔄 Testing cache misses...');
-      await themeManager.setTheme('default', 'light'); // Cache miss
-      await themeManager.setTheme('supabase', 'dark'); // Cache miss
+      await setTheme('default', 'light'); // Cache miss
+      await setTheme('supabase', 'dark'); // Cache miss
       await delay(200);
       
       // Test cache hits (repeat loads)
       console.log('🔄 Testing cache hits...');
-      await themeManager.setTheme('default', 'light'); // Should be cache hit
-      await themeManager.setTheme('supabase', 'dark'); // Should be cache hit
-      await themeManager.setTheme('default', 'light'); // Should be cache hit
+      await setTheme('default', 'light'); // Should be cache hit
+      await setTheme('supabase', 'dark'); // Should be cache hit
+      await setTheme('default', 'light'); // Should be cache hit
       
       updateScenarioStatus('cache_effectiveness_test', 'completed');
       console.log('✅ Cache Effectiveness Test completed');
@@ -309,7 +313,7 @@ export const ProfessionalBenchmark: React.FC = () => {
   };
 
   const runFullBenchmark = async () => {
-    if (!themeManager || isRunning) return;
+    if (!initialized || isRunning) return;
     
     setIsRunning(true);
     setResults(null);
@@ -459,7 +463,7 @@ export const ProfessionalBenchmark: React.FC = () => {
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
         <button 
           onClick={runFullBenchmark}
-          disabled={isRunning || !themeManager}
+          disabled={isRunning || !initialized}
           style={{ 
             padding: '0.75rem 1.5rem',
             backgroundColor: isRunning ? 'var(--muted)' : 'var(--primary)',
@@ -562,7 +566,7 @@ export const ProfessionalBenchmark: React.FC = () => {
         </div>
       )}
 
-      {!themeManager && (
+      {!initialized && (
         <p style={{ 
           color: 'var(--muted-foreground)',
           fontStyle: 'italic',

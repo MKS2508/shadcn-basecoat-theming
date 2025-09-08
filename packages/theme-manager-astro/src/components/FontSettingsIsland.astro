@@ -1,10 +1,12 @@
 ---
-import Modal from './ui/Modal.astro';
-import Button from './ui/Button.astro';
-import Switch from './ui/Switch.astro';
-import Badge from './ui/Badge.astro';
-import TrashIcon from './icons/TrashIcon.astro';
-import SettingsIcon from './icons/SettingsIcon.astro';
+import { 
+  Modal, 
+  Button, 
+  Switch, 
+  Badge, 
+  TrashIcon, 
+  SettingsIcon 
+} from '@mks2508/basecoat-astro-components';
 
 // Server-side: Import font catalog directly
 import { getFontsByCategory } from '@mks2508/shadcn-basecoat-theme-manager';
@@ -284,6 +286,7 @@ function separateFontsByType(fonts: any[]) {
         Apply
       </Button>
     </div>
+  </div>
   </div>
 </Modal>
 

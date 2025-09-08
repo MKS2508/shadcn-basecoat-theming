@@ -1,7 +1,5 @@
 ---
-import Modal from './ui/Modal.astro';
-import Button from './ui/Button.astro';
-import SearchIcon from './icons/SearchIcon.astro';
+import { Modal, Button, SearchIcon } from '@mks2508/basecoat-astro-components';
 
 // Server-side: Themes will be loaded client-side from IndexedDB via core
 ---
@@ -778,8 +776,6 @@ import SearchIcon from './icons/SearchIcon.astro';
       
       // Refresh installed themes tab
       loadInstalledThemes();
-      
-      // No manual event dispatch needed - ThemeCore handles this via themeManager.installTheme()
       
     } catch (error) {
       console.error(`Failed to install registry theme ${themeName}:`, error);
