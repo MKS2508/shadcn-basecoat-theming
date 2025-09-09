@@ -29,8 +29,8 @@ export class ThemeManager {
     pending: {}
   };
   
-  constructor() {
-    this.themeRegistry = new ThemeRegistry();
+  constructor(registryPath: string = '/themes/registry.json') {
+    this.themeRegistry = new ThemeRegistry(registryPath);
     this.fontManager = new FontManager();
     this.fontLoader = new FontLoader();
   }

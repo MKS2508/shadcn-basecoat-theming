@@ -75,7 +75,7 @@ export class ThemeCore {
       this.handleFOUCPrevention();
 
       // Create core instances
-      const themeManager = new ThemeManager();
+      const themeManager = new ThemeManager(this.config.registryPath);
       const themeInstaller = new ThemeInstaller(themeManager);
       const themeListFetcher = new ThemeListFetcher();
 

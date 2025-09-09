@@ -14,6 +14,9 @@ importers:
       '@mks2508/shadcn-basecoat-theme-manager':
         specifier: ^1.1.2
         version: 1.1.2(@mks2508/better-logger@0.3.0)
+      '@mks2508/theme-manager-vanilla':
+        specifier: ^0.1.1
+        version: 0.1.1(@mks2508/better-logger@0.3.0)
       '@radix-ui/react-slot':
         specifier: ^1.2.3
         version: 1.2.3(@types/react@19.1.12)(react@19.1.1)
@@ -77,7 +80,7 @@ importers:
         version: link:../../packages/theme-manager-astro
       '@tailwindcss/vite':
         specifier: ^4.1.12
-        version: 4.1.12(vite@6.3.5(@types/node@22.18.0)(jiti@2.5.1)(lightningcss@1.30.1)(tsx@4.20.5)(yaml@2.8.1))
+        version: 4.1.12(vite@5.4.19(@types/node@22.18.0)(lightningcss@1.30.1))
       astro:
         specifier: ^5.13.5
         version: 5.13.5(@types/node@22.18.0)(jiti@2.5.1)(lightningcss@1.30.1)(rollup@4.50.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.1)
@@ -339,8 +342,8 @@ importers:
   packages/theme-manager-react:
     dependencies:
       '@mks2508/shadcn-basecoat-theme-manager':
-        specifier: workspace:*
-        version: link:../theme-manager-core
+        specifier: ^1.1.3
+        version: 1.1.3(@mks2508/better-logger@0.3.0)
       '@radix-ui/react-dialog':
         specifier: ^1.0.0
         version: 1.1.15(@types/react-dom@18.3.7(@types/react@18.3.24))(@types/react@18.3.24)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -385,8 +388,8 @@ importers:
   packages/theme-manager-vanilla:
     dependencies:
       '@mks2508/shadcn-basecoat-theme-manager':
-        specifier: ^1.1.2
-        version: 1.1.2(@mks2508/better-logger@0.3.0)
+        specifier: ^1.1.3
+        version: 1.1.3(@mks2508/better-logger@0.3.0)
       '@mks2508/simple-html-component-template-engine':
         specifier: ^0.1.0
         version: 0.1.0
@@ -1307,15 +1310,23 @@ packages:
       basecoat-css: ^0.3.0
 
   '@mks2508/better-logger@0.3.0':
-    resolution: {integrity: sha512-h1l369bfbVARRgukTar0L59bpL0AyruxWt9f6IxOMxZjbo/NRKqvaq1HW2jtX87q+u595Casm5HThwM1pxTrfA==, tarball: https://npm.pkg.github.com/download/@mks2508/better-logger/0.3.0/704fd20eb5129cc1c656fc663b72c78037b3192e}
+    resolution: {integrity: sha512-LDRZxydgeKccbM601WZyf32L31uf9kw9Um3bJjH/5z+Ww47cO1k+BgOccfv1qZe+Hnr4QDR2kasf/fxFSRCUuA==}
 
   '@mks2508/shadcn-basecoat-theme-manager@1.1.2':
     resolution: {integrity: sha512-0kAWJQH0j4WzT7owy3b/crTmCZa2VY8lzAjuyUmsG8kTVPJDYw2i1hWl/PLmX9u1d6aMtSmoLWbyAZS0LhzlRg==}
     peerDependencies:
       '@mks2508/better-logger': ^0.3.0
 
+  '@mks2508/shadcn-basecoat-theme-manager@1.1.3':
+    resolution: {integrity: sha512-FmVojJDzpgmUmFpUgfI7U5EVaXiY3XCAODx7eBiGhkJFuajrlq0gbkIUUFbG5+XcRBdOo295gB5+iSk98wfxmA==}
+    peerDependencies:
+      '@mks2508/better-logger': ^0.3.0
+
   '@mks2508/simple-html-component-template-engine@0.1.0':
     resolution: {integrity: sha512-XLRnOI/7ndtbZi+kMj74Fs+mEMQhOvXYAxDvNhD670cb3OxQa17PLq0vvlSUWVZWFvEeeHBr8zhSwjBoAGVoZA==}
+
+  '@mks2508/theme-manager-vanilla@0.1.1':
+    resolution: {integrity: sha512-WgOLFcIQYoC1vtFTIoIub3AyLrWDHi9uPb4dlDU8ki+7n2jvobkyQBOh8WH53l6jerA4UzgMU7EkPHrni4NMJw==}
 
   '@modelcontextprotocol/sdk@1.17.5':
     resolution: {integrity: sha512-QakrKIGniGuRVfWBdMsDea/dx1PNE739QJ7gCM41s9q+qaCYTHCdsIBXQVVXry3mfWAiaM9kT22Hyz53Uw8mfg==}
@@ -6580,7 +6591,18 @@ snapshots:
     dependencies:
       '@mks2508/better-logger': 0.3.0
 
+  '@mks2508/shadcn-basecoat-theme-manager@1.1.3(@mks2508/better-logger@0.3.0)':
+    dependencies:
+      '@mks2508/better-logger': 0.3.0
+
   '@mks2508/simple-html-component-template-engine@0.1.0': {}
+
+  '@mks2508/theme-manager-vanilla@0.1.1(@mks2508/better-logger@0.3.0)':
+    dependencies:
+      '@mks2508/shadcn-basecoat-theme-manager': 1.1.3(@mks2508/better-logger@0.3.0)
+      '@mks2508/simple-html-component-template-engine': 0.1.0
+    transitivePeerDependencies:
+      - '@mks2508/better-logger'
 
   '@modelcontextprotocol/sdk@1.17.5':
     dependencies:

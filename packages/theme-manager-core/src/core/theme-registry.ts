@@ -60,9 +60,11 @@ export class ThemeRegistry {
   private installedThemes: ThemeConfig[] = [];
   private allThemes: Map<string, ThemeConfig> = new Map();
   private isInitialized = false;
+  private registryPath: string;
 
-  constructor() {
+  constructor(registryPath: string = '/themes/registry.json') {
     this.storageManager = StorageManager.getInstance();
+    this.registryPath = registryPath;
   }
 
   /**
@@ -102,8 +104,8 @@ export class ThemeRegistry {
    */
   private async loadBuiltInThemes(): Promise<void> {
     try {
-      console.log('🔄 [ThemeRegistry] Fetching /shadcn-basecoat-theming/registry.json...');
-      const response = await fetch('/shadcn-basecoat-theming/registry.json');
+      console.log(`🔄 [ThemeRegistry] Fetching ${this.registryPath}...`);
+      const response = await fetch(this.registryPath);
       console.log('✅ [ThemeRegistry] Fetch response received:', response.status);
       
       if (!response.ok) {
