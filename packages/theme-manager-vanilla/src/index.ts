@@ -131,10 +131,10 @@ export class VanillaThemeManager {
     }
 
     // Setup dropdown functionality
-    this.setupThemeDropdownEvents(dropdownButton, dropdownMenu, options);
+    this.setupThemeDropdownEvents(dropdownButton, dropdownMenu);
     
     // Populate with current themes
-    this.refreshThemeDropdownContent(dropdownMenu, options);
+    this.refreshThemeDropdownContent(dropdownMenu);
 
     // Track rendered component (container with dropdown inside)
     this.renderedComponents.set(`theme-dropdown-${selector}`, container as HTMLElement);
@@ -376,7 +376,7 @@ export class VanillaThemeManager {
   // EVENT SETUP METHODS
   // ===========================================
 
-  private setupThemeDropdownEvents(button: HTMLElement, menu: HTMLElement, options?: any): void {
+  private setupThemeDropdownEvents(button: HTMLElement, menu: HTMLElement): void {
     // Toggle dropdown
     button.addEventListener('click', () => {
       const isExpanded = button.getAttribute('aria-expanded') === 'true';
@@ -457,7 +457,7 @@ export class VanillaThemeManager {
   // CONTENT UPDATE METHODS
   // ===========================================
 
-  private refreshThemeDropdownContent(menu: HTMLElement, options?: any): void {
+  private refreshThemeDropdownContent(menu: HTMLElement): void {
     // Get available themes
     const themes = this.themeManager.getAvailableThemes();
     const currentTheme = this.themeManager.getCurrentTheme();
@@ -555,7 +555,7 @@ export class VanillaThemeManager {
     }
   }
 
-  private updateModeToggleIcon(button: HTMLElement, mode: 'light' | 'dark' | 'auto'): void {
+  public updateModeToggleIcon(button: HTMLElement, mode: 'light' | 'dark' | 'auto'): void {
     // Use template engine to generate icon content
     const iconHTML = this.generateModeToggleIcon(mode);
     
