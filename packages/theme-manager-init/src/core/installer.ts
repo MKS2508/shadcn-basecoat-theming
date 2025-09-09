@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { spawn } from 'child_process';
 import chalk from 'chalk';
-import { ProjectInfo } from './prerequisites.js';
+import type { ProjectInfo } from './prerequisites.js';
 
 export interface InstallOptions {
   cwd: string;
@@ -21,19 +21,19 @@ export async function installThemeManager(
   console.log(chalk.bold('\n📦 Installing Theme Manager...\n'));
 
   // 1. Install the package
-  await installPackage(projectInfo.packageManager || 'npm', cwd, verbose, framework);
+  await installPackage(projectInfo.packageManager || 'npm', cwd, verbose ?? false, framework);
 
   // 2. Create directories
-  await createDirectories(cwd, themeDir, verbose);
+  await createDirectories(cwd, themeDir, verbose ?? false);
 
   // 3. Generate theme files
-  await generateThemeFiles(cwd, themeDir, verbose);
+  await generateThemeFiles(cwd, themeDir, verbose ?? false);
 
   // 4. Generate registry
-  await generateRegistry(cwd, themeDir, verbose);
+  await generateRegistry(cwd, themeDir, verbose ?? false);
 
   // 5. Update global.css
-  await updateGlobalCSS(cwd, verbose);
+  await updateGlobalCSS(cwd, verbose ?? false);
 
   console.log(chalk.green.bold('\n✅ Theme manager setup complete!\n'));
   displayNextSteps(projectInfo.packageManager || 'npm');
