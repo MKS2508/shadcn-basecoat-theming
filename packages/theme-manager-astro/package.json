@@ -1,6 +1,6 @@
 {
   "name": "@mks2508/theme-manager-astro",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Astro components and islands for theme management (basecoat compatible)",
   "type": "module",
   "exports": {
@@ -29,7 +29,7 @@
   "author": "MKS2508",
   "license": "MIT",
   "dependencies": {
-    "@mks2508/shadcn-basecoat-theme-manager": "^1.0.1"
+    "@mks2508/shadcn-basecoat-theme-manager": "^1.0.2"
   },
   "peerDependencies": {
     "astro": "^5.0.0",

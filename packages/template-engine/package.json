@@ -1,6 +1,6 @@
 {
   "name": "@mks2508/simple-html-component-template-engine",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Lightweight HTML template engine with component system for vanilla JS",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
