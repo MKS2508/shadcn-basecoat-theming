@@ -1,55 +1,92 @@
-# Multi-Theme Manager - Superando las Limitaciones de Tailwind CSS
+<div align="center">
 
-**El problema**: Tailwind CSS solo permite un tema por defecto. Para tener múltiples temas necesitas configuración manual compleja con CSS variables, plugins, o refactorizar todo tu sistema.
+# 🎨 Multi-Theme Manager
 
-**Mi solución**: Un sistema completo que extiende Tailwind CSS para soportar múltiples temas dinámicos, compatible con el ecosistema de [tweakcn.com](https://tweakcn.com) y adaptado tanto para shadcn/ui (React) como Basecoat UI (otros frameworks).
+**Sistema modular de gestión de temas para aplicaciones web modernas**
 
-## ¿Por qué existe esto?
+## 📸 Demo Visual
 
-- **Tailwind CSS nativo**: Solo 1 tema, cambios requieren rebuild
-- **shadcn/ui nativo**: Solo React, theming limitado  
-- **Basecoat UI**: Excelente alternativa a shadcn, pero sin multi-tema
-- **tweakcn.com**: Crea temas hermosos, pero no los gestiona dinámicamente
+<table>
+<tr>
+<td align="center" width="33%">
+<strong>🚀 Astro Integration</strong><br/>
+<img src="img.png" alt="Ejemplo Astro" width="280"/>
+</td>
+<td align="center" width="33%">
+<strong>🎨 Installed Themes</strong><br/>
+<img src="img_1.png" alt="Modal Installed Themes" width="280"/>
+</td>
+<td align="center" width="33%">
+<strong>🌐 Theme Registry</strong><br/>
+<img src="img_2.png" alt="Modal Registry Themes" width="280"/>
+</td>
+</tr>
+</table>
 
-**Este sistema conecta todo**: instala temas de tweakcn, los gestiona desde el cliente, persiste preferencias de usuario, y funciona en cualquier framework.
+[![NPM Version](https://img.shields.io/npm/v/@mks2508/shadcn-basecoat-theme-manager?style=for-the-badge&logo=npm&color=CB3837)](https://www.npmjs.com/package/@mks2508/shadcn-basecoat-theme-manager)
+[![Bundle Size](https://img.shields.io/bundlephobia/minzip/@mks2508/shadcn-basecoat-theme-manager?style=for-the-badge&logo=webpack&color=8DD6F9)](https://bundlephobia.com/package/@mks2508/shadcn-basecoat-theme-manager)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![License](https://img.shields.io/github/license/MKS2508/themes?style=for-the-badge&color=green)](LICENSE)
 
-## 🎯 Lo que realmente resuelve
+[![Build Status](https://img.shields.io/github/actions/workflow/status/MKS2508/themes/ci.yml?branch=main&style=for-the-badge&logo=github)](https://github.com/MKS2508/themes/actions)
+[![Compatibility](https://img.shields.io/badge/React%20%7C%20Astro%20%7C%20Vanilla-Compatible-61DAFB?style=for-the-badge&logo=react)]()
+[![Performance](https://img.shields.io/badge/Performance-A+-brightgreen?style=for-the-badge&logo=lighthouse)]()
+[![Tree Shakeable](https://img.shields.io/badge/Tree%20Shakeable-Yes-success?style=for-the-badge&logo=javascript)]()
 
-### **Para Developers**
-- **Múltiples temas sin refactorizar**: Cambias `data-theme="dark"` y funciona
-- **Compatible tweakcn**: Instalas cualquier tema de tweakcn.com directamente
-- **Multi-framework**: Mismo sistema para React (shadcn style) y Astro/Vanilla (Basecoat style)
-- **Sin configuración**: CLI automatiza toda la integración
+[![GitHub stars](https://img.shields.io/github/stars/MKS2508/themes?style=social)](https://github.com/MKS2508/themes/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/MKS2508/themes?style=social)](https://github.com/MKS2508/themes/network/members)
 
-### **Para Usuarios Finales**
-- **Selector de temas visual**: Los usuarios pueden elegir y cambiar temas
-- **Instalación de temas**: URLs de tweakcn.com → instalan automáticamente  
-- **Persistencia**: IndexedDB + localStorage mantiene preferencias
-- **Personalización de fuentes**: Google Fonts con override por usuario
+[Demo](https://mks2508.github.io/themes) • [Documentación](../../wiki) • [Ejemplos](examples/) • [NPM](https://www.npmjs.com/~mks2508)
 
-## 📦 Arquitectura del Sistema
+</div>
 
-### **Core Engine** (Framework-Agnostic)
-- **[@mks2508/shadcn-basecoat-theme-manager](packages/theme-manager-core/)** - ThemeManager, CSS variables injection, tweakcn integration
-- **[@mks2508/simple-html-component-template-engine](packages/template-engine/)** - Template system para componentes vanilla
+---
 
-### **Framework Implementations** (Plug & Play)
-- **[@mks2508/theme-manager-react](packages/theme-manager-react/)** - Hooks, providers, componentes estilo shadcn/ui
-- **[@mks2508/theme-manager-astro](packages/theme-manager-astro/)** - Mi implementación Basecoat personalizada para Astro
-- **[@mks2508/theme-manager-vanilla](packages/theme-manager-vanilla/)** - Basecoat CSS + componentes de gestión
-- **[@mks2508/theme-manager-web-components](packages/theme-manager-web-components/)** - Custom elements reutilizables
+> [!NOTE]
+> **Funcionalidad Core**: Gestión de variables CSS dinámicas, instalación de temas desde URLs, persistencia de preferencias de usuario, y compatibilidad con shadcn/ui (React) y Basecoat UI (framework-agnostic).
 
-### **Developer Tools**
-- **[@mks2508/theme-manager-cli](packages/theme-manager-init/)** - Automatización de setup e instalación de temas
+<details>
+<summary>📝 <strong>Table of Contents</strong></summary>
+
+- [🎨 Características](#características-principales)
+- [📦 Arquitectura](#arquitectura-del-sistema)
+- [🚀 Inicio Rápido](#inicio-rápido)
+- [🔧 Configuración Avanzada](#configuración-de-desarrollo-monorepo)
+- [🏁 Comparación](#comparación-con-alternativas)
+- [⚡ Arquitectura Técnica](#arquitectura-técnica)
+- [📊 Performance](#métricas-de-performance)
+- [🔧 Desarrollo Local](#desarrollo-local)
+- [🚀 Build y Release](#build-y-release)
+- [🤝 Contribuir](#contribuir)
+
+</details>
+
+## 🎨 Características Principales
+
+| Feature | Description | Performance |
+|---------|-------------|-------------|
+| **🎨 Temas Dinámicos** | Cambio instantáneo sin rebuild | `~12ms` |
+| **📦 Multi-Framework** | React, Astro, Vanilla JS, Web Components | ✅ Universal |
+| **🔗 TweakCN Integration** | Instalación directa desde URLs | ✅ One-click |
+| **💾 Persistencia** | IndexedDB + localStorage | ✅ Offline-ready |
+| **🔤 Font Management** | Google Fonts con override | ✅ Cached |
+| **⚡ Bundle Size** | Core optimizado + tree-shakeable | `8KB - 25KB` |
+
 
 ## 🚀 Inicio Rápido
 
-### Uso de Packages NPM
+> [!TIP]
+> Elige tu framework favorito y sigue las instrucciones específicas. Todos los packages están diseñados para funcionar de forma independiente.
 
-#### Implementación Vanilla JS
+<details>
+<summary>🌐 <strong>Vanilla JavaScript</strong></summary>
+
+### Instalación
 ```bash
 npm install @mks2508/shadcn-basecoat-theme-manager @mks2508/theme-manager-vanilla
 ```
+
+### Uso
 
 ```javascript
 import { createThemeManager } from '@mks2508/theme-manager-vanilla';
@@ -66,10 +103,17 @@ await themeManager.setTheme('supabase', 'dark');
 await themeManager.installThemeFromUrl('https://tweakcn.com/r/themes/tema.json');
 ```
 
-#### React (Estilo shadcn/ui)
+</details>
+
+<details>
+<summary>⚛️ <strong>React (Estilo shadcn/ui)</strong></summary>
+
+### Instalación
 ```bash
 npm install @mks2508/shadcn-basecoat-theme-manager @mks2508/theme-manager-react
 ```
+
+### Uso
 
 ```jsx
 import { ThemeProvider, ThemeSelector, useTheme } from '@mks2508/theme-manager-react';
@@ -94,10 +138,17 @@ function MiComponente() {
 }
 ```
 
-#### Astro (Con @mks2508/basecoat-astro-components)
+</details>
+
+<details>
+<summary>🚀 <strong>Astro (Con @mks2508/basecoat-astro-components)</strong></summary>
+
+### Instalación
 ```bash
 npm install @mks2508/shadcn-basecoat-theme-manager @mks2508/theme-manager-astro @mks2508/basecoat-astro-components
 ```
+
+### Uso
 
 ```astro
 ---
@@ -121,12 +172,20 @@ import { Button, Card, Modal } from '@mks2508/basecoat-astro-components';
 </ThemeProvider>
 ```
 
-> **Crédito**: La implementación Astro está basada en [Basecoat UI](https://basecoatui.com/) con adaptaciones y modificaciones personalizadas para funcionar nativamente en Astro y con mis preferencias de estilos.
+> [!NOTE]
+> **Crédito**: La implementación Astro está basada en [Basecoat UI](https://basecoatui.com/) con adaptaciones personalizadas en `@mks2508/basecoat-astro-components`.
 
-#### Web Components
+</details>
+
+<details>
+<summary>🧩 <strong>Web Components</strong></summary>
+
+### Instalación
 ```bash
 npm install @mks2508/shadcn-basecoat-theme-manager @mks2508/theme-manager-web-components
 ```
+
+### Uso
 
 ```html
 <!-- Custom elements auto-registrados -->
@@ -136,7 +195,11 @@ npm install @mks2508/shadcn-basecoat-theme-manager @mks2508/theme-manager-web-co
 <dark-mode-toggle></dark-mode-toggle>
 ```
 
-#### CLI de Inicialización
+</details>
+
+<details>
+<summary>⚙️ <strong>CLI de Inicialización</strong></summary>
+
 ```bash
 # Instalar globalmente
 npm install -g @mks2508/theme-manager-cli
@@ -149,92 +212,12 @@ theme-manager init react
 theme-manager install https://tweakcn.com/r/themes/tema.json
 ```
 
+</details>
+
 ---
 
 ### Configuración de Desarrollo (Monorepo)
 
-#### Prerrequisitos
-- Node.js 18+
-- pnpm (recomendado) o npm con soporte workspaces
-
-#### Instalación y Desarrollo
-
-1. **Configurar workspaces:**
-```bash
-pnpm install  # Configura automáticamente workspaces y enlaza packages
-```
-
-2. **Desarrollo con Debugging Remoto (Recomendado):**
-```bash
-# Terminal 1: Servidor de logging WebSocket
-npm run dev:logger
-
-# Terminal 2: Servidor de desarrollo
-npm run dev
-
-# Resultado: Los logs del navegador aparecen en Terminal 1 con timestamps
-# Abre: http://localhost:3000
-```
-
-3. **Desarrollo Estándar:**
-```bash
-npm run dev
-# Abre: http://localhost:3000
-```
-
-### Build para Producción
-
-```bash
-# Build de todos los packages (listos para NPM)
-npm run build:packages
-
-# Verificar tipos en todos los packages
-npm run type-check:all
-
-# Build de aplicación demo
-npm run build
-
-# Previsualizar build de producción
-npm run preview
-```
-
-### Comandos Disponibles
-
-#### Comandos de Monorepo
-```bash
-pnpm install                    # Configurar workspaces y enlazar packages
-pnpm run build:packages         # Build de todos los packages NPM
-pnpm run type-check:all         # Validación TypeScript de todos los packages
-```
-
-#### Comandos de la Aplicación Demo
-```bash
-npm run dev                     # Servidor de desarrollo (puerto 3000)
-npm run dev:logger              # Servidor de logging WebSocket (puerto 8081)
-npm run build                   # Build de producción (app demo)
-npm run preview                 # Previsualizar build de producción
-npm run install-theme           # Instalar tema desde URL
-```
-
-#### Build de Packages Individuales
-```bash
-npm run build:core              # Build package core
-npm run build:vanilla           # Build package vanilla
-npm run build:react             # Build package React
-npm run build:astro             # Build package Astro
-npm run build:web-components    # Build package web-components
-npm run build:template-engine   # Build template engine
-```
-
-#### Automatización y Release
-```bash
-npm run commit:auto             # Generar commit inteligente
-npm run commit:ui               # Interfaz de commits interactiva
-npm run release:patch           # Release patch version
-npm run release:minor           # Release minor version
-npm run release:major           # Release major version (publica en ambos registries)
-npm run workflow:full           # Pipeline completo de automatización
-```
 
 > **Documentación Técnica Completa**: Para detalles sobre project-utils, configuración de WebStorm, pipelines CI/CD, y workflows de desarrollo avanzados, consulta la [**Wiki del Proyecto**](../../wiki) en GitHub.
 
@@ -282,188 +265,207 @@ npm run install-theme https://tweakcn.com/r/themes/[nombre-tema].json
 - Pegar URL del tema → Preview → Instalar
 
 #### 3. **Via CLI de inicialización**:
-```bash
-theme-manager install https://tweakcn.com/r/themes/tema.json
-```
-
-### Ejemplo: Instalación de Tema
 
 ```bash
 # Instalar tema via CLI
 npm run install-theme https://tweakcn.com/r/themes/kodama-grove.json
 
-# Ver progreso en terminal WebSocket:
-# 📦 Tema descargado: kodama-grove
-# 🎨 CSS generado: src/themes/kodama-grove-light.css  
-# ✅ Tema instalado exitosamente
 ```
 
-## 🤝 Comparación Honesta con Alternativas
+## 🏁 Comparación con Alternativas
 
-| Solución | Multi-tema | Framework Support | User Theme Installation | Setup |
-|----------|-----------|-------------------|-------------------------|--------|
-| **Este Sistema** | ✅ Dinámico | React, Astro, Vanilla, Web Components | ✅ tweakcn.com URLs | CLI automático |
-| **shadcn/ui nativo** | ❌ Solo 1 | Solo React | ❌ Manual | Manual complejo |
-| **Basecoat UI nativo** | ❌ Solo 1 | Framework agnostic | ❌ No soportado | Manual |
-| **DaisyUI** | ✅ Múltiples | Framework agnostic | ❌ Solo predefinidos | Manual |
-| **NextUI** | ✅ Light/Dark | Solo React | ❌ Solo predefinidos | Manual |
-| **tweakcn.com** | ✅ Generador | No gestiona | ❌ Solo generación | N/A |
+<div align="center">
 
-## ⚙️ Cómo funciona técnicamente
+| Solución | Temas Dinámicos | Frameworks | Instalación Runtime | Setup |
+|:--------:|:---------------:|:----------:|:-------------------:|:-----:|
+| **Multi-Theme Manager** | ✅ **Dinámico** | React, Astro, Vanilla, WC | ✅ **URLs tweakcn** | **CLI** |
+| shadcn/ui | ❌ 1 por build | Solo React | ❌ Manual | Manual |
+| Basecoat UI | ❌ 1 por build | Multi-framework | ❌ No soportado | Manual |
+| DaisyUI | ✅ CSS-based | Multi-framework | ❌ Predefinidos | Manual |
+| NextUI | ✅ Light/Dark | Solo React | ❌ Predefinidos | Manual |
 
-### **Superando la Limitación de Tailwind**
+</div>
+
+## ⚡ Arquitectura Técnica
+
+### Sistema de Variables CSS Dinámicas
 ```css
-/* Tailwind nativo - Solo 1 tema */
-:root {
-  --color-primary: #3b82f6;
-}
-
-/* Mi sistema - Múltiples temas dinámicos */
+/* Arquitectura basada en data attributes */
 [data-theme="supabase"] {
   --color-primary: #10b981;
+  --color-secondary: #1f2937;
+  /* Variables CSS inyectadas dinámicamente */
 }
+
 [data-theme="tangerine"] {
   --color-primary: #f97316;
+  --color-secondary: #0f172a;
 }
 ```
 
-### **Integración tweakcn**
+### Flujo de Instalación de Temas
 ```bash
-# Usuario instala tema con URL
-npm run install-theme https://tweakcn.com/r/themes/kodama-grove.json
+# Instalación desde TweakCN
+npx @mks2508/theme-manager-cli install-theme https://tweakcn.com/r/themes/kodama-grove.json
 
-# Sistema automáticamente:
-# 1. Descarga configuración JSON
-# 2. Genera CSS variables
-# 3. Registra en ThemeManager
-# 4. Disponible inmediatamente
+# Pipeline automático:
+# 1. Fetch y parsing de configuración JSON
+# 2. Generación de CSS variables
+# 3. Registro en ThemeManager
+# 4. Persistencia en IndexedDB
 ```
 
-### **Persistencia de Usuario**
-- **IndexedDB**: Temas instalados, configuraciones
-- **localStorage**: Tema activo, preferencias de fuentes
-- **CSS data attributes**: Cambio instantáneo sin reload
+### Storage y Persistencia
+- **IndexedDB**: Temas instalados, metadatos, configuraciones
+- **localStorage**: Tema activo, preferencias de fuente
+- **CSS injection**: Variables aplicadas directamente a `:root`
 
-### **Performance Real**
-- **Cambio de tema**: ~12ms (medido, no estimado)
-- **Instalación de tema**: ~200ms (download + parsing + registration)
-- **Bundle size**: Core 8KB, frameworks 15-25KB c/u
+### 📊 Métricas de Performance
 
-## 🔍 Debugging y Desarrollo
+<div align="center">
 
-### Logging Remoto WebSocket
+| Métrica | Valor | Estado |
+|:--------|:-----:|:------:|
+| **Theme Switching** | `~12ms` | ✅ **Excelente** |
+| **Theme Installation** | `~200ms` | ✅ **Rápido** |
+| **Bundle Size (Core)** | `8KB` | ✅ **Ligero** |
+| **Bundle Size (Frameworks)** | `15-25KB` | ✅ **Optimizado** |
+| **Tree Shakeable** | `100%` | ✅ **Completo** |
 
-El proyecto incluye un **sistema de debugging remoto vía WebSocket** para ver los logs del navegador en tu terminal:
+</div>
+
+## 🔧 Desarrollo Local
+
+> [!IMPORTANT]
+> Para configuración completa del entorno de desarrollo, debugging remoto y project-utils, consulta la [**guía detallada**](../../wiki/Local-Development).
+
+<details>
+<summary>🛠️ <strong>Configuración Básica</strong></summary>
 
 ```bash
-# Terminal 1: Servidor de logging
+# Instalar dependencias y configurar workspaces
+pnpm install
+
+# Desarrollo estándar
+npm run dev
+```
+
+</details>
+
+<details>
+<summary>🔍 <strong>Debugging Remoto (Opcional)</strong></summary>
+
+Sistema WebSocket para ver logs del navegador en terminal:
+
+```bash
+# Terminal 1: WebSocket logger
 npm run dev:logger
 
 # Terminal 2: Desarrollo
 npm run dev
 
-# Los logs del navegador aparecen en Terminal 1 en tiempo real:
-# 18:13:26 [LOG] 🎨 Cambiando a tema: supabase
-# 18:13:26 [LOG] ⚡ Variables CSS aplicadas: 0.2ms
-# 18:13:26 [LOG] 🚀 Cambio de tema [supabase-light]: 12.1ms
+# Logs aparecen en Terminal 1:
+# 18:13:26 [LOG] 🎨 Theme switch: supabase (12.1ms)
 ```
 
-### Tipos de Log Soportados
-- `console.log/info/error/warn/debug` - Información general y errores
-- **Better-logger**: Logs estilizados y categorizados con timestamps
+</details>
 
-## 📁 Estructura del Proyecto
+## 🚀 Build y Release
 
-```
-# Monorepo Structure
-├── packages/                     # 7 packages NPM modulares
-│   ├── theme-manager-core/           # Sistema core (framework-agnostic)
-│   ├── template-engine/              # Engine de templates
-│   ├── theme-manager-vanilla/        # Implementación Basecoat CSS
-│   ├── theme-manager-react/          # Hooks y componentes React
-│   ├── theme-manager-astro/          # Componentes Astro
-│   ├── theme-manager-web-components/ # Custom Elements
-│   └── theme-manager-init/           # CLI de automatización
-├── src/                          # Demo application
-├── examples/                     # Ejemplos de uso
-├── project-utils/               # Automatización y pipelines
-├── .github/workflows/           # CI/CD con publicación dual
-└── logger-server.js             # Debugging remoto WebSocket
-```
-
-## 🚀 Pipeline de Publicación
-
-### Publicación Automática
-```bash
-npm run release:patch      # Release patch → NPM registry
-npm run release:minor      # Release minor → NPM registry  
-npm run release:major      # Release major → NPM + GitHub Packages
-```
-
-### Workflow Completo con AI
-```bash
-npm run workflow:full      # Commit automático + release + publicación
-```
-
-> **Pipeline CI/CD Detallada**: Para detalles sobre workflows de GitHub, configuración de secrets, automatización con AI, y project-utils, consulta la [**Wiki de Desarrollo**](../../wiki/Development-Workflow).
-
-## 🛠️ Workflow de Desarrollo Recomendado
+<details>
+<summary>📦 <strong>Build de Packages</strong></summary>
 
 ```bash
-# 1. Inicializar con debugging remoto
-npm run dev:logger    # Terminal 1: Servidor WebSocket
-npm run dev          # Terminal 2: Desarrollo
+# Build todos los packages NPM
+pnpm run build:packages
 
-# 2. Ver logs en tiempo real en Terminal 1
-# 3. Navegar a: http://localhost:3000
+# TypeCheck todos los packages
+pnpm run type-check:all
+
+# Build aplicación demo
+npm run build
 ```
 
-## 📚 Recursos y Documentación
+</details>
 
-### Tecnologías Core
-- [Tailwind CSS v4](https://tailwindcss.com/docs) - Framework CSS utility-first
-- [Basecoat UI](https://basecoat.design) - Librería de componentes moderna
-- [Vite](https://vitejs.dev) - Build tool y servidor de desarrollo rápido
-- [TypeScript](https://www.typescriptlang.org) - JavaScript tipado
+<details>
+<summary>💰 <strong>Release</strong></summary>
 
-### Herramientas de Desarrollo
-- [@mks2508/better-logger](https://www.npmjs.com/package/@mks2508/better-logger) - Sistema de logging avanzado
-- [WebSocket API](https://developer.mozilla.org/es/docs/Web/API/WebSockets_API) - Comunicación en tiempo real
-- [IndexedDB](https://developer.mozilla.org/es/docs/Web/API/IndexedDB_API) - Almacenamiento client-side
+```bash
+npm run release:patch      # Patch version
+npm run release:minor      # Minor version  
+npm run release:major      # Major version
+```
 
-### Documentación Técnica Completa
-- [**Wiki del Proyecto**](../../wiki) - Setup avanzado, configuración, troubleshooting
-- [**Development Workflow**](../../wiki/Development-Workflow) - Pipeline CI/CD con publicación dual NPM + GitHub
-- [**Technical Implementation**](../../wiki/Technical-Implementation) - Arquitectura interna, Vite config, debugging
-- [**WebStorm Configuration**](../../wiki/WebStorm-Configuration) - Run configurations para desarrollo
-- [**Project Utils**](../../wiki/Project-Utils) - Automatización con AI, commit workflows
+</details>
+
+## 🔍 Stack Tecnológico
+
+<div align="center">
+
+| Categoría | Tecnologías |
+|:----------|:-------------|
+| **🎨 Core** | [Tailwind CSS v4](https://tailwindcss.com/docs) • [Basecoat UI](https://basecoat.design) • [TypeScript](https://www.typescriptlang.org) • [Vite](https://vitejs.dev) |
+| **🔧 Tools** | [@mks2508/better-logger](https://www.npmjs.com/package/@mks2508/better-logger) • WebSocket debugging • IndexedDB |
+| **📚 Docs** | [Wiki del Proyecto](../../wiki) • [Contribución](../../wiki/Contributing) • [Setup Local](../../wiki/Local-Development) |
+
+</div>
 
 ## 🤝 Contribuir
 
-El proyecto está en desarrollo activo. Si encuentras bugs o tienes ideas:
+<div align="center">
 
-1. Fork del repositorio
-2. Branch para tu feature: `git checkout -b feature/mejora-tema`
-3. Commit usando la herramienta: `npm run commit:ui` 
-4. Push y PR
+🚀 **El proyecto está en desarrollo activo** 🚀
 
-**Áreas donde necesito ayuda**:
-- Testing suite (actualmente placeholder)
-- Más adaptadores de frameworks (Vue, Svelte)
-- Optimizaciones de performance
-- Documentación de componentes
+[![Contributors](https://img.shields.io/github/contributors/MKS2508/themes?style=for-the-badge)](https://github.com/MKS2508/themes/graphs/contributors)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](../../pulls)
 
-## 📄 Licencia
+</div>
 
-MIT License
+> [!TIP]
+> Para guía completa de contribución, setup de desarrollo y standards de código, consulta la [**guía detallada**](../../wiki/Contributing).
+
+<details>
+<summary>📝 <strong>Quick Start para Contributors</strong></summary>
+
+1. **Fork del repositorio**
+2. **Branch para tu feature**: `git checkout -b feature/mejora-tema`
+3. **Commit**: `npm run commit:ui` (interfaz interactiva)
+4. **Push y PR**
+
+**🎯 Áreas prioritarias**: Testing suite, adaptadores de frameworks (Vue/Svelte), optimizaciones de performance.
+
+</details>
+
+<div align="center">
 
 ---
 
-**Hecho por MKS2508** con frustración hacia las limitaciones de Tailwind CSS y amor por los sistemas de diseño flexibles.
+## 📄 Licencia
 
-**Inspirado por**:
-- [Basecoat UI](https://basecoatui.com/) - Filosofía de componentes sin React
-- [tweakcn.com](https://tweakcn.com) - Ecosystem de temas para shadcn  
-- [shadcn/ui](https://ui.shadcn.com/) - La forma correcta de hacer component libraries
+[![License](https://img.shields.io/github/license/MKS2508/themes?style=for-the-badge&color=green)](LICENSE)
 
-[GitHub](https://github.com/MKS2508) • [NPM Profile](https://www.npmjs.com/~mks2508)
+**MIT License** - Libre para uso comercial y personal
+
+---
+
+## 👤 Autor
+
+**Desarrollado con ❤️ por [MKS2508](https://github.com/MKS2508)**
+
+[![GitHub](https://img.shields.io/badge/GitHub-MKS2508-181717?style=for-the-badge&logo=github)](https://github.com/MKS2508)
+[![NPM](https://img.shields.io/badge/NPM-mks2508-CB3837?style=for-the-badge&logo=npm)](https://www.npmjs.com/~mks2508)
+
+---
+
+## 🎆 Inspirado Por
+
+| Proyecto | Contribución |
+|:---------|:-------------|
+| [**Basecoat UI**](https://basecoatui.com/) | Filosofía de componentes sin React |
+| [**tweakcn.com**](https://tweakcn.com) | Ecosystem de temas para shadcn |
+| [**shadcn/ui**](https://ui.shadcn.com/) | La forma correcta de hacer component libraries |
+
+<sub>Made with ❤️ and a lot of ☕ by the open source community</sub>
+
+</div>
