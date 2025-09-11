@@ -29,8 +29,8 @@ export class ThemeManager {
     pending: {}
   };
   
-  constructor(registryPath: string = '/themes/registry.json') {
-    this.themeRegistry = new ThemeRegistry(registryPath);
+  constructor() {
+    this.themeRegistry = new ThemeRegistry();
     this.fontManager = new FontManager();
     this.fontLoader = new FontLoader();
   }
@@ -208,9 +208,7 @@ export class ThemeManager {
       }
       
       // Apply CSS variables directly to document root
-      const startTime = performance.now();
       this.applyCSSVariables(cssVariables);
-      const applyTime = performance.now() - startTime;
       
       // Remove any previous theme CSS link
       if (this.currentStyleElement) {

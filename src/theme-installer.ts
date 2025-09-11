@@ -129,7 +129,7 @@ export class ThemeInstaller {
   /**
    * Process and install theme data
    */
-  private async processAndInstallTheme(themeData: ThemeData, _url: string): Promise<void> {
+  private async processAndInstallTheme(_themeData: ThemeData, _url: string): Promise<void> {
     // Installation logic simplified for now
     // CSS generation handled elsewhere
 

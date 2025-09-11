@@ -133,7 +133,7 @@ export class ThemeRegistry {
       const cachedThemes = await this.storageManager.getAllThemes();
       
       // Debug: Log all cached themes
-      cachedThemes.forEach(cached => {
+      cachedThemes.forEach(_cached => {
       });
 
       // Convert cached themes to theme config format

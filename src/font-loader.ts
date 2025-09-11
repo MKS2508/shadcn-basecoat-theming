@@ -155,7 +155,7 @@ export class FontLoader {
   /**
    * Load web font from external source
    */
-  private async loadWebFont(config: FontConfig): Promise<void> {
+  private async loadWebFont(_config: FontConfig): Promise<void> {
     // For now, we'll try to detect and load common web fonts
     // In a real implementation, this might parse @font-face rules
     

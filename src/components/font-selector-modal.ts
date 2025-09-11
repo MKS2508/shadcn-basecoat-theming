@@ -67,7 +67,7 @@ export class FontSelectorModal extends ModalComponent {
     if (this.overrideToggle) {
 
       // Add multiple event listeners for debugging
-      this.bindEvent(this.overrideToggle, 'click', (e) => {
+      this.bindEvent(this.overrideToggle, 'click', () => {
       });
 
       this.bindEvent(this.overrideToggle, 'change', async () => {
@@ -137,7 +137,6 @@ export class FontSelectorModal extends ModalComponent {
     
     // Refresh state before opening
     const fontManagerState = this.fontManager.isOverrideEnabled();
-    const fontManagerConfig = this.fontManager.getOverrideConfiguration();
     
     this.isOverrideEnabled = fontManagerState;
     
