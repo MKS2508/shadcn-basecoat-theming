@@ -21,7 +21,19 @@
     "build:template-engine": "pnpm --filter @mks2508/simple-html-component-template-engine run build",
     "build:vanilla": "pnpm --filter @mks2508/theme-manager-vanilla run build",
     "build:react": "pnpm --filter @mks2508/theme-manager-react run build",
-    "build:web-components": "pnpm --filter @mks2508/theme-manager-web-components run build"
+    "build:web-components": "pnpm --filter @mks2508/theme-manager-web-components run build",
+    "commit:auto": "tsx project-utils/core/commit-generator.ts --auto-approve",
+    "commit:generate": "tsx project-utils/core/commit-generator.ts",
+    "version:auto": "tsx project-utils/core/version-manager.ts --auto-approve",
+    "version:patch": "tsx project-utils/core/version-manager.ts --type=patch --auto-approve --create-tag",
+    "version:minor": "tsx project-utils/core/version-manager.ts --type=minor --auto-approve --create-tag",
+    "version:major": "tsx project-utils/core/version-manager.ts --type=major --auto-approve --create-tag",
+    "release:auto": "tsx project-utils/workflows/auto-release.ts --auto-approve",
+    "release:patch": "tsx project-utils/workflows/auto-release.ts --type=patch --auto-approve --publish-npm",
+    "release:minor": "tsx project-utils/workflows/auto-release.ts --type=minor --auto-approve --publish-npm",
+    "release:major": "tsx project-utils/workflows/auto-release.ts --type=major --auto-approve --publish-npm --publish-github",
+    "release:alpha": "tsx project-utils/workflows/auto-release.ts --type=patch --prefix=alpha --auto-approve --publish-npm",
+    "release:beta": "tsx project-utils/workflows/auto-release.ts --type=minor --prefix=beta --auto-approve --publish-npm"
   },
   "dependencies": {
     "@mks2508/better-logger": "^0.3.0",
