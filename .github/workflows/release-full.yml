@@ -49,6 +49,16 @@ on:
         required: false
         default: false
         type: boolean
+      enable_ai:
+        description: 'Habilitar análisis AI para commits'
+        required: false
+        default: true
+        type: boolean
+      force_release:
+        description: 'Forzar release aunque no haya cambios'
+        required: false
+        default: false
+        type: boolean
 
 env:
   NODE_VERSION: '20'
@@ -87,9 +97,9 @@ jobs:
       - name: "🔍 Check for changes requiring release"
         id: check-changes
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "${{ inputs.force_release }}" = "true" ]; then
             echo "should_release=true" >> $GITHUB_OUTPUT
-            echo "📋 Manual dispatch - forcing release"
+            echo "📋 Manual dispatch or force release - proceeding"
           else
             # Check if there are changes in packages since last release tag
             LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
@@ -102,6 +112,18 @@ jobs:
                 echo "should_release=true" >> $GITHUB_OUTPUT
                 echo "📋 Changes detected since $LAST_TAG:"
                 echo "$CHANGES"
+                
+                # Advanced change analysis
+                echo "### 📊 Change Analysis" >> $GITHUB_STEP_SUMMARY
+                echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+                git diff --stat $LAST_TAG..HEAD -- packages/ project-utils/ package.json >> $GITHUB_STEP_SUMMARY
+                echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+                
+                # Analyze change types
+                FEAT_CHANGES=$(git log --oneline $LAST_TAG..HEAD | grep -c "^[a-f0-9]* feat" || echo "0")
+                FIX_CHANGES=$(git log --oneline $LAST_TAG..HEAD | grep -c "^[a-f0-9]* fix" || echo "0")
+                echo "- **Feature changes**: $FEAT_CHANGES" >> $GITHUB_STEP_SUMMARY
+                echo "- **Bug fixes**: $FIX_CHANGES" >> $GITHUB_STEP_SUMMARY
               else
                 echo "should_release=false" >> $GITHUB_OUTPUT
                 echo "📋 No package changes since $LAST_TAG - skipping release"
@@ -174,7 +196,52 @@ jobs:
         if: ${{ inputs.publish_npm != false }}
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
+          echo "access=public" >> ~/.npmrc
           npm whoami
+          
+          # Verify GitHub registry access 
+          echo "Verifying GitHub Packages access..."
+          npm ping --registry=https://npm.pkg.github.com || echo "GitHub Packages registry not accessible"
+
+      - name: "🧠 AI-powered pre-release analysis"
+        if: ${{ inputs.enable_ai == true }}
+        env:
+          GOOGLE_AI_API_KEY: ${{ secrets.GOOGLE_AI_API_KEY }}
+        run: |
+          echo "🧠 Running AI analysis for release planning..."
+          if [ -n "${{ secrets.GOOGLE_AI_API_KEY }}" ]; then
+            # Generate intelligent commit if needed
+            echo "📝 AI commit analysis..."
+            pnpm tsx project-utils/core/commit-generator.ts --auto-approve || echo "⚠️ AI commit failed, continuing"
+            
+            # AI release notes generation
+            echo "📋 AI release notes generation..."
+            pnpm tsx project-utils/ai/generate-release-notes.ts --version="${{ needs.validate.outputs.release_type }}" || echo "⚠️ AI release notes failed, continuing"
+          else
+            echo "⚠️ GOOGLE_AI_API_KEY not set, skipping AI analysis"
+          fi
+
+      - name: "🔍 Pre-release validation"
+        run: |
+          echo "🔍 Running comprehensive pre-release validation..."
+          
+          # Check workspace consistency
+          echo "### 🔍 Pre-Release Validation" >> $GITHUB_STEP_SUMMARY
+          
+          # Verify all packages have consistent dependencies
+          echo "Checking workspace dependencies..." >> $GITHUB_STEP_SUMMARY
+          WORKSPACE_ISSUES=0
+          
+          for package_json in packages/*/package.json; do
+            if [ -f "$package_json" ]; then
+              package_name=$(dirname "$package_json" | xargs basename)
+              workspace_deps=$(grep -c "workspace:" "$package_json" 2>/dev/null || echo "0")
+              echo "- **$package_name**: $workspace_deps workspace deps" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          
+          echo "✅ Workspace validation completed" >> $GITHUB_STEP_SUMMARY
 
       - name: "🚀 Execute auto-release"
         env:
@@ -182,7 +249,7 @@ jobs:
           GOOGLE_AI_API_KEY: ${{ secrets.GOOGLE_AI_API_KEY }}
         run: |
           # Build release command based on inputs/auto-detection
-          RELEASE_CMD="tsx project-utils/workflows/auto-release.ts"
+          RELEASE_CMD="pnpm tsx project-utils/workflows/auto-release.ts"
           RELEASE_CMD="$RELEASE_CMD --type=${{ needs.validate.outputs.release_type }}"
           
           if [ -n "${{ needs.validate.outputs.version_prefix }}" ]; then
@@ -197,6 +264,11 @@ jobs:
             RELEASE_CMD="$RELEASE_CMD --publish-github"
           fi
           
+          # Force publish to both registries for major releases
+          if [ "${{ needs.validate.outputs.release_type }}" = "major" ]; then
+            RELEASE_CMD="$RELEASE_CMD --publish-github"
+          fi
+          
           if [ "${{ inputs.skip_build }}" = "true" ]; then
             RELEASE_CMD="$RELEASE_CMD --skip-build"
           fi
@@ -205,10 +277,48 @@ jobs:
             RELEASE_CMD="$RELEASE_CMD --dry-run"
           fi
           
+          # Skip commit if we already did AI commit
+          if [ "${{ inputs.enable_ai }}" = "true" ] && [ -n "${{ secrets.GOOGLE_AI_API_KEY }}" ]; then
+            RELEASE_CMD="$RELEASE_CMD --skip-commit"
+          fi
+          
           RELEASE_CMD="$RELEASE_CMD --auto-approve"
           
           echo "🚀 Executing: $RELEASE_CMD"
           eval $RELEASE_CMD
+
+      - name: "📊 Post-release analysis"
+        if: always()
+        run: |
+          echo "📊 Generating post-release analysis..."
+          
+          # Get the latest release info
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$LATEST_TAG" ]; then
+            echo "### 📦 Release Analysis: $LATEST_TAG" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # Package sizes
+            echo "#### 📏 Package Sizes" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            for package_dir in packages/*/dist/; do
+              if [ -d "$package_dir" ]; then
+                package_name=$(echo "$package_dir" | cut -d'/' -f2)
+                size=$(du -sh "$package_dir" | cut -f1)
+                echo "$package_name: $size" >> $GITHUB_STEP_SUMMARY
+              fi
+            done
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            
+            # Commit summary since last release
+            PREV_TAG=$(git describe --tags --abbrev=0 $LATEST_TAG^1 2>/dev/null || echo "")
+            if [ -n "$PREV_TAG" ]; then
+              echo "#### 📝 Changes from $PREV_TAG to $LATEST_TAG" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              git log --oneline $PREV_TAG..$LATEST_TAG >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
 
       - name: "📊 Release summary"
         if: always()

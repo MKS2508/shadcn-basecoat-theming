@@ -293,11 +293,25 @@ export const PROJECT_INFO = {
 // Monorepo specific configuration
 export const WORKSPACE_CONFIG = {
   packagesDir: "packages",
-  examplesDir: "examples",
+  examplesDir: "examples", 
   packages: PROJECT_COMPONENTS.filter(c => c.packagePath).map(c => ({
     id: c.id,
     name: c.name,
     path: c.packagePath!,
     buildCommand: c.buildCommand
-  }))
+  })),
+  publishablePackages: [
+    "@mks2508/shadcn-basecoat-theme-manager",
+    "@mks2508/simple-html-component-template-engine",
+    "@mks2508/theme-manager-vanilla", 
+    "@mks2508/theme-manager-react",
+    "@mks2508/theme-manager-web-components"
+  ],
+  buildOrder: [
+    "core",
+    "template-engine",
+    "vanilla", 
+    "react",
+    "web-components"
+  ]
 }
