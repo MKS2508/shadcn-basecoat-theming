@@ -68,7 +68,7 @@ async function installPackage(
 
   const baseCommands = {
     npm: ['install'],
-    pnpm: ['add', '-w'], // Add -w flag for workspace root installation
+    pnpm: ['add'],
     yarn: ['add'],
     bun: ['add']
   };

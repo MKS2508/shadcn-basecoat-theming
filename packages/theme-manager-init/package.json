@@ -1,6 +1,6 @@
 {
   "name": "@mks2508/theme-manager-cli",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "CLI para automatizar la integración del Theme Manager en proyectos Astro",
   "main": "dist/cli-simple.js",
   "module": "dist/cli-simple.js",
