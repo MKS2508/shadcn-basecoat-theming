@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../index';
 import { ThemeCore } from '@mks2508/shadcn-basecoat-theme-manager';
 import { Button } from './ui/button';
 import * as Popover from '@radix-ui/react-popover';
@@ -15,30 +15,31 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = memo(({
   onThemeManagement,
   onFontSettings,
 }) => {
-  const { themeManager, isLoaded } = useTheme();
-  const [currentTheme, setCurrentTheme] = useState<string>('Default');
+  const { themeManager, initialized, currentTheme, themes } = useTheme();
   const [availableThemes, setAvailableThemes] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [currentThemeLabel, setCurrentThemeLabel] = useState<string>('Default');
 
   useEffect(() => {
-    if (!themeManager) return;
+    if (!themeManager || !initialized) return;
 
     const loadThemes = () => {
       try {
         console.log('🔍 [ThemeSelector] Loading available themes...');
         
-        const themes = themeManager.getAvailableThemes();
-        const currentThemeId = themeManager.getCurrentTheme();
+        // Use themes from context instead of calling themeManager directly
+        const themesList = themes || [];
+        const currentThemeId = currentTheme;
         
-        console.log('🔍 [ThemeSelector] Found themes:', themes.length);
+        console.log('🔍 [ThemeSelector] Found themes:', themesList.length);
         console.log('🔍 [ThemeSelector] Current theme:', currentThemeId);
         
-        setAvailableThemes(themes);
+        setAvailableThemes(themesList);
         
         // Update current theme label
-        const currentThemeData = themes.find((theme: any) => theme.id === currentThemeId);
+        const currentThemeData = themesList.find((theme: any) => theme.id === currentThemeId || theme.name === currentThemeId);
         if (currentThemeData) {
-          setCurrentTheme(currentThemeData.label || currentThemeData.name || currentThemeData.id);
+          setCurrentThemeLabel(currentThemeData.label || currentThemeData.name || currentThemeData.id);
         }
         
       } catch (error) {
@@ -85,7 +86,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = memo(({
       // Update UI
       const selectedTheme = availableThemes.find(theme => theme.id === themeId);
       if (selectedTheme) {
-        setCurrentTheme(selectedTheme.label || selectedTheme.name || selectedTheme.id);
+        setCurrentThemeLabel(selectedTheme.label || selectedTheme.name || selectedTheme.id);
       }
       
       // Close popover
@@ -113,7 +114,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = memo(({
             className="justify-between min-w-40"
           >
             <span className="flex items-center gap-2">
-              <span>{currentTheme}</span>
+              <span>{currentThemeLabel}</span>
               <div className="w-px h-4 bg-border" />
               <ChevronDown className="h-4 w-4" />
             </span>

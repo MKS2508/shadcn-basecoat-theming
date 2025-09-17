@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../index';
 import { Button } from './ui/button';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -21,7 +21,7 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
   open,
   onOpenChange,
 }) => {
-  const { themeManager, installer, isLoaded } = useTheme();
+  const { themeManager, installer, initialized } = useTheme();
   const [activeTab, setActiveTab] = useState<'installed' | 'browse'>('installed');
   const [installedThemes, setInstalledThemes] = useState<ThemeConfig[]>([]);
   const [registryThemes, setRegistryThemes] = useState<RegistryTheme[]>([]);
@@ -35,7 +35,7 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
 
   // Load installed themes
   useEffect(() => {
-    if (!themeManager || !isLoaded) return;
+    if (!themeManager || !initialized) return;
 
     const loadInstalledThemes = async () => {
       try {
@@ -57,7 +57,7 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
     if (open) {
       loadInstalledThemes();
     }
-  }, [themeManager, isLoaded, open]);
+  }, [themeManager, initialized, open]);
 
   // Load registry themes
   const loadRegistryThemes = async () => {
@@ -301,7 +301,7 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
     theme.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (!isLoaded) {
+  if (!initialized) {
     return null;
   }
 

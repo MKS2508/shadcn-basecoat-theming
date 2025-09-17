@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo } from 'react';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../index';
 import { ThemeCore } from '@mks2508/shadcn-basecoat-theme-manager';
 import { Button } from './ui/button';
 import { Sun, Moon, Monitor } from 'lucide-react';

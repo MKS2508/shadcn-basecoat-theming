@@ -7,6 +7,7 @@ import {
   ThemeConfig,
   FontOverride
 } from '@mks2508/shadcn-basecoat-theme-manager';
+import { ThemeSelector as ThemeSelectorComponent } from './components/ThemeSelector';
 
 /**
  * Context para el Theme Manager
@@ -137,31 +138,6 @@ export function useTheme() {
     throw new Error('useTheme debe usarse dentro de ThemeProvider');
   }
   return context;
-}
-
-/**
- * Componente selector de temas
- */
-export function ThemeSelector() {
-  const { currentTheme, themes, setTheme, initialized } = useTheme();
-
-  if (!initialized) {
-    return <div>Cargando...</div>;
-  }
-
-  return (
-    <select 
-      value={currentTheme}
-      onChange={(e) => setTheme(e.target.value)}
-      className="theme-selector"
-    >
-      {themes.map(theme => (
-        <option key={theme.id} value={theme.name}>
-          {theme.label}
-        </option>
-      ))}
-    </select>
-  );
 }
 
 /**
@@ -423,3 +399,4 @@ export function FontSettingsModal({ open, onOpenChange }: ModalProps) {
     </div>
   );
 }
+

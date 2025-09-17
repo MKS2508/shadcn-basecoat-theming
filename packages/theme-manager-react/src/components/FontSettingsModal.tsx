@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../index';
 import { Button } from './ui/button';
 import { Switch } from './ui/switch';
 import { Label } from './ui/label';
@@ -20,7 +20,7 @@ export const FontSettingsModal: React.FC<FontSettingsModalProps> = ({
   open,
   onOpenChange,
 }) => {
-  const { fontManager, isLoaded } = useTheme();
+  const { fontManager, initialized } = useTheme();
   const [isEnabled, setIsEnabled] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<FontCategory>('sans');
   const [fontsByCategory, setFontsByCategory] = useState<{
@@ -36,7 +36,7 @@ export const FontSettingsModal: React.FC<FontSettingsModalProps> = ({
 
   // Load fonts and configuration
   useEffect(() => {
-    if (!fontManager || !isLoaded) return;
+    if (!fontManager || !initialized) return;
 
     const loadFonts = async () => {
       try {
@@ -71,7 +71,7 @@ export const FontSettingsModal: React.FC<FontSettingsModalProps> = ({
     if (open) {
       loadFonts();
     }
-  }, [fontManager, isLoaded, open]);
+  }, [fontManager, initialized, open]);
 
   const handleToggleOverride = async (enabled: boolean) => {
     if (!fontManager) return;
@@ -217,7 +217,7 @@ export const FontSettingsModal: React.FC<FontSettingsModalProps> = ({
     );
   };
 
-  if (!isLoaded) {
+  if (!initialized) {
     return null;
   }
 
