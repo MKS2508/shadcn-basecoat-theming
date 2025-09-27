@@ -3,7 +3,7 @@ import { useTheme } from '../index';
 import { ThemeCore } from '@mks2508/shadcn-basecoat-theme-manager';
 import { Button } from './ui/button';
 import * as Popover from '@radix-ui/react-popover';
-import { ChevronDown, Check, Search, Settings } from 'lucide-react';
+import { ChevronDown, Check, Search, Settings, type LucideIcon } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface ThemeSelectorProps {
@@ -116,7 +116,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = memo(({
             <span className="flex items-center gap-2">
               <span>{currentThemeLabel}</span>
               <div className="w-px h-4 bg-border" />
-              <ChevronDown className="h-4 w-4" />
+              {React.createElement(ChevronDown as any, { className: "h-4 w-4" })}
             </span>
           </Button>
         </Popover.Trigger>
@@ -163,7 +163,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = memo(({
                         )}
                       </div>
                       {isActive && (
-                        <Check className="ml-auto h-4 w-4" />
+                        React.createElement(Check as any, { className: "ml-auto h-4 w-4" })
                       )}
                     </button>
                   );
@@ -184,7 +184,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = memo(({
                   onThemeManagement?.();
                 }}
               >
-                <Search className="mr-2 h-4 w-4" />
+                {React.createElement(Search as any, { className: "mr-2 h-4 w-4" })}
                 Browse More...
               </Button>
               <Button
@@ -196,7 +196,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = memo(({
                   onFontSettings?.();
                 }}
               >
-                <Settings className="h-4 w-4" />
+                {React.createElement(Settings as any, { className: "h-4 w-4" })}
               </Button>
             </div>
           </div>

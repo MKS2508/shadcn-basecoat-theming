@@ -36,16 +36,22 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 /**
  * Provider principal de temas para React
  */
-export interface ThemeProviderProps {
+interface ThemeProviderProps {
   children: React.ReactNode;
   defaultTheme?: string;
   defaultMode?: 'light' | 'dark' | 'auto';
+  registryUrl?: string;
+  storageKey?: string;
+  enableTransitions?: boolean;
 }
 
 export function ThemeProvider({ 
   children, 
   defaultTheme = 'default',
-  defaultMode = 'auto' 
+  defaultMode = 'auto',
+  registryUrl = '/themes/registry.json',
+  storageKey = 'theme-preference',
+  enableTransitions = true
 }: ThemeProviderProps) {
   // Usar ThemeCore global en lugar de instancias locales
   const [themeManager, setThemeManager] = useState<ThemeManager | null>(null);
@@ -59,30 +65,70 @@ export function ThemeProvider({
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    const initFromThemeCore = async () => {
+    const initThemeManager = async () => {
       try {
-        // Usar ThemeCore ya inicializado globalmente
-        const managers = await ThemeCore.waitForReady();
+        // Auto-initialize with provided configuration
+        await ThemeCore.init({
+          registryPath: registryUrl,
+          debug: false
+        });
+        
+        const managers = ThemeCore.getInstance();
+        if (!managers) {
+          throw new Error('ThemeCore initialization returned null');
+        }
         
         setThemeManager(managers.themeManager);
         setFontManager(managers.fontManager);
         setInstaller(managers.themeInstaller);
         
-        // Sincronizar estado reactivo
+        // Sync reactive state
         setCurrentTheme(managers.themeManager.getCurrentTheme());
         setCurrentMode(managers.themeManager.getCurrentMode());
         setThemes(managers.themeManager.getAvailableThemes());
-        // TODO: Obtener font overrides actuales del fontManager
         setFontOverrides({ enabled: false, fonts: {} });
         
         setInitialized(true);
       } catch (error) {
-        console.error('❌ ThemeProvider: Failed to connect to ThemeCore:', error);
+        console.warn('⚠️ ThemeProvider: Auto-initialization failed, using fallback:', error);
+        
+        // Fallback: minimal working state
+        setCurrentTheme(defaultTheme);
+        setCurrentMode(defaultMode);
+        setThemes([
+          {
+            id: 'default',
+            name: 'Default',
+            label: 'Default Theme',
+            description: 'Default theme configuration',
+            version: '1.0.0',
+            source: 'local' as const,
+            category: 'built-in' as const,
+            modes: {
+              light: '',
+              dark: ''
+            },
+            fonts: {
+              sans: '',
+              serif: '',
+              mono: ''
+            },
+            preview: {
+              primary: '#007bff',
+              background: '#ffffff',
+              accent: '#f8f9fa'
+            },
+            config: {
+              radius: '0.5rem'
+            }
+          }
+        ]);
+        setInitialized(true);
       }
     };
     
-    initFromThemeCore();
-  }, []);
+    initThemeManager();
+  }, [defaultTheme, defaultMode]);
 
   const setTheme = useCallback(async (theme: string, mode?: 'light' | 'dark' | 'auto') => {
     if (!themeManager) return;
@@ -399,4 +445,8 @@ export function FontSettingsModal({ open, onOpenChange }: ModalProps) {
     </div>
   );
 }
+
+// Export all components and utilities
+export { ThemeSelectorComponent as ThemeSelector }
+export type { ModalProps, ThemeContextValue, ThemeProviderProps }
 

@@ -1,7 +1,7 @@
 {
   "name": "@mks2508/theme-manager-react",
-  "version": "1.0.2",
-  "description": "React hooks and components for theme management (shadcn/ui compatible)",
+  "version": "3.2.0",
+  "description": "React hooks and components for theme management (shadcn/ui compatible, Next.js 15 ready)",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -10,6 +10,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
+    },
+    "./nextjs": {
+      "types": "./dist/nextjs/index.d.ts",
+      "import": "./dist/nextjs/index.mjs",
+      "require": "./dist/nextjs/index.js"
     }
   },
   "scripts": {
@@ -24,30 +29,33 @@
     "hooks",
     "dark-mode",
     "radix-ui",
-    "lucide-react"
+    "lucide-react",
+    "nextjs",
+    "next-15",
+    "react-19"
   ],
   "author": "MKS2508",
   "license": "MIT",
   "dependencies": {
-    "@mks2508/shadcn-basecoat-theme-manager": "^1.0.2"
+    "@mks2508/shadcn-basecoat-theme-manager": "workspace:*"
   },
   "peerDependencies": {
-    "react": ">=16.8.0",
-    "react-dom": ">=16.8.0",
+    "react": ">=18.2.0 || ^19.0.0",
+    "react-dom": ">=18.2.0 || ^19.0.0",
     "@radix-ui/react-popover": "^1.0.0",
     "@radix-ui/react-dialog": "^1.0.0",
     "@radix-ui/react-tabs": "^1.0.0",
     "@radix-ui/react-switch": "^1.0.0",
     "@radix-ui/react-label": "^2.0.0",
-    "lucide-react": "^0.400.0",
+    "lucide-react": "^0.540.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
-    "tailwind-merge": "^2.0.0"
+    "tailwind-merge": "^2.5.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
     "tsup": "^8.0.0",
     "typescript": "^5.6.2"
   },
