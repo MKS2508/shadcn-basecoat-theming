@@ -1,72 +1,77 @@
-import React, { useState, useEffect, memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import { useTheme } from '../index';
-import { ThemeCore } from '@mks2508/shadcn-basecoat-theme-manager';
 import { Button } from './ui/button';
 import { Sun, Moon, Monitor } from 'lucide-react';
+import { ThemeToggler } from './primitives/ThemeToggler';
+
+// Helper para detectar tema del sistema
+function getSystemTheme(): 'light' | 'dark' {
+  if (typeof window === 'undefined') return 'light';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
 
 export const ModeToggle: React.FC = memo(() => {
-  const { themeManager } = useTheme();
-  const [currentMode, setCurrentMode] = useState<'light' | 'dark' | 'auto'>('auto');
-
-  useEffect(() => {
-    if (!themeManager) return;
-
-    // Get initial mode
-    const mode = themeManager.getCurrentMode?.() || 'auto';
-    setCurrentMode(mode);
-
-    // Listen for mode changes using ThemeCore events
-    const handleModeChange = (data: any) => {
-      console.log('🌓 [ModeToggle] Mode changed:', data);
-      setCurrentMode(data.mode || data.effectiveMode || 'auto');
-    };
-
-    // Use ThemeCore event system when available
-    ThemeCore.onThemeChange && ThemeCore.onThemeChange(handleModeChange);
-
-    return () => {
-      // Cleanup if needed
-    };
-  }, [themeManager]);
-
-  const toggleMode = async () => {
-    if (!themeManager?.toggleMode) return;
-
-    try {
-      console.log('🔄 [ModeToggle] Toggling mode...');
-      await themeManager.toggleMode();
-      
-      const newMode = themeManager.getCurrentMode?.() || 'auto';
-      setCurrentMode(newMode);
-      
-      console.log(`✅ [ModeToggle] Switched to mode: ${newMode}`);
-    } catch (error) {
-      console.error('❌ [ModeToggle] Error toggling mode:', error);
+  const { themeManager, currentMode, setTheme, currentTheme } = useTheme();
+  
+  // Convertir currentMode a formato esperado por animate-ui
+  const getEffectiveTheme = (): 'light' | 'dark' => {
+    if (currentMode === 'auto') {
+      return getSystemTheme();
     }
+    return currentMode as 'light' | 'dark';
   };
+
+  // Convertir modo a ThemeSelection para animate-ui
+  const getThemeSelection = (): 'light' | 'dark' | 'system' => {
+    if (currentMode === 'auto') return 'system';
+    return currentMode as 'light' | 'dark';
+  };
+
+  const handleThemeChange = useCallback(async (theme: 'light' | 'dark' | 'system') => {
+    const mode = theme === 'system' ? 'auto' : theme;
+    await setTheme(currentTheme, mode);
+  }, [setTheme, currentTheme]);
 
   if (!themeManager) {
-    return null; // Don't render if ThemeCore isn't ready
+    return null;
   }
 
-  const Icon = currentMode === 'light' ? Sun : currentMode === 'dark' ? Moon : Monitor;
-  const modeLabels = {
-    light: 'Light mode',
-    dark: 'Dark mode', 
-    auto: 'System mode'
-  };
-
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={toggleMode}
-      aria-label={`Switch to next theme mode (current: ${modeLabels[currentMode]})`}
-      title={`Current: ${modeLabels[currentMode]}. Click to cycle through modes.`}
-      className="w-10 h-10 p-0"
+    <ThemeToggler
+      theme={getThemeSelection()}
+      resolvedTheme={getEffectiveTheme()}
+      setTheme={handleThemeChange}
+      direction="ltr"
     >
-      <Icon className="h-4 w-4" />
-    </Button>
+      {({ effective, resolved, toggleTheme }) => {
+        const Icon = effective === 'light' ? Sun : effective === 'dark' ? Moon : Monitor;
+        const modeLabels = {
+          light: 'Light mode',
+          dark: 'Dark mode',
+          system: 'System mode'
+        };
+
+        const handleClick = () => {
+          // Cycle through: light -> dark -> system -> light
+          const nextTheme = effective === 'light' ? 'dark' : 
+                           effective === 'dark' ? 'system' : 'light';
+          toggleTheme(nextTheme);
+        };
+
+        return (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleClick}
+            aria-label={`Switch to next theme mode (current: ${modeLabels[effective]})`}
+            title={`Current: ${modeLabels[effective]}. Click to cycle through modes.`}
+            className="w-10 h-10 p-0"
+          >
+            {React.createElement(Icon as any, { className: "h-4 w-4" })}
+          </Button>
+        );
+      }}
+    </ThemeToggler>
   );
 });
 

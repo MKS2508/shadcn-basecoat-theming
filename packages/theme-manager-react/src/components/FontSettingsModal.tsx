@@ -228,7 +228,7 @@ export const FontSettingsModal: React.FC<FontSettingsModalProps> = ({
           {/* Header */}
           <div className="flex items-center justify-between border-b p-6">
             <div className="flex items-center space-x-3">
-              <Settings className="w-6 h-6" />
+              {React.createElement(Settings as any, { className: "w-6 h-6" })}
               <h2 className="text-lg font-semibold text-foreground">Font Settings</h2>
               <div className="flex items-center space-x-2">
                 <Switch
@@ -240,7 +240,7 @@ export const FontSettingsModal: React.FC<FontSettingsModalProps> = ({
             </div>
             <Dialog.Close asChild>
               <Button variant="ghost" size="sm">
-                <X className="h-4 w-4" />
+                {React.createElement(X as any, { className: "h-4 w-4" })}
               </Button>
             </Dialog.Close>
           </div>
@@ -301,7 +301,7 @@ export const FontSettingsModal: React.FC<FontSettingsModalProps> = ({
               onClick={handleReset}
               disabled={!isEnabled}
             >
-              <Trash2 className="w-4 h-4 mr-2" />
+              {React.createElement(Trash2 as any, { className: "w-4 h-4 mr-2" })}
               Reset All
             </Button>
             <div className="flex items-center space-x-3">

@@ -323,7 +323,7 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
               </div>
               <Dialog.Close asChild>
                 <Button variant="ghost" size="sm">
-                  <X className="h-4 w-4" />
+                  {React.createElement(X as any, { className: "h-4 w-4" })}
                 </Button>
               </Dialog.Close>
             </div>
@@ -341,7 +341,7 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
                   {isLoadingInstalled ? (
                     <div className="flex items-center justify-center py-12">
                       <div className="text-center">
-                        <Loader2 className="w-8 h-8 mx-auto mb-4 animate-spin" />
+                        {React.createElement(Loader2 as any, { className: "w-8 h-8 mx-auto mb-4 animate-spin" })}
                         <p className="text-sm text-muted-foreground">Loading installed themes...</p>
                       </div>
                     </div>
@@ -390,7 +390,7 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
                                   variant="outline"
                                   onClick={() => previewTheme(theme.id)}
                                 >
-                                  <Eye className="w-3 h-3 mr-1" />
+                                  {React.createElement(Eye as any, { className: "w-3 h-3 mr-1" })}
                                   Preview
                                 </Button>
                                 <Button
@@ -409,7 +409,7 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
                                     disabled={isActive}
                                     title={isActive ? "Cannot delete active theme" : "Delete theme"}
                                   >
-                                    <Trash2 className="w-3 h-3" />
+                                    {React.createElement(Trash2 as any, { className: "w-3 h-3" })}
                                   </Button>
                                 )}
                               </div>
@@ -427,7 +427,7 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
                     {/* Search bar */}
                     <div className="flex items-center space-x-4">
                       <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        {React.createElement(Search as any, { className: "absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" })}
                         <Input
                           type="text"
                           placeholder="Search themes..."
@@ -443,9 +443,9 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
                         disabled={isLoadingRegistry}
                       >
                         {isLoadingRegistry ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          React.createElement(Loader2 as any, { className: "w-4 h-4 animate-spin" })
                         ) : (
-                          <RefreshCw className="w-4 h-4" />
+                          React.createElement(RefreshCw as any, { className: "w-4 h-4" })
                         )}
                       </Button>
                     </div>
@@ -455,7 +455,7 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
                       {isLoadingRegistry ? (
                         <div className="flex items-center justify-center py-12">
                           <div className="text-center">
-                            <Loader2 className="w-8 h-8 mx-auto mb-4 animate-spin" />
+                            {React.createElement(Loader2 as any, { className: "w-8 h-8 mx-auto mb-4 animate-spin" })}
                             <p className="text-sm text-muted-foreground">Loading registry themes...</p>
                           </div>
                         </div>
@@ -499,14 +499,14 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
                                     variant="outline"
                                     onClick={() => previewTheme(theme.id, true)}
                                   >
-                                    <Eye className="w-3 h-3 mr-1" />
+                                    {React.createElement(Eye as any, { className: "w-3 h-3 mr-1" })}
                                     Preview
                                   </Button>
                                   <Button
                                     size="sm"
                                     onClick={() => installTheme(theme.id)}
                                   >
-                                    <Download className="w-3 h-3 mr-1" />
+                                    {React.createElement(Download as any, { className: "w-3 h-3 mr-1" })}
                                     Install
                                   </Button>
                                 </div>

@@ -1,50 +1,41 @@
 # @mks2508/theme-manager-react
 
-React hooks and components for theme management (shadcn/ui compatible, Next.js 15 ready)
+React hooks and components for theme management (shadcn/ui compatible, Next.js 15 ready) with **animated transitions**
 
-## 🚀 Next.js 15 Compatibility
+## 🚀 Features v3.3.0
 
-This package is compatible with **Next.js 15** with the following considerations:
+- ✅ **Animated Theme Transitions**: Smooth View Transitions API integration
+- ✅ **Next.js Optimized**: Dedicated `/nextjs` export for SSR/SSG
+- ✅ **React 19 Compatible**: Full support with TypeScript fixes
+- ✅ **Flexible Dependencies**: Compatible with wide range of peer dependency versions
 
-### ✅ Fully Compatible
-- **Pages Router**: Full support with React 18.2+ and React 19
-- **App Router**: Compatible with React 19 (recommended)
-- **TypeScript**: Full type safety with both React versions
+## 📘 Quick Start Guide for Existing Next.js Projects
 
-### ⚠️ Known Limitations
-- **Radix UI + React 19**: Some Radix UI components may show warnings with React 19 due to ongoing compatibility work
-- **useEffectEvent warnings**: May appear in development but don't affect functionality
-- **Mixed Router Usage**: Not recommended to use different React versions across routers in the same app
+### **Prerequisites**:
+- ✅ Next.js project configured
+- ✅ `/public/themes/registry.json` present
+- ✅ `/public/themes/` folder with CSS theme files
 
-## Installation
-
+### **Installation**
 ```bash
-npm install @mks2508/theme-manager-react@^3.1.0
-npm install @mks2508/shadcn-basecoat-theme-manager@^3.0.0
-
-# Required peer dependencies
-npm install react react-dom
-npm install @radix-ui/react-popover @radix-ui/react-dialog @radix-ui/react-tabs @radix-ui/react-switch @radix-ui/react-label
-npm install lucide-react class-variance-authority clsx tailwind-merge
+npm install @mks2508/theme-manager-react@3.3.0
 ```
 
-## Next.js 15 Setup
-
-### App Router (React 19)
+### **Setup in layout.tsx (App Router)**
 ```tsx
 // app/layout.tsx
-import { ThemeProvider } from '@mks2508/theme-manager-react'
-import './globals.css'
+import { ThemeProvider } from '@mks2508/theme-manager-react/nextjs'
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <body>
-        <ThemeProvider>
+        <ThemeProvider 
+          registryUrl="/themes/registry.json"
+          defaultTheme="default"
+          defaultMode="auto"
+          enableTransitions={true}
+        >
           {children}
         </ThemeProvider>
       </body>
@@ -53,46 +44,177 @@ export default function RootLayout({
 }
 ```
 
-### Pages Router (React 18.2+ or 19)
+### **Sidebar with Animated Components**
+```tsx
+// components/Sidebar.tsx
+import { 
+  ModeToggle,
+  AnimatedThemeToggler,
+  ThemeSelector
+} from '@mks2508/theme-manager-react/nextjs'
+
+export function Sidebar() {
+  return (
+    <aside className="w-64 p-4">
+      {/* Toggle light/dark with animations */}
+      <ModeToggle />
+      
+      {/* Custom animated toggler */}
+      <AnimatedThemeToggler direction="ltr">
+        {({ effective, toggleTheme }) => (
+          <button onClick={() => toggleTheme()}>
+            {effective === 'light' ? '🌙' : '☀️'} Toggle
+          </button>
+        )}
+      </AnimatedThemeToggler>
+      
+      {/* Full theme selector */}
+      <ThemeSelector />
+    </aside>
+  )
+}
+```
+
+### **Expected File Structure**
+```
+/public/themes/
+├── registry.json          ← Theme configuration
+├── default-light.css      ← Individual themes
+├── default-dark.css
+├── rose-light.css
+└── rose-dark.css
+```
+
+### **Registry.json Structure**
+```json
+{
+  "themes": [
+    {
+      "id": "default",
+      "name": "Default",
+      "modes": {
+        "light": "/themes/default-light.css",
+        "dark": "/themes/default-dark.css"
+      }
+    }
+  ]
+}
+```
+
+## Full Installation (New Projects)
+
+```bash
+npm install @mks2508/theme-manager-react@^3.3.0
+npm install @mks2508/shadcn-basecoat-theme-manager@^3.2.1
+
+# Required peer dependencies (flexible versions)
+npm install react react-dom
+npm install @radix-ui/react-popover @radix-ui/react-dialog @radix-ui/react-tabs @radix-ui/react-switch @radix-ui/react-label
+npm install lucide-react class-variance-authority clsx tailwind-merge
+```
+
+### Pages Router Setup
 ```tsx
 // pages/_app.tsx
-import { ThemeProvider } from '@mks2508/theme-manager-react'
+import { ThemeProvider } from '@mks2508/theme-manager-react/nextjs'
 import type { AppProps } from 'next/app'
 import './globals.css'
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <ThemeProvider>
+    <ThemeProvider
+      registryUrl="/themes/registry.json"
+      defaultTheme="default"
+      defaultMode="auto"
+      enableTransitions={true}
+    >
       <Component {...pageProps} />
     </ThemeProvider>
   )
 }
 ```
 
-## Components
+## 🎨 Animated Components
 
-### Theme Selector
+### Animated Theme Toggler
 ```tsx
-import { ThemeSelector } from '@mks2508/theme-manager-react'
+import { AnimatedThemeToggler } from '@mks2508/theme-manager-react/nextjs'
+
+export default function Navigation() {
+  return (
+    <nav>
+      <AnimatedThemeToggler direction="ltr">
+        {({ effective, toggleTheme, isAnimating }) => (
+          <button 
+            onClick={() => toggleTheme()}
+            disabled={isAnimating}
+            className="animated-toggle"
+          >
+            {effective === 'light' ? '🌙' : '☀️'}
+          </button>
+        )}
+      </AnimatedThemeToggler>
+    </nav>
+  )
+}
+```
+
+### Animated Theme Selector
+```tsx
+import { AnimatedThemeSelector } from '@mks2508/theme-manager-react/nextjs'
+
+export default function ThemeGrid() {
+  const themes = ['default', 'rose', 'blue', 'green']
+  
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      {themes.map(theme => (
+        <AnimatedThemeSelector 
+          key={theme}
+          targetTheme={theme}
+          direction="ltr"
+        >
+          {({ switchToTheme, isCurrentTheme, isAnimating }) => (
+            <button
+              onClick={switchToTheme}
+              disabled={isCurrentTheme || isAnimating}
+              className={`theme-card ${isCurrentTheme ? 'active' : ''}`}
+            >
+              {theme} {isCurrentTheme && '✓'}
+            </button>
+          )}
+        </AnimatedThemeSelector>
+      ))}
+    </div>
+  )
+}
+```
+
+### Mode Toggle (Enhanced)
+```tsx
+import { ModeToggle } from '@mks2508/theme-manager-react/nextjs'
 
 export default function Header() {
   return (
     <header>
-      <ThemeSelector />
+      <ModeToggle />
     </header>
   )
 }
 ```
 
-### Mode Toggle (Dark/Light)
+### Theme Selector
 ```tsx
-import { ModeToggle } from '@mks2508/theme-manager-react'
+import { ThemeSelector } from '@mks2508/theme-manager-react/nextjs'
 
-export default function Navigation() {
+export default function Sidebar() {
   return (
-    <nav>
-      <ModeToggle />
-    </nav>
+    <aside>
+      <ThemeSelector 
+        onThemeManagement={() => console.log('Open theme manager')}
+        onFontSettings={() => console.log('Open font settings')}
+      />
+    </aside>
   )
 }
 ```
@@ -127,24 +249,25 @@ export default function Admin() {
 
 ### useTheme
 ```tsx
-import { useTheme } from '@mks2508/theme-manager-react'
+import { useTheme } from '@mks2508/theme-manager-react/nextjs'
 
 export default function CustomComponent() {
   const { 
     currentTheme, 
-    setTheme, 
-    isDarkMode, 
-    toggleDarkMode,
-    availableThemes 
+    currentMode,
+    setTheme,
+    themes,
+    themeManager 
   } = useTheme()
 
   return (
     <div>
       <p>Current theme: {currentTheme}</p>
-      <p>Dark mode: {isDarkMode ? 'Yes' : 'No'}</p>
-      <button onClick={toggleDarkMode}>
-        Toggle mode
+      <p>Current mode: {currentMode}</p>
+      <button onClick={() => setTheme('rose', 'dark')}>
+        Switch to Rose Dark
       </button>
+      <p>Available themes: {themes.length}</p>
     </div>
   )
 }
@@ -230,19 +353,39 @@ If using strict TypeScript settings, you may need to add:
 }
 ```
 
-## Migration from v3.0.0
+## Migration Guides
 
-Update your package.json:
+### From v3.2.x to v3.3.0
+
+**New Features:**
+- ✅ Animated theme transitions with View Transitions API
+- ✅ New components: `AnimatedThemeToggler`, `AnimatedThemeSelector`
+- ✅ Enhanced `ModeToggle` with animations
+- ✅ Flexible peer dependencies
+
+**Update package.json:**
+```diff
+- "@mks2508/theme-manager-react": "^3.2.1"
++ "@mks2508/theme-manager-react": "^3.3.0"
+```
+
+**Update imports for Next.js:**
+```diff
+- import { ThemeProvider } from '@mks2508/theme-manager-react'
++ import { ThemeProvider } from '@mks2508/theme-manager-react/nextjs'
+```
+
+### From v3.0.0 to v3.3.0
 
 ```diff
 - "@mks2508/theme-manager-react": "^3.0.0"
-+ "@mks2508/theme-manager-react": "^3.1.0"
++ "@mks2508/theme-manager-react": "^3.3.0"
 
 - "lucide-react": "^0.400.0"
-+ "lucide-react": "^0.540.0"
++ "lucide-react": ">=0.400.0"
 
 - "tailwind-merge": "^2.0.0"
-+ "tailwind-merge": "^2.5.0"
++ "tailwind-merge": ">=1.0.0"
 ```
 
 ## Support

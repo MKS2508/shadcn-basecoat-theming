@@ -224,44 +224,6 @@ export function ThemeInstallerComponent() {
   );
 }
 
-/**
- * Componente ModeToggle para alternar entre modos light/dark/auto
- */
-export function ModeToggle() {
-  const { currentMode, setTheme, currentTheme } = useTheme();
-
-  const handleModeToggle = async () => {
-    const modes: Array<'light' | 'dark' | 'auto'> = ['light', 'dark', 'auto'];
-    const currentIndex = modes.indexOf(currentMode);
-    const nextMode = modes[(currentIndex + 1) % modes.length];
-    
-    await setTheme(currentTheme, nextMode);
-  };
-
-  const getModeIcon = () => {
-    switch (currentMode) {
-      case 'light':
-        return '☀️';
-      case 'dark':
-        return '🌙';
-      case 'auto':
-        return '🖥️';
-      default:
-        return '🖥️';
-    }
-  };
-
-  return (
-    <button
-      onClick={handleModeToggle}
-      className="inline-flex items-center justify-center rounded-md border border-input bg-background w-10 h-10 text-sm ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-      aria-label={`Current mode: ${currentMode}. Click to change mode.`}
-      title={`Current mode: ${currentMode}`}
-    >
-      <span className="text-base">{getModeIcon()}</span>
-    </button>
-  );
-}
 
 /**
  * Props para modales
@@ -448,5 +410,8 @@ export function FontSettingsModal({ open, onOpenChange }: ModalProps) {
 
 // Export all components and utilities
 export { ThemeSelectorComponent as ThemeSelector }
+export { default as ModeToggle } from './components/ModeToggle'
+export { default as AnimatedThemeToggler } from './components/AnimatedThemeToggler'
+export { default as AnimatedThemeSelector } from './components/AnimatedThemeSelector'
 export type { ModalProps, ThemeContextValue, ThemeProviderProps }
 
