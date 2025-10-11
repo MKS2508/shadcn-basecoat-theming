@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 Theme Toolkit - Gestor de Themes</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/theme/monokai.min.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🎨 Theme Toolkit</h1>
+                <p>Herramienta de desarrollo para gestión de themes</p>
+            </div>
+            <div class="header-actions">
+                <button id="create-theme-btn" class="btn btn-primary">+ Nuevo Theme</button>
+                <button id="refresh-btn" class="btn btn-secondary">↻ Refrescar</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Sidebar - Theme List -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h2>Themes</h2>
+                    <span id="theme-count" class="theme-count">0 themes</span>
+                </div>
+                <div id="theme-list" class="theme-list">
+                    <!-- Themes will be loaded here -->
+                </div>
+            </aside>
+
+            <!-- Editor Area -->
+            <section class="editor-section">
+                <div id="no-theme-selected" class="no-selection">
+                    <div class="no-selection-content">
+                        <h2>🎨 Bienvenido a Theme Toolkit</h2>
+                        <p>Selecciona un theme existente o crea uno nuevo para comenzar</p>
+                        <button id="create-first-theme" class="btn btn-primary">Crear Primer Theme</button>
+                    </div>
+                </div>
+
+                <div id="theme-editor" class="theme-editor" style="display: none;">
+                    <!-- Theme Header -->
+                    <div class="editor-header">
+                        <div class="theme-info">
+                            <h2 id="editor-title">Theme Name</h2>
+                            <p id="editor-description">Theme description</p>
+                        </div>
+                        <div class="editor-controls">
+                            <div class="mode-selector">
+                                <button id="light-mode-btn" class="mode-btn active" data-mode="light">Light</button>
+                                <button id="dark-mode-btn" class="mode-btn" data-mode="dark">Dark</button>
+                            </div>
+                            <div class="editor-actions">
+                                <button id="validate-btn" class="btn btn-secondary">✓ Validar</button>
+                                <button id="preview-btn" class="btn btn-accent">👁 Preview</button>
+                                <button id="save-btn" class="btn btn-primary">💾 Guardar</button>
+                                <button id="export-btn" class="btn btn-secondary">📤 Exportar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Editor Content -->
+                    <div class="editor-content">
+                        <div class="code-editor-section">
+                            <div class="editor-section-header">
+                                <h3>CSS Editor</h3>
+                                <div class="editor-tools">
+                                    <button id="format-btn" class="btn btn-small">Format</button>
+                                    <button id="copy-btn" class="btn btn-small">Copy</button>
+                                </div>
+                            </div>
+                            <div class="code-editor">
+                                <textarea id="css-editor"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="preview-section">
+                            <div class="editor-section-header">
+                                <h3>Live Preview</h3>
+                                <div class="preview-tools">
+                                    <button id="refresh-preview-btn" class="btn btn-small">↻</button>
+                                    <button id="open-fullscreen-btn" class="btn btn-small">⛶</button>
+                                </div>
+                            </div>
+                            <div class="preview-container">
+                                <iframe id="preview-frame" class="preview-frame"></iframe>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Validation Results -->
+                    <div id="validation-results" class="validation-results" style="display: none;">
+                        <h3>Resultados de Validación</h3>
+                        <div id="validation-content" class="validation-content">
+                            <!-- Validation results will appear here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Modals -->
+        <div id="create-theme-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Crear Nuevo Theme</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <form id="create-theme-form" class="modal-body">
+                    <div class="form-group">
+                        <label for="theme-name">Nombre</label>
+                        <input type="text" id="theme-name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="theme-label">Label</label>
+                        <input type="text" id="theme-label" name="label" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="theme-description">Descripción</label>
+                        <textarea id="theme-description" name="description" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="theme-category">Categoría</label>
+                        <select id="theme-category" name="category">
+                            <option value="custom">Custom</option>
+                            <option value="built-in">Built-in</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="base-theme">Theme Base (opcional)</label>
+                        <select id="base-theme" name="baseThemeId">
+                            <option value="">Ninguno</option>
+                        </select>
+                    </div>
+                </form>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary modal-close">Cancelar</button>
+                    <button type="submit" form="create-theme-form" class="btn btn-primary">Crear Theme</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <p>Cargando...</p>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <div id="notifications" class="notifications"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/edit/closetag.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/comment/comment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/fold/foldcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/fold/foldgutter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/fold/brace-fold.min.js"></script>
+    <script src="/script.js"></script>
+</body>
+</html>

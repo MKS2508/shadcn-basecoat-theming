@@ -1,0 +1,33 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-10-11T00:00:00Z",
+  "themes": [
+    {
+      "id": "medmoderna",
+      "name": "medmoderna",
+      "label": "MedModerna",
+      "description": "Tema oficial de Medicina Moderna con colores verdes característicos",
+      "author": "MedModerna Team",
+      "version": "1.0.0",
+      "source": "local",
+      "category": "built-in",
+      "modes": {
+        "light": "/themes/css/medmoderna-light.css",
+        "dark": "/themes/css/medmoderna-dark.css"
+      },
+      "fonts": {
+        "sans": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans\", sans-serif",
+        "serif": "Georgia, Cambria, \"Times New Roman\", Times, serif",
+        "mono": "\"Fira Code\", Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace"
+      },
+      "preview": {
+        "primary": "oklch(0.6124 0.1584 142.74)",
+        "background": "oklch(1.0000 0 0)",
+        "accent": "oklch(0.7278 0.1745 130.54)"
+      },
+      "config": {
+        "radius": "0.5rem"
+      }
+    }
+  ]
+}
