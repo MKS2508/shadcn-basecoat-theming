@@ -40,7 +40,7 @@ export function ThemeList({
     refetch,
   } = useThemes();
 
-  const filteredThemes = themes.filter(theme => {
+  const filteredThemes = (themes || []).filter(theme => {
     const matchesSearch = theme.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          theme.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          theme.id.toLowerCase().includes(searchTerm.toLowerCase());

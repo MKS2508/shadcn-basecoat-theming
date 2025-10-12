@@ -17,7 +17,7 @@ const themeManager = new ThemeManager(join(process.cwd(), 'themes'));
 
 // Create Bun server
 const server = serve({
-  port: 3001,
+  port: 4002,
   hostname: 'localhost',
   async fetch(req) {
     const url = new URL(req.url);
@@ -53,7 +53,20 @@ const server = serve({
 
       // API Routes
       if (url.pathname.startsWith('/api/themes/')) {
-        if (url.pathname.match(/^\/api\/themes\/[^\/]+\/(light|dark)$/)) {
+        if (url.pathname.match(/^\/api\/themes\/[^\/]+\/css$/)) {
+          // Handle /api/themes/{id}/css?mode=light|dark
+          const parts = url.pathname.split('/');
+          const themeId = parts[3];
+          const mode = url.searchParams.get('mode') || 'light';
+
+          if (method === 'GET') {
+            req.params = { id: themeId, mode };
+            return handleThemeCSS(req, themeManager);
+          } else if (method === 'PUT') {
+            req.params = { id: themeId, mode };
+            return handleSaveThemeCSS(req, themeManager);
+          }
+        } else if (url.pathname.match(/^\/api\/themes\/[^\/]+\/(light|dark)$/)) {
           const parts = url.pathname.split('/');
           const themeId = parts[3];
           const mode = parts[4];
@@ -61,7 +74,7 @@ const server = serve({
           if (method === 'GET') {
             req.params = { id: themeId, mode };
             return handleThemeCSS(req, themeManager);
-          } else if (method === 'POST') {
+          } else if (method === 'PUT') {
             req.params = { id: themeId, mode };
             return handleSaveThemeCSS(req, themeManager);
           }
@@ -110,6 +123,12 @@ const server = serve({
         }
       }
 
+      if (url.pathname === '/api/themes/validate') {
+        if (method === 'POST') {
+          return handleValidateCSS(req, themeManager);
+        }
+      }
+
       // 404 for unknown routes
       return new Response('Not Found', {
         status: 404,
@@ -129,24 +148,23 @@ const server = serve({
   }
 });
 
-serverLogger.success('🚀 Theme Toolkit Server started on http://localhost:3001');
+serverLogger.success('🚀 Theme Toolkit Server started on http://localhost:4002');
 
 // API Handlers
 async function handleListThemes(req: Request, themeManager: ThemeManager) {
   try {
     const themes = await themeManager.getAllThemes();
     return new Response(JSON.stringify({
-      success: true,
-      data: themes,
-      count: themes.length
+      themes: themes,
+      total: themes.length
     }), {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
     serverLogger.error('Failed to list themes:', error);
     return new Response(JSON.stringify({
-      success: false,
-      error: 'Failed to fetch themes'
+      themes: [],
+      total: 0
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
@@ -304,8 +322,13 @@ async function handleThemeCSS(req: Request, themeManager: ThemeManager) {
       });
     }
 
-    return new Response(css, {
-      headers: { 'Content-Type': 'text/css' }
+    // Return CSS as JSON instead of raw CSS
+    return new Response(JSON.stringify({
+      css: css,
+      mode: mode,
+      themeId: id
+    }), {
+      headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
     serverLogger.error('Failed to get theme CSS:', error);
@@ -347,8 +370,9 @@ async function handleSaveThemeCSS(req: Request, themeManager: ThemeManager) {
     }
 
     return new Response(JSON.stringify({
-      success: true,
-      message: 'CSS saved successfully'
+      css: css,
+      mode: mode,
+      themeId: id
     }), {
       headers: { 'Content-Type': 'application/json' }
     });

@@ -7,9 +7,10 @@ export default defineConfig({
   base: '/',
   plugins: [react(), tailwindcss()],
   root: path.resolve(__dirname, 'src/web'),
+  publicDir: path.resolve(__dirname, 'public'),
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(__dirname, "./src/web"),
       "@/components": path.resolve(__dirname, './src/web/components'),
       "@/pages": path.resolve(__dirname, './src/web/pages'),
       "@/hooks": path.resolve(__dirname, './src/web/hooks'),
@@ -35,11 +36,11 @@ export default defineConfig({
     sourcemap: false,
   },
   server: {
-    port: 4000,
+    port: 5173,
     host: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'http://localhost:4002',
         changeOrigin: true,
       },
     },

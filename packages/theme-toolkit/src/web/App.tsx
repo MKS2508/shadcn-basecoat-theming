@@ -7,6 +7,7 @@ import { Settings, Palette, Plus, RefreshCw } from "lucide-react";
 import { ThemeProvider, ThemeSelector, ModeToggle } from "@mks2508/theme-manager-react";
 import { ThemeList } from "@/components/ThemeList";
 import { CSSEditor } from "@/components/CSSEditor";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 function App() {
   const [showThemeManagement, setShowThemeManagement] = useState(false);
@@ -32,8 +33,9 @@ function App() {
   };
 
   return (
-    <ThemeProvider>
-      <div className="min-h-screen bg-background text-foreground">
+    <ErrorBoundary>
+      <ThemeProvider>
+        <div className="min-h-screen bg-background text-foreground">
         <div className="flex h-screen">
           {/* Sidebar - Theme List */}
           <aside className="w-80 border-r border-border bg-muted/50">
@@ -153,8 +155,9 @@ function App() {
 
         {/* Theme Management Modal */}
         {/* Font Settings Modal */}
-      </div>
-    </ThemeProvider>
+        </div>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

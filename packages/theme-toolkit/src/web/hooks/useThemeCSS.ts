@@ -48,12 +48,12 @@ export function useThemeCSS(themeId: string) {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/themes/${themeId}/css`, {
+      const response = await fetch(`/api/themes/${themeId}/css?mode=${mode}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ mode, css: cssContent }),
+        body: JSON.stringify({ css: cssContent }),
       });
 
       if (!response.ok) {

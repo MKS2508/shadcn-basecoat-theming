@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
+import Table from 'cli-table3';
 import type { ThemeManager, ColorAnalyzer, ColorRenderer, TableFormatter } from '../../types/index.js';
 
 export const analyzeCommand = (services: any) => {
