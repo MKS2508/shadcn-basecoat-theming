@@ -1,6 +1,6 @@
 {
   "name": "@mks2508/theme-manager-vanilla",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "description": "Vanilla JS implementation of theme manager for Basecoat CSS",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -26,7 +26,7 @@
   "author": "MKS2508",
   "license": "MIT",
   "dependencies": {
-    "@mks2508/shadcn-basecoat-theme-manager": "^3.2.1",
+    "@mks2508/shadcn-basecoat-theme-manager": "^4.0.1",
     "@mks2508/simple-html-component-template-engine": "^3.2.1"
   },
   "devDependencies": {
