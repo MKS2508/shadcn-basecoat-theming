@@ -3,6 +3,20 @@ import { ThemeRegistry, ThemeConfig } from './theme-registry';
 import { FontManager } from './font-manager';
 import { StorageManager, ThemeModeConfig } from './storage-manager';
 import { PerformanceTracker } from '../utils/performance-tracker';
+import {
+  isClient,
+  isServer,
+  safeGetDocument,
+  safeGetWindow,
+  safeDOMManipulation,
+  safeSetTimeout,
+  safeClearTimeout,
+  safeRequestAnimationFrame,
+  safeCancelAnimationFrame,
+  ssrSafeStorage,
+  safeMatchMedia,
+  safeAddEventListener
+} from '../utils/ssr-utils';
 
 
 /**
@@ -27,8 +41,8 @@ export class ThemeManager {
   
   // Storage optimization
   private readonly SAVE_DEBOUNCE_MS = 200;
-  private themeStorage: {timer: NodeJS.Timeout | null, pending: {theme?: string, mode?: string}} = {
-    timer: null, 
+  private themeStorage: {timer: ReturnType<typeof setTimeout> | null, pending: {theme?: string, mode?: string}} = {
+    timer: null,
     pending: {}
   };
   
@@ -47,9 +61,17 @@ export class ThemeManager {
    * @returns Promise que se resuelve cuando la inicialización está completa
    */
   async init(): Promise<void> {
+    // Skip initialization on server-side
+    if (isServer()) {
+      console.log('🔄 [ThemeManager] Server-side environment detected, skipping initialization');
+      this.currentTheme = 'default';
+      this.currentMode = 'auto';
+      return;
+    }
+
     try {
       console.log('🔄 [ThemeManager] Starting initialization...');
-      
+
       // Initialize storage manager first
       console.log('🔄 [ThemeManager] Initializing StorageManager...');
       await this.storageManager.init();
@@ -59,16 +81,16 @@ export class ThemeManager {
       console.log('🔄 [ThemeManager] Initializing ThemeRegistry...');
       await this.themeRegistry.init();
       console.log('✅ [ThemeManager] ThemeRegistry initialized');
-      
+
       // Initialize font manager with timeout fallback
       console.log('🔄 [ThemeManager] Initializing FontManager...');
       try {
         // Add timeout to prevent FontManager from blocking the entire initialization
         const fontManagerPromise = this.fontManager.init();
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('FontManager.init() timeout after 5 seconds')), 5000);
+          safeSetTimeout(() => reject(new Error('FontManager.init() timeout after 5 seconds')), 5000);
         });
-        
+
         await Promise.race([fontManagerPromise, timeoutPromise]);
         console.log('✅ [ThemeManager] FontManager initialized');
       } catch (error) {
@@ -76,7 +98,7 @@ export class ThemeManager {
         console.warn('⚠️ [ThemeManager] FontManager initialization failed, continuing without font management:', errorMessage);
         // Continue without font manager - it's not critical for basic theme functionality
       }
-      
+
       // Get saved theme and mode from StorageManager
       console.log('🔄 [ThemeManager] Getting saved theme from StorageManager...');
       const savedConfig = await PerformanceTracker.measureStorageOperationAsync('indexedDB', 'read', async () => {
@@ -85,33 +107,33 @@ export class ThemeManager {
       const savedTheme = savedConfig?.currentTheme || 'default';
       const savedMode = savedConfig?.currentMode || 'auto';
       console.log('✅ [ThemeManager] Saved theme:', savedTheme, 'mode:', savedMode);
-      
+
       // Validate saved theme exists in registry
       console.log('🔄 [ThemeManager] Validating saved theme exists...');
       const themeExists = this.themeRegistry.getTheme(savedTheme);
       this.currentTheme = themeExists ? savedTheme : 'default';
       this.currentMode = savedMode;
       console.log('✅ [ThemeManager] Current theme set to:', this.currentTheme);
-      
+
       // Apply initial theme
       console.log('🔄 [ThemeManager] Applying initial theme...');
       await this.applyTheme(this.currentTheme, this.currentMode);
       console.log('✅ [ThemeManager] Initial theme applied');
-      
+
       // Preload built-in themes in background (non-blocking)
       console.log('🔄 [ThemeManager] Starting theme preloading...');
       this.preloadBuiltinThemes();
       console.log('✅ [ThemeManager] Theme preloading started');
-      
+
       console.log('✅ [ThemeManager] Initialization completed successfully');
-      
+
     } catch (error) {
       console.error('❌ ThemeManager: Failed to initialize:', error);
-      
+
       // Fallback to basic initialization
       this.currentTheme = 'default';
       this.currentMode = 'auto';
-      
+
       // Try to apply default theme without registry
     }
   }
@@ -165,35 +187,46 @@ export class ThemeManager {
    * Prefetch a specific theme (single-request optimization)
    */
   private prefetchTheme(themeName: string, mode: 'light' | 'dark'): void {
+    // Skip prefetching on server
+    if (!isClient()) return;
+
     const themeConfig = this.themeRegistry.getTheme(themeName);
     if (!themeConfig) return;
 
     const cssPath = themeConfig.modes[mode];
     const prefetchKey = `${themeName}-${mode}`;
-    
+
     // Skip if already prefetching or prefetched
     if (this.prefetchedThemes.has(prefetchKey) || this.prefetchPromises.has(prefetchKey)) {
       return;
     }
 
     const prefetchPromise = new Promise<void>((resolve) => {
-      // Single request: use prefetch for background loading
-      const link = document.createElement('link');
-      link.rel = 'prefetch';
-      link.href = cssPath;
-      link.crossOrigin = 'anonymous';
-      link.id = `theme-prefetch-${prefetchKey}`;
-      
-      link.onload = () => {
-        this.prefetchedThemes.add(prefetchKey);
-        resolve();
-      };
-      
-      link.onerror = () => {
-        resolve();
-      };
-      
-      document.head.appendChild(link);
+      safeDOMManipulation(() => {
+        const document = safeGetDocument();
+        if (!document?.head) {
+          resolve();
+          return;
+        }
+
+        // Single request: use prefetch for background loading
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = cssPath;
+        link.crossOrigin = 'anonymous';
+        link.id = `theme-prefetch-${prefetchKey}`;
+
+        link.onload = () => {
+          this.prefetchedThemes.add(prefetchKey);
+          resolve();
+        };
+
+        link.onerror = () => {
+          resolve();
+        };
+
+        document.head.appendChild(link);
+      });
     });
 
     this.prefetchPromises.set(prefetchKey, prefetchPromise);
@@ -208,7 +241,12 @@ export class ThemeManager {
    * @returns Promise que se resuelve cuando el tema se ha aplicado
    */
   private async applyTheme(themeName: string, mode: 'light' | 'dark' | 'auto', enableTransition: boolean = false): Promise<void> {
-    
+    // Skip theme application on server-side
+    if (!isClient()) {
+      console.log(`🎨 [ThemeManager] Skipping theme application on server: ${themeName} (${mode})`);
+      return;
+    }
+
     // Get theme config from registry
     const themeConfig = this.themeRegistry.getTheme(themeName);
     if (!themeConfig) {
@@ -222,24 +260,28 @@ export class ThemeManager {
     // Resolve mode
     let resolvedMode: 'light' | 'dark';
     if (mode === 'auto') {
-      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      resolvedMode = systemPrefersDark ? 'dark' : 'light';
+      const mediaQuery = safeMatchMedia('(prefers-color-scheme: dark)');
+      resolvedMode = mediaQuery && mediaQuery.matches ? 'dark' : 'light';
     } else {
       resolvedMode = mode;
     }
 
     try {
-      // Add loading class for smooth transition
-      document.documentElement.classList.add('theme-switching');
-      
+      safeDOMManipulation(() => {
+        const document = safeGetDocument();
+        if (!document?.documentElement) return;
+
+        // Add loading class for smooth transition
+        document.documentElement.classList.add('theme-switching');
+      });
+
       // Get final theme config
       const finalThemeConfig = this.themeRegistry.getTheme(themeName)!;
       const cssPath = finalThemeConfig.modes[resolvedMode];
-      
-      
+
       // Fetch CSS content and extract variables
       let cssVariables: Record<string, string> = {};
-      
+
       if (cssPath.startsWith('blob:')) {
         // Handle blob URLs (installed themes) - always cache miss
         PerformanceTracker.trackCacheMiss('CSS Theme Data');
@@ -251,7 +293,7 @@ export class ThemeManager {
       } else {
         // Handle static file themes - check for cache hit/miss
         const isCached = this.prefetchedThemes.has(`${themeName}-${resolvedMode}`);
-        
+
         if (isCached) {
           PerformanceTracker.trackCacheHit('CSS Theme Data');
           cssVariables = await PerformanceTracker.measureAsync('CSS Fetch (Cached)', async () => {
@@ -275,39 +317,44 @@ export class ThemeManager {
           });
         }
       }
-      
+
       // Apply CSS variables directly to document root
       PerformanceTracker.measure('CSS Variables Apply', () => {
         this.applyCSSVariables(cssVariables, enableTransition);
       });
-      
+
       // Remove any previous theme CSS link
       if (this.currentStyleElement) {
         this.currentStyleElement.remove();
         this.currentStyleElement = null;
       }
-      
+
       // Set data attributes for debugging
-      document.documentElement.setAttribute('data-theme', themeName);
-      document.documentElement.setAttribute('data-mode', resolvedMode);
-      
+      safeDOMManipulation(() => {
+        const document = safeGetDocument();
+        if (!document?.documentElement) return;
+
+        document.documentElement.setAttribute('data-theme', themeName);
+        document.documentElement.setAttribute('data-mode', resolvedMode);
+      });
+
       // Load fonts for this theme if available
       try {
         const themeConfig = this.themeRegistry.getTheme(themeName);
         if (themeConfig && themeConfig.fonts) {
-          
+
           // Load external fonts if defined
           if (themeConfig.externalFonts && themeConfig.externalFonts.length > 0) {
             const fontFamilyNames = themeConfig.externalFonts.map(font => font.family);
             const fontLoadType = this.areFontsAlreadyLoaded(fontFamilyNames) ? 'Font Loading (Cached)' : 'Font Loading (Cold)';
             const isCached = fontLoadType.includes('Cached');
-            
+
             if (isCached) {
               PerformanceTracker.trackCacheHit('Font Data');
             } else {
               PerformanceTracker.trackCacheMiss('Font Data');
             }
-            
+
             await PerformanceTracker.measureAsync(fontLoadType, async () => {
               // Convert to CSS vars format for font loader
               const fontVars = {
@@ -320,21 +367,30 @@ export class ThemeManager {
           }
         }
       } catch (fontError) {
+        console.warn('Font loading failed:', fontError);
       }
-      
+
       // Trigger transition animation
-      setTimeout(() => {
-        document.documentElement.classList.remove('theme-switching');
-        document.documentElement.classList.add('theme-switch');
-        
-        setTimeout(() => {
-          document.documentElement.classList.remove('theme-switch');
-        }, 200);
+      safeSetTimeout(() => {
+        safeDOMManipulation(() => {
+          const document = safeGetDocument();
+          if (!document?.documentElement) return;
+
+          document.documentElement.classList.remove('theme-switching');
+          document.documentElement.classList.add('theme-switch');
+
+          safeSetTimeout(() => {
+            document.documentElement.classList.remove('theme-switch');
+          }, 200);
+        });
       }, 50);
-      
+
     } catch (error) {
       console.error(`Failed to load theme "${themeName}" (${resolvedMode}):`, error);
-      document.documentElement.classList.remove('theme-switching');
+      safeDOMManipulation(() => {
+        const document = safeGetDocument();
+        document?.documentElement.classList.remove('theme-switching');
+      });
       throw error;
     }
   }
@@ -371,27 +427,32 @@ export class ThemeManager {
    * Apply CSS variables directly to document root
    */
   private applyCSSVariables(variables: Record<string, string>, enableTransition: boolean = false, useImportant: boolean = false): void {
-    const root = document.documentElement;
-    
-    // Apply transition class only when theme actually changes
-    if (enableTransition && document.body) {
-      document.body.classList.add('theme-transition');
-      // Remove transition class after animation completes
-      setTimeout(() => {
-        document.body?.classList.remove('theme-transition');
-      }, 200);
-    }
-    
-    // Apply each variable
-    Object.entries(variables).forEach(([property, value]) => {
-      if (useImportant) {
-        root.style.setProperty(property, value, 'important');
-        console.log(`🎨 Applied with !important: ${property} = ${value}`);
-      } else {
-        root.style.setProperty(property, value);
+    safeDOMManipulation(() => {
+      const document = safeGetDocument();
+      const root = document?.documentElement;
+      const body = document?.body;
+
+      if (!root) return;
+
+      // Apply transition class only when theme actually changes
+      if (enableTransition && body) {
+        body.classList.add('theme-transition');
+        // Remove transition class after animation completes
+        safeSetTimeout(() => {
+          body?.classList.remove('theme-transition');
+        }, 200);
       }
+
+      // Apply each variable
+      Object.entries(variables).forEach(([property, value]) => {
+        if (useImportant) {
+          root.style.setProperty(property, value, 'important');
+          console.log(`🎨 Applied with !important: ${property} = ${value}`);
+        } else {
+          root.style.setProperty(property, value);
+        }
+      });
     });
-    
   }
 
   /**
@@ -454,8 +515,8 @@ export class ThemeManager {
    */
   getEffectiveMode(): 'light' | 'dark' {
     if (this.currentMode === 'auto') {
-      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      return systemPrefersDark ? 'dark' : 'light';
+      const mediaQuery = safeMatchMedia('(prefers-color-scheme: dark)');
+      return mediaQuery && mediaQuery.matches ? 'dark' : 'light';
     }
     return this.currentMode;
   }
@@ -542,8 +603,11 @@ export class ThemeManager {
    * Check if fonts are already loaded in browser cache
    */
   private areFontsAlreadyLoaded(fontFamilies: string[]): boolean {
-    if (typeof document === 'undefined' || !document.fonts) return false;
-    
+    if (!isClient()) return false;
+
+    const document = safeGetDocument();
+    if (!document?.fonts) return false;
+
     return fontFamilies.every(fontFamily => {
       // Check if font is already loaded in document.fonts
       for (const font of document.fonts) {
@@ -562,14 +626,14 @@ export class ThemeManager {
     // Store pending values
     this.themeStorage.pending.theme = theme;
     this.themeStorage.pending.mode = mode;
-    
+
     // Clear existing timer
     if (this.themeStorage.timer) {
-      clearTimeout(this.themeStorage.timer);
+      safeClearTimeout(this.themeStorage.timer);
     }
-    
+
     // Debounced save
-    this.themeStorage.timer = setTimeout(() => {
+    this.themeStorage.timer = safeSetTimeout(() => {
       this.performThemeStorageSave();
     }, this.SAVE_DEBOUNCE_MS);
   }
@@ -579,16 +643,19 @@ export class ThemeManager {
    */
   private performThemeStorageSave(): void {
     if (!this.themeStorage.pending.theme && !this.themeStorage.pending.mode) return;
-    
+
     // Use requestIdleCallback for non-blocking save
-    if (window.requestIdleCallback) {
-      window.requestIdleCallback(() => {
-        this.saveThemeToStorage();
-      });
-    } else {
-      setTimeout(() => {
-        this.saveThemeToStorage();
-      }, 0);
+    if (isClient()) {
+      const window = safeGetWindow();
+      if (window?.requestIdleCallback) {
+        window.requestIdleCallback(() => {
+          this.saveThemeToStorage();
+        });
+      } else {
+        safeSetTimeout(() => {
+          this.saveThemeToStorage();
+        }, 0);
+      }
     }
   }
 
@@ -609,6 +676,14 @@ export class ThemeManager {
         await PerformanceTracker.measureStorageOperationAsync('indexedDB', 'write', async () => {
           await this.storageManager.storeThemeModeConfig(config);
         });
+        
+        // Also update FOUC-critical localStorage keys so SSR FOUC script can pick them synchronously
+        try {
+          this.storageManager.setCurrentTheme(config.currentTheme);
+          this.storageManager.setCurrentMode(config.currentMode);
+        } catch (e) {
+          // Non-fatal if localStorage is unavailable
+        }
       }
       
       // Clear pending saves

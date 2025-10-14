@@ -8,6 +8,18 @@ import { StorageManager } from './storage-manager';
 import { ThemeInstaller } from '../installers/theme-installer';
 import { ThemeListFetcher } from '../installers/theme-list-fetcher';
 import { getFontsByCategory } from '../catalogs/font-catalog';
+import {
+  isClient,
+  isServer,
+  safeGetDocument,
+  safeGetWindow,
+  safeDOMManipulation,
+  safeSetTimeout,
+  safeClearTimeout,
+  ssrSafeStorage,
+  safeMatchMedia,
+  safeGetComputedStyle
+} from '../utils/ssr-utils';
 
 export interface ThemeCoreConfig {
   registryPath?: string;
@@ -52,6 +64,13 @@ export class ThemeCore {
    * Initialize ThemeCore with configuration
    */
   static async init(config: ThemeCoreConfig = {}): Promise<ThemeCoreInstance> {
+    // Skip initialization on server-side - return mock instance
+    if (isServer()) {
+      console.log('🎨 ThemeCore: Server-side environment detected, returning mock instance');
+      this.coreInstance = this.createServerInstance();
+      return this.coreInstance;
+    }
+
     // Return existing promise if already initializing
     if (this.initPromise) {
       return this.initPromise;
@@ -67,6 +86,53 @@ export class ThemeCore {
 
     this.initPromise = this.performInit();
     return this.initPromise;
+  }
+
+  /**
+   * Create a server-safe mock instance
+   */
+  private static createServerInstance(): ThemeCoreInstance {
+    // Create mock theme manager for server
+    const mockThemeManager = {
+      getCurrentTheme: () => 'default',
+      getCurrentMode: () => 'auto',
+      getEffectiveMode: () => 'light',
+      setTheme: async () => {},
+      getAvailableThemes: () => [],
+      getThemeRegistry: () => ({}),
+      getFontManager: () => mockFontManager,
+      onThemeChange: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {}
+    } as any;
+
+    // Create mock font manager for server
+    const mockFontManager = {
+      getOverrideConfiguration: () => ({ fonts: { sans: '', serif: '', mono: '' } }),
+      setFontOverride: async () => {},
+      loadFontOverrides: async () => {}
+    } as any;
+
+    // Create mock installer for server
+    const mockInstaller = {
+      installFromUrl: async () => {},
+      init: async () => {}
+    } as any;
+
+    // Create mock fetcher for server
+    const mockFetcher = {
+      init: async () => {},
+      fetchAll: async () => []
+    } as any;
+
+    return {
+      themeManager: mockThemeManager,
+      fontManager: mockFontManager,
+      themeInstaller: mockInstaller,
+      themeListFetcher: mockFetcher,
+      getThemeRegistry: () => ({}),
+      getFontsByCategory
+    };
   }
 
   private static async performInit(): Promise<ThemeCoreInstance> {
@@ -146,13 +212,16 @@ export class ThemeCore {
    * Handle FOUC prevention based on configuration
    */
   private static handleFOUCPrevention(): void {
-    // Skip if not in browser or FOUC prevention is disabled
-    if (typeof window === 'undefined' || this.config.fouc?.prevent === false) {
+    // Skip if not in client environment or FOUC prevention is disabled
+    if (!isClient() || this.config.fouc?.prevent === false) {
       return;
     }
 
+    const document = safeGetDocument();
+    if (!document) return;
+
     const method = this.config.fouc?.method || 'auto';
-    
+
     // Auto-detect method based on timing
     if (method === 'auto') {
       // If document is still loading, we can apply sync FOUC prevention
@@ -172,65 +241,72 @@ export class ThemeCore {
    * Apply synchronous FOUC prevention (ideal for early initialization)
    */
   private static applySyncFOUCPrevention(): void {
-    try {
-      const storage = StorageManager.getInstance();
-      const savedTheme = storage.getCurrentTheme() || this.config.defaults?.theme || 'default';
-      const savedMode = storage.getCurrentMode() || this.config.defaults?.mode || 'auto';
-      
-      let resolvedMode = savedMode;
-      if (savedMode === 'auto') {
-        resolvedMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    safeDOMManipulation(() => {
+      const document = safeGetDocument();
+      if (!document) return;
+
+      try {
+        const savedTheme = ssrSafeStorage.getItem('theme-current') || this.config.defaults?.theme || 'default';
+        const savedMode = ssrSafeStorage.getItem('theme-mode') || this.config.defaults?.mode || 'auto';
+
+        let resolvedMode = savedMode;
+        if (savedMode === 'auto') {
+          const mediaQuery = safeMatchMedia('(prefers-color-scheme: dark)');
+          resolvedMode = mediaQuery && mediaQuery.matches ? 'dark' : 'light';
+        }
+
+        // Apply theme and mode attributes immediately
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.documentElement.setAttribute('data-mode', resolvedMode);
+        document.documentElement.classList.toggle('dark', resolvedMode === 'dark');
+
+        if (this.config.debug) {
+          console.log('🎨 FOUC prevention applied:', { theme: savedTheme, mode: resolvedMode });
+        }
+      } catch (error) {
+        console.warn('⚠️ FOUC prevention failed:', error);
       }
-      
-      // Apply theme and mode attributes immediately
-      document.documentElement.setAttribute('data-theme', savedTheme);
-      document.documentElement.setAttribute('data-mode', resolvedMode);
-      document.documentElement.classList.toggle('dark', resolvedMode === 'dark');
-      
-      if (this.config.debug) {
-        console.log('🎨 FOUC prevention applied:', { theme: savedTheme, mode: resolvedMode });
-      }
-    } catch (error) {
-      console.warn('⚠️ FOUC prevention failed:', error);
-    }
+    });
   }
 
   /**
    * Apply programmatic FOUC prevention (for late initialization)
    */
   private static applyProgrammaticFOUCPrevention(): void {
-    // Reveal body with transition if it's hidden
-    const body = document.body;
-    if (!body) return;
+    safeDOMManipulation(() => {
+      const document = safeGetDocument();
+      const body = document?.body;
+      if (!body) return;
 
-    const delay = this.config.fouc?.revealDelay || 0;
-    
-    // Check both inline styles and computed styles
-    const computedStyle = window.getComputedStyle(body);
-    const isHidden = 
-      body.style.visibility === 'hidden' || 
-      body.style.opacity === '0' ||
-      computedStyle.visibility === 'hidden' ||
-      computedStyle.opacity === '0';
-    
-    if (isHidden) {
-      setTimeout(() => {
+      const delay = this.config.fouc?.revealDelay || 0;
+
+      // Check both inline styles and computed styles
+      const computedStyle = safeGetComputedStyle(body);
+      const isHidden =
+        body.style.visibility === 'hidden' ||
+        body.style.opacity === '0' ||
+        computedStyle?.visibility === 'hidden' ||
+        computedStyle?.opacity === '0';
+
+      if (isHidden) {
+        safeSetTimeout(() => {
+          body.style.visibility = 'visible';
+          body.style.opacity = '1';
+          body.style.transition = 'opacity 0.15s ease-out';
+
+          if (this.config.debug) {
+            console.log('🎨 Body revealed after ThemeCore init (programmatic)');
+          }
+        }, delay);
+      } else {
+        // Even if not explicitly hidden, ensure it's visible
+        if (this.config.debug) {
+          console.log('🎨 Body already visible, ensuring styles are applied');
+        }
         body.style.visibility = 'visible';
         body.style.opacity = '1';
-        body.style.transition = 'opacity 0.15s ease-out';
-        
-        if (this.config.debug) {
-          console.log('🎨 Body revealed after ThemeCore init (programmatic)');
-        }
-      }, delay);
-    } else {
-      // Even if not explicitly hidden, ensure it's visible
-      if (this.config.debug) {
-        console.log('🎨 Body already visible, ensuring styles are applied');
       }
-      body.style.visibility = 'visible';
-      body.style.opacity = '1';
-    }
+    });
   }
 
   /**
@@ -310,16 +386,36 @@ export class ThemeCore {
   // Apply saved theme immediately to prevent flash
   function applyThemeVariables() {
     try {
-      const savedTheme = localStorage.getItem('theme-current') || 'default';
-      const savedMode = localStorage.getItem('theme-mode') || 'auto';
+      var savedTheme = localStorage.getItem('theme-current');
+      var savedMode = localStorage.getItem('theme-mode');
+
+      // Fallback: read consolidated config if individual keys are missing
+      if (!savedTheme || !savedMode) {
+        try {
+          var cfg = localStorage.getItem('theme-mode-config');
+          if (cfg) {
+            var parsed = JSON.parse(cfg);
+            if (!savedTheme && parsed.currentTheme) savedTheme = parsed.currentTheme;
+            if (!savedMode && parsed.currentMode) savedMode = parsed.currentMode;
+          }
+        } catch (e) {}
+      }
+
+      if (!savedTheme) savedTheme = 'default';
+      if (!savedMode) savedMode = 'auto';
       
-      // Apply mode class
-      const effectiveMode = savedMode === 'auto' 
+      // Apply mode class (Tailwind expects .dark)
+      var effectiveMode = savedMode === 'auto' 
         ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
         : savedMode;
       
-      document.documentElement.classList.add(effectiveMode);
+      if (effectiveMode === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
       document.documentElement.setAttribute('data-theme', savedTheme);
+      document.documentElement.setAttribute('data-mode', effectiveMode);
       
     } catch (error) {
       console.warn('FOUC prevention failed:', error);
@@ -374,15 +470,22 @@ export class ThemeCore {
    */
   private static setupBrowserIntegration(): void {
     // Auto-setup for any browser environment
-    if (typeof window !== 'undefined') {
-      (window as any).themeCore = this.coreInstance;
-      
-      // Dispatch ready event after next tick
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('theme-core-ready', {
-          detail: { themeCore: this.coreInstance }
-        }));
-      }, 0);
+    if (isClient()) {
+      const window = safeGetWindow();
+      if (window) {
+        (window as any).themeCore = this.coreInstance;
+
+        // Dispatch ready event after next tick
+        safeSetTimeout(() => {
+          try {
+            window.dispatchEvent(new CustomEvent('theme-core-ready', {
+              detail: { themeCore: this.coreInstance }
+            }));
+          } catch (error) {
+            console.warn('Failed to dispatch theme-core-ready event:', error);
+          }
+        }, 0);
+      }
     }
   }
 
@@ -448,11 +551,14 @@ export class ThemeCore {
     }
 
     // Listen for ready event (for browser environments)
-    if (typeof window !== 'undefined') {
-      window.addEventListener('theme-core-ready', (event: Event) => {
-        const customEvent = event as CustomEvent;
-        callback(customEvent.detail.themeCore);
-      });
+    if (isClient()) {
+      const window = safeGetWindow();
+      if (window) {
+        window.addEventListener('theme-core-ready', (event: Event) => {
+          const customEvent = event as CustomEvent;
+          callback(customEvent.detail.themeCore);
+        });
+      }
     }
 
     // Also handle promise-based initialization

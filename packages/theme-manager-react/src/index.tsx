@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { 
+import {
   ThemeCore,
   ThemeManager,
   FontManager,
@@ -17,14 +17,17 @@ interface ThemeContextValue {
   themeManager: ThemeManager | null;
   fontManager: FontManager | null;
   installer: ThemeInstaller | null;
-  
+
   // Estado reactivo
   currentTheme: string;
   currentMode: 'light' | 'dark' | 'auto';
   themes: ThemeConfig[];
   fontOverrides: FontOverride;
   initialized: boolean;
-  
+  isServer: boolean;
+  loading: boolean;
+  error: string | null;
+
   // Métodos de conveniencia
   setTheme: (theme: string, mode?: 'light' | 'dark' | 'auto') => Promise<void>;
   installTheme: (url: string) => Promise<void>;
@@ -45,53 +48,86 @@ interface ThemeProviderProps {
   enableTransitions?: boolean;
 }
 
-export function ThemeProvider({ 
-  children, 
+export function ThemeProvider({
+  children,
   defaultTheme = 'default',
   defaultMode = 'auto',
   registryUrl = '/themes/registry.json',
   storageKey = 'theme-preference',
   enableTransitions = true
 }: ThemeProviderProps) {
+  // Detect server-side environment
+  const [isServer, setIsServer] = useState(true);
+
   // Usar ThemeCore global en lugar de instancias locales
   const [themeManager, setThemeManager] = useState<ThemeManager | null>(null);
   const [fontManager, setFontManager] = useState<FontManager | null>(null);
   const [installer, setInstaller] = useState<ThemeInstaller | null>(null);
-  
+
   const [currentTheme, setCurrentTheme] = useState(defaultTheme);
   const [currentMode, setCurrentMode] = useState<'light' | 'dark' | 'auto'>(defaultMode);
   const [themes, setThemes] = useState<ThemeConfig[]>([]);
   const [fontOverrides, setFontOverrides] = useState<FontOverride>({ enabled: false, fonts: {} });
   const [initialized, setInitialized] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Detect client-side environment
+    setIsServer(typeof window === 'undefined');
+
     const initThemeManager = async () => {
+      // Skip initialization on server-side - use mock data
+      if (typeof window === 'undefined') {
+        console.log('🎨 ThemeProvider: Server-side rendering detected, using mock data');
+        setInitialized(true);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
       try {
         // Auto-initialize with provided configuration
         await ThemeCore.init({
           registryPath: registryUrl,
           debug: false
         });
-        
+
         const managers = ThemeCore.getInstance();
         if (!managers) {
           throw new Error('ThemeCore initialization returned null');
         }
-        
+
         setThemeManager(managers.themeManager);
         setFontManager(managers.fontManager);
         setInstaller(managers.themeInstaller);
-        
+
         // Sync reactive state
         setCurrentTheme(managers.themeManager.getCurrentTheme());
         setCurrentMode(managers.themeManager.getCurrentMode());
         setThemes(managers.themeManager.getAvailableThemes());
         setFontOverrides({ enabled: false, fonts: {} });
-        
+
         setInitialized(true);
+
+        // Subscribe to theme and registry events
+        const tm = managers.themeManager;
+        const handleThemeChange = () => {
+          setCurrentTheme(tm.getCurrentTheme());
+          setCurrentMode(tm.getCurrentMode());
+        };
+        tm.onThemeChange?.(handleThemeChange as any);
+
+        const updateThemes = () => setThemes(tm.getAvailableThemes());
+        // theme install/uninstall events are dispatched from ThemeManager
+        ThemeCore.onThemeInstalled && ThemeCore.onThemeInstalled(updateThemes as any);
+        ThemeCore.onThemeUninstalled && ThemeCore.onThemeUninstalled(updateThemes as any);
+
       } catch (error) {
         console.warn('⚠️ ThemeProvider: Auto-initialization failed, using fallback:', error);
-        
+        setError(error instanceof Error ? error.message : 'Initialization failed');
+
         // Fallback: minimal working state
         setCurrentTheme(defaultTheme);
         setCurrentMode(defaultMode);
@@ -124,11 +160,13 @@ export function ThemeProvider({
           }
         ]);
         setInitialized(true);
+      } finally {
+        setLoading(false);
       }
     };
-    
+
     initThemeManager();
-  }, [defaultTheme, defaultMode]);
+  }, [defaultTheme, defaultMode, registryUrl]);
 
   const setTheme = useCallback(async (theme: string, mode?: 'light' | 'dark' | 'auto') => {
     if (!themeManager) return;
@@ -154,14 +192,17 @@ export function ThemeProvider({
     themeManager,
     fontManager,
     installer,
-    
+
     // Estado reactivo
     currentTheme,
     currentMode,
     themes,
     fontOverrides,
     initialized,
-    
+    isServer,
+    loading,
+    error,
+
     // Métodos de conveniencia
     setTheme,
     installTheme,
