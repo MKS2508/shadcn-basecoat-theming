@@ -22,6 +22,11 @@ export { ThemeListFetcher } from './installers/theme-list-fetcher';
 // Catalogs
 export * from './catalogs/font-catalog';
 
+// Storage Adapters
+export { CookieStorageAdapter } from './adapters/cookie-storage-adapter';
+export { LocalStorageAdapter } from './adapters/local-storage-adapter';
+export type { StorageAdapter, CookieOptions } from './types/storage-adapter';
+
 // Types
 export type { ThemeCoreConfig, ThemeCoreInstance } from './core/theme-core';
 export type { ThemeConfig } from './core/theme-registry';

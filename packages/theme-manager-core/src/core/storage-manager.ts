@@ -2,6 +2,10 @@
  * Storage abstraction for theme caching with IndexedDB + localStorage fallback
  */
 
+import { isClient } from '../utils/ssr-utils';
+import type { StorageAdapter } from '../types/storage-adapter';
+import { LocalStorageAdapter } from '../adapters/local-storage-adapter';
+
 export interface CachedTheme {
   name: string;
   url: string;
@@ -50,24 +54,43 @@ export class StorageManager {
   private themeModeStoreName = 'theme-mode-config';
   private db: IDBDatabase | null = null;
   private indexedDBAvailable = false;
-  
+  private storageAdapter: StorageAdapter;
+
   // localStorage keys for FOUC-critical data only
   private static readonly FOUC_KEYS = {
     THEME: 'theme-current',
-    MODE: 'theme-mode', 
+    MODE: 'theme-mode',
     FONTS: 'fonts-active'
   } as const;
   private initPromise: Promise<void> | null = null;
 
   /**
-   * Get singleton instance of StorageManager
+   * Get singleton instance of StorageManager with default LocalStorage adapter
    */
   static getInstance(): StorageManager {
     if (!StorageManager.instance) {
-      console.log('🔧 StorageManager: Creating new singleton instance');
-      StorageManager.instance = new StorageManager();
+      console.log('🔧 StorageManager: Creating new singleton instance with LocalStorage adapter');
+      StorageManager.instance = new StorageManager(new LocalStorageAdapter());
     }
     return StorageManager.instance;
+  }
+
+  /**
+   * Get singleton instance with custom storage adapter
+   */
+  static getInstanceWithAdapter(adapter: StorageAdapter): StorageManager {
+    if (!StorageManager.instance) {
+      console.log('🔧 StorageManager: Creating new singleton instance with custom adapter');
+      StorageManager.instance = new StorageManager(adapter);
+    }
+    return StorageManager.instance;
+  }
+
+  /**
+   * Private constructor
+   */
+  private constructor(storageAdapter: StorageAdapter) {
+    this.storageAdapter = storageAdapter;
   }
 
   /**
@@ -115,8 +138,9 @@ export class StorageManager {
    */
   private initIndexedDB(): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (!window.indexedDB) {
-        reject(new Error('IndexedDB not supported'));
+      // CRITICAL: Add SSR guard to prevent server-side crashes
+      if (!isClient() || !window.indexedDB) {
+        reject(new Error('IndexedDB not available (server-side or not supported)'));
         return;
       }
 

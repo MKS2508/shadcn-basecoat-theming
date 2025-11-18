@@ -1,0 +1,56 @@
+{
+  "name": "@mks2508/theme-manager-tanstack-start",
+  "version": "2.0.4",
+  "description": "TanStack Start SSR integration for @mks2508/shadcn-basecoat-theme-manager with dynamic theme loading",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "tanstack-start",
+    "ssr",
+    "theme-manager",
+    "shadcn",
+    "themes"
+  ],
+  "author": "MKS2508",
+  "license": "MIT",
+  "dependencies": {
+    "@mks2508/shadcn-basecoat-theme-manager": "^4.0.2",
+    "@tanstack/react-start": "^1.132.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mks2508/shadcn-basecoat-theme-manager.git",
+    "directory": "packages/theme-manager-tanstack-start"
+  },
+  "bugs": {
+    "url": "https://github.com/mks2508/shadcn-basecoat-theme-manager/issues"
+  },
+  "homepage": "https://github.com/mks2508/shadcn-basecoat-theme-manager#readme"
+}
