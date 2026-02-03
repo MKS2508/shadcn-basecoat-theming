@@ -1,6 +1,11 @@
+"use client"
+
 /**
  * TanStack Start Theme Provider
  * SSR-optimized theme management for TanStack Start applications
+ *
+ * This component uses the "use client" directive to ensure it only runs on the client.
+ * It prevents hydration mismatches by rendering a simple shell during SSR.
  */
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
@@ -8,10 +13,9 @@ import {
   ThemeCore,
   ThemeManager,
   StorageManager,
-  type ThemeConfig
+  type ThemeConfig,
+  CookieStorageAdapter
 } from '@mks2508/shadcn-basecoat-theme-manager';
-import { setThemeInCookie } from './server-fns';
-import { CookieStorageAdapter } from '@mks2508/shadcn-basecoat-theme-manager';
 
 interface ThemeContextValue {
   // Core managers
@@ -46,7 +50,7 @@ export function TanStackStartProvider({
   defaultMode = 'auto',
   registryUrl = '/themes/registry.json'
 }: TanStackStartProviderProps) {
-  const [isClient, setIsClient] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   // Core managers
   const [themeManager, setThemeManager] = useState<ThemeManager | null>(null);
@@ -59,18 +63,14 @@ export function TanStackStartProvider({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Detect client-side
+  // Prevent hydration mismatch by only rendering after mount
   useEffect(() => {
-    setIsClient(typeof window !== 'undefined');
+    setMounted(true);
   }, []);
 
-  // Initialize theme manager
+  // Initialize theme manager (only after component is mounted on client)
   useEffect(() => {
-    if (!isClient) {
-      console.log('🎨 TanStackStartProvider: Server-side rendering detected, using mock data');
-      setInitialized(true);
-      return;
-    }
+    if (!mounted) return;
 
     const initializeThemeManager = async () => {
       setLoading(true);
@@ -78,7 +78,7 @@ export function TanStackStartProvider({
 
       try {
         // Create storage manager with cookie adapter for SSR compatibility
-        const cookieStorage = new CookieStorageAdapter();
+        const cookieStorageAdapter = new CookieStorageAdapter();
 
         // Initialize ThemeCore normally (storage adapter handled at StorageManager level)
         await ThemeCore.init({
@@ -87,7 +87,7 @@ export function TanStackStartProvider({
         });
 
         // Replace storage manager with cookie-based one
-        StorageManager.getInstanceWithAdapter(cookieStorage);
+        StorageManager.getInstanceWithAdapter(cookieStorageAdapter);
 
         // Get theme manager instance
         const themeManagerInstance = ThemeCore.getManager()!;
@@ -106,9 +106,9 @@ export function TanStackStartProvider({
           setCurrentTheme(newTheme);
           setCurrentMode(newMode);
 
-          // Sync cookies for SSR
+          // Sync cookies for SSR using client-safe method
           try {
-            setThemeInCookie({ theme: newTheme, mode: newMode } as any);
+            cookieStorageAdapter.setThemePreference(newTheme, newMode);
           } catch (e) {
             console.warn('Failed to sync theme to cookies:', e);
           }
@@ -163,7 +163,7 @@ export function TanStackStartProvider({
     };
 
     initializeThemeManager();
-  }, [isClient, registryUrl, defaultTheme, defaultMode]);
+  }, [mounted, registryUrl, defaultTheme, defaultMode]);
 
   // Theme switching methods
   const setTheme = async (theme: string, mode?: 'light' | 'dark' | 'auto') => {
@@ -209,26 +209,16 @@ export function TanStackStartProvider({
     toggleMode
   };
 
-  // Server-side render fallback
-  if (!isClient) {
+  // During SSR and initial render, provide a basic shell to prevent hydration mismatch
+  if (!mounted) {
     return (
-      <ThemeContext.Provider value={contextValue}>
+      <div suppressHydrationWarning>
         {children}
-      </ThemeContext.Provider>
+      </div>
     );
   }
 
-  // Client-side render with loading state
-  if (loading) {
-    return (
-      <ThemeContext.Provider value={contextValue}>
-        <div suppressHydrationWarning>
-          {children}
-        </div>
-      </ThemeContext.Provider>
-    );
-  }
-
+  // After hydration, render the full theme provider
   return (
     <ThemeContext.Provider value={contextValue}>
       {children}

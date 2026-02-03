@@ -1,6 +1,6 @@
 {
   "name": "@mks2508/theme-manager-tanstack-start",
-  "version": "2.0.4",
+  "version": "2.0.7",
   "description": "TanStack Start SSR integration for @mks2508/shadcn-basecoat-theme-manager with dynamic theme loading",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
