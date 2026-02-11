@@ -451,7 +451,6 @@ export function FontSettingsModal({ open, onOpenChange }: ModalProps) {
 
 // Export all components and utilities
 export { ThemeSelectorComponent as ThemeSelector }
-export { default as ModeToggle } from './components/ModeToggle'
 export { default as AnimatedThemeToggler } from './components/AnimatedThemeToggler'
 export { default as AnimatedThemeSelector } from './components/AnimatedThemeSelector'
 export type { ModalProps, ThemeContextValue, ThemeProviderProps }

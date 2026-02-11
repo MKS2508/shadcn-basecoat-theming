@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback, memo } from 'react';
 import { useTheme } from '../index';
 import { ThemeCore } from '@mks2508/shadcn-basecoat-theme-manager';
 import { Button } from './ui/button';
-import * as Popover from '@radix-ui/react-popover';
-import { ChevronDown, Check, Search, Settings, type LucideIcon } from 'lucide-react';
+import { Popover } from '@mks2508/mks-ui/components/ui/popover';
+import { ChevronDown, Check, Search, Settings } from '@mks2508/mks-ui/icons';
 import { cn } from '../lib/utils';
 
 interface ThemeSelectorProps {

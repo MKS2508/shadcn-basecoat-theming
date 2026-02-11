@@ -1,6 +1,6 @@
 /**
  * Next.js specific exports for @mks2508/theme-manager-react
- * 
+ *
  * This module provides Next.js optimized components and utilities
  * that handle SSR, hydration, and App Router compatibility.
  */
@@ -10,7 +10,7 @@ export {
   ThemeProvider,
   useTheme,
   ThemeInstallerComponent,
-  ModeToggle,
+  AnimatedThemeToggler,
   ThemeManagementModal,
   FontSettingsModal,
   ThemeSelector

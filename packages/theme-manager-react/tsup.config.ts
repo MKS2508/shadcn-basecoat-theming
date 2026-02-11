@@ -13,9 +13,10 @@ export default defineConfig({
   target: 'es2020',
   minify: false,
   external: [
-    'react', 
-    'react-dom', 
+    'react',
+    'react-dom',
     '@mks2508/shadcn-basecoat-theme-manager',
+    '@mks2508/mks-ui',
     'lucide-react',
     // Next.js externals
     'next',

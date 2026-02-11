@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../index';
-import { Button } from './ui/button';
-import { Switch } from './ui/switch';
-import { Label } from './ui/label';
-import * as Dialog from '@radix-ui/react-dialog';
-import { X, Settings, Trash2 } from 'lucide-react';
-import { 
-  type FontOption, 
-  type FontCategory 
+import { Button, Switch, Label } from '@mks2508/mks-ui';
+import { AlertDialog as Dialog, AlertDialogTrigger as DialogTrigger, AlertDialogPortal as DialogPortal, AlertDialogPopup as DialogPopup, AlertDialogBackdrop as DialogBackdrop, AlertDialogTitle as DialogTitle, AlertDialogClose as DialogClose } from '@mks2508/mks-ui';
+import { X, Settings as SettingsIcon, Trash2 } from '@mks2508/mks-ui/icons/lucide-animated';
+import {
+  type FontOverride,
+  type FontCatalog
 } from '@mks2508/shadcn-basecoat-theme-manager';
 import { cn } from '../lib/utils';
 
@@ -20,307 +18,206 @@ export const FontSettingsModal: React.FC<FontSettingsModalProps> = ({
   open,
   onOpenChange,
 }) => {
-  const { fontManager, initialized } = useTheme();
-  const [isEnabled, setIsEnabled] = useState(false);
-  const [currentCategory, setCurrentCategory] = useState<FontCategory>('sans');
-  const [fontsByCategory, setFontsByCategory] = useState<{
-    sans: any[];
-    serif: any[];
-    mono: any[];
-  }>({ sans: [], serif: [], mono: [] });
-  const [selectedFonts, setSelectedFonts] = useState<{
-    sans: string | null;
-    serif: string | null;
-    mono: string | null;
-  }>({ sans: null, serif: null, mono: null });
+  const { fontManager, initialized, setFontOverride } = useTheme();
+  const [currentOverrides, setCurrentOverrides] = useState<FontOverride>({ enabled: false, fonts: {} });
+  const [availableFonts, setAvailableFonts] = useState<FontCatalog>({});
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Load fonts and configuration
+  // Load current font overrides and available fonts
   useEffect(() => {
     if (!fontManager || !initialized) return;
 
     const loadFonts = async () => {
       try {
-        // Import font catalog functions
-        const { getFontsByCategory } = await import('@mks2508/shadcn-basecoat-theme-manager');
-        
-        // Load fonts by category
-        const sansFonts = getFontsByCategory('sans');
-        const serifFonts = getFontsByCategory('serif');
-        const monoFonts = getFontsByCategory('mono');
-        
-        setFontsByCategory({
-          sans: sansFonts || [],
-          serif: serifFonts || [],
-          mono: monoFonts || [],
-        });
-        
-        // Load current configuration
-        const config = fontManager.getOverrideConfiguration();
-        setIsEnabled(fontManager.isOverrideEnabled());
-        setSelectedFonts({
-          sans: config.fonts.sans || null,
-          serif: config.fonts.serif || null,
-          mono: config.fonts.mono || null,
-        });
-        
+        setIsLoading(true);
+        console.log('🔤 [FontSettings] Loading font configuration...');
+
+        const overrides = fontManager.getFontOverride();
+        const catalog = fontManager.getFontCatalog();
+
+        console.log('🔤 [FontSettings] Current overrides:', overrides);
+        console.log('📚 [FontSettings] Available fonts:', catalog);
+
+        setCurrentOverrides(overrides);
+        setAvailableFonts(catalog);
       } catch (error) {
-        console.error('Failed to load fonts:', error);
+        console.error('Failed to load font configuration:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    if (open) {
-      loadFonts();
-    }
-  }, [fontManager, initialized, open]);
+    loadFonts();
+  }, [fontManager, initialized]);
 
-  const handleToggleOverride = async (enabled: boolean) => {
+  const handleFontChange = (category: 'sans' | 'serif' | 'mono', fontId: string) => {
     if (!fontManager) return;
 
-    try {
-      if (enabled) {
-        await fontManager.enableOverride();
-      } else {
-        await fontManager.disableOverride();
+    console.log(`🔤 [FontSettings] Changing ${category} to ${fontId}`);
+
+    const newOverrides: FontOverride = {
+      enabled: true,
+      fonts: {
+        ...currentOverrides.fonts,
+        [category]: fontId
       }
-      setIsEnabled(enabled);
-    } catch (error) {
-      console.error('Failed to toggle font override:', error);
-    }
+    };
+
+    setCurrentOverrides(newOverrides);
+    setFontOverride(category, fontId);
   };
 
-  const handleFontSelect = (fontId: string, category: FontCategory) => {
+  const handleReset = () => {
     if (!fontManager) return;
 
-    try {
-      fontManager.setFontOverride(category, fontId);
-      setSelectedFonts(prev => ({
-        ...prev,
-        [category]: fontId,
-      }));
-    } catch (error) {
-      console.error('Failed to set font override:', error);
-    }
+    console.log('🔄 [FontSettings] Resetting font overrides');
+
+    const resetOverrides: FontOverride = {
+      enabled: false,
+      fonts: {}
+    };
+
+    setCurrentOverrides(resetOverrides);
+
+    // Apply reset to each category
+    Object.keys(availableFonts).forEach(category => {
+      const cat = category as 'sans' | 'serif' | 'mono';
+      fontManager.setFontOverride(cat, '');
+    });
   };
 
-  const handleReset = async () => {
-    if (!fontManager) return;
-
-    try {
-      await fontManager.resetOverrides();
-      const config = fontManager.getOverrideConfiguration();
-      setSelectedFonts({
-        sans: config.fonts.sans || null,
-        serif: config.fonts.serif || null,
-        mono: config.fonts.mono || null,
-      });
-    } catch (error) {
-      console.error('Failed to reset font overrides:', error);
-    }
+  const getCurrentFontId = (category: 'sans' | 'serif' | 'mono'): string => {
+    return currentOverrides.fonts[category] || '';
   };
 
-  const getPreviewText = (category: FontCategory) => {
-    return category === 'mono' 
-      ? 'const code = "example";' 
-      : 'The quick brown fox jumps over the lazy dog';
+  const getFontName = (category: 'sans' | 'serif' | 'mono', fontId: string): string => {
+    const fonts = availableFonts[category];
+    const font = fonts?.find(f => f.id === fontId);
+    return font?.name || fontId;
   };
 
-  const separateFontsByType = (fonts: any[]) => {
-    const systemFonts = fonts.filter(f => f.category === 'system');
-    const googleFonts = fonts.filter(f => f.category === 'google-fonts');
-    return { systemFonts, googleFonts };
-  };
-
-  const renderFontCategory = (category: FontCategory) => {
-    const fonts = fontsByCategory[category];
-    const { systemFonts, googleFonts } = separateFontsByType(fonts);
-    
-    return (
-      <div className={cn("space-y-6", currentCategory !== category && "hidden")}>
-        {systemFonts.length > 0 && (
-          <div>
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-              System Fonts
-            </h3>
-            <div className="space-y-2">
-              {systemFonts.map((font) => {
-                const isSelected = selectedFonts[category] === font.id;
-                return (
-                  <button
-                    key={font.id}
-                    type="button"
-                    className={cn(
-                      "text-left w-full p-3 rounded-md border transition-colors",
-                      isSelected 
-                        ? "bg-primary text-primary-foreground border-primary" 
-                        : "border-input bg-background hover:bg-accent hover:text-accent-foreground"
-                    )}
-                    onClick={() => handleFontSelect(font.id, category)}
-                    style={{ fontFamily: `${font.family}, ${font.fallback}` }}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium text-sm">{font.name}</span>
-                      {isSelected && (
-                        <span className="bg-primary text-primary-foreground px-2 py-1 text-xs rounded">
-                          Active
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-xs opacity-75">
-                      {getPreviewText(category)}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-        
-        {googleFonts.length > 0 && (
-          <div>
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-              Google Fonts
-            </h3>
-            <div className="space-y-2">
-              {googleFonts.map((font) => {
-                const isSelected = selectedFonts[category] === font.id;
-                return (
-                  <button
-                    key={font.id}
-                    type="button"
-                    className={cn(
-                      "text-left w-full p-3 rounded-md border transition-colors",
-                      isSelected 
-                        ? "bg-primary text-primary-foreground border-primary" 
-                        : "border-input bg-background hover:bg-accent hover:text-accent-foreground"
-                    )}
-                    onClick={() => handleFontSelect(font.id, category)}
-                    style={{ fontFamily: `${font.family}, ${font.fallback}` }}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium text-sm">{font.name}</span>
-                      {isSelected && (
-                        <span className="bg-primary text-primary-foreground px-2 py-1 text-xs rounded">
-                          Active
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-xs opacity-75">
-                      {getPreviewText(category)}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  if (!initialized) {
-    return null;
-  }
+  if (!open) return null;
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-        <div className="bg-background border border-border rounded-lg shadow-lg w-full max-w-4xl max-h-[80vh] flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between border-b p-6">
-            <div className="flex items-center space-x-3">
-              {React.createElement(Settings as any, { className: "w-6 h-6" })}
-              <h2 className="text-lg font-semibold text-foreground">Font Settings</h2>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  checked={isEnabled}
-                  onCheckedChange={handleToggleOverride}
-                />
-                <Label>Override fonts</Label>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogPopup>
+        <div className="flex flex-col space-y-1.5 text-center sm:text-left">
+          <DialogTitle>
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <SettingsIcon className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold leading-none">Font Settings</h2>
+                <p className="text-sm text-muted-foreground">
+                  Customize fonts for different text categories
+                </p>
               </div>
             </div>
-            <Dialog.Close asChild>
-              <Button variant="ghost" size="sm">
-                {React.createElement(X as any, { className: "h-4 w-4" })}
-              </Button>
-            </Dialog.Close>
-          </div>
+          </DialogTitle>
+        </div>
 
-          {/* Content */}
-          <div className="flex-1 overflow-hidden p-6">
-            {!isEnabled ? (
-              <div className="flex items-center justify-center py-12 text-muted-foreground">
-                <div className="text-center">
-                  <div className="w-12 h-12 mx-auto mb-4 opacity-50">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </div>
-                  <p className="text-sm">Enable font override to customize fonts</p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4 h-full">
-                {/* Category tabs */}
-                <div className="border-b border-border">
-                  <div className="flex space-x-1" role="tablist">
-                    {(['sans', 'serif', 'mono'] as FontCategory[]).map((category) => (
-                      <button
-                        key={category}
-                        className={cn(
-                          "px-3 py-2 text-sm rounded-t-md border-b-2 transition-colors",
-                          currentCategory === category
-                            ? "border-primary text-primary bg-background"
-                            : "border-transparent text-muted-foreground hover:text-foreground"
+        <div className="space-y-6">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-transparent border-t-primary" />
+              <span className="ml-2">Loading fonts...</span>
+            </div>
+          ) : (
+            <>
+              {Object.entries(availableFonts).map(([category, fonts]) => {
+                const cat = category as 'sans' | 'serif' | 'mono';
+                const currentFontId = getCurrentFontId(cat);
+
+                return (
+                  <div key={category} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor={`font-${category}`} className="text-base font-medium capitalize">
+                        {category === 'sans' ? 'Sans Serif' : category === 'serif' ? 'Serif' : 'Monospace'}
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <select
+                          id={`font-${category}`}
+                          value={currentFontId}
+                          onChange={e => handleFontChange(cat, e.target.value)}
+                          className={cn(
+                            "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm",
+                            "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                            "disabled:cursor-not-allowed disabled:opacity-50"
+                          )}
+                        >
+                          <option value="">Use theme default</option>
+                          {fonts.map(font => (
+                            <option key={font.id} value={font.id}>
+                              {font.name}
+                            </option>
+                          ))}
+                        </select>
+                        {currentFontId && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleFontChange(cat, '')}
+                            className="ml-2"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         )}
-                        onClick={() => setCurrentCategory(category)}
-                      >
-                        {category === 'sans' && 'Sans Serif'}
-                        {category === 'serif' && 'Serif'}
-                        {category === 'mono' && 'Monospace'}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                      </div>
+                    </div>
 
-                {/* Font options */}
-                <div className="min-h-[300px] max-h-[400px] overflow-y-auto">
-                  {renderFontCategory('sans')}
-                  {renderFontCategory('serif')}
-                  {renderFontCategory('mono')}
+                    {currentFontId && (
+                      <div className="rounded-md bg-muted/50 p-3">
+                        <p className="text-sm text-muted-foreground">
+                          <span className="font-medium">Current selection:</span>{' '}
+                          <span className="text-foreground">
+                            {getFontName(cat, currentFontId)}
+                          </span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </div>
+
+        <div className="space-y-4 border-t pt-4">
+          <div className="flex items-center justify-between rounded-md bg-muted/50 p-3">
+            <div className="flex items-center gap-2 text-sm">
+              <SettingsIcon className="h-4 w-4" />
+              <div>
+                <div className="font-medium">Font overrides are</div>
+                <div className={cn(
+                  "ml-1",
+                  currentOverrides.enabled ? "text-primary" : "text-muted-foreground"
+                )}>
+                  {currentOverrides.enabled ? 'enabled' : 'disabled'}
                 </div>
               </div>
-            )}
-          </div>
-
-          {/* Footer */}
-          <div className="flex items-center justify-between p-6 border-t bg-muted/5">
+            </div>
             <Button
-              variant="destructive"
               size="sm"
+              variant="outline"
               onClick={handleReset}
-              disabled={!isEnabled}
+              disabled={!currentOverrides.enabled}
             >
-              {React.createElement(Trash2 as any, { className: "w-4 h-4 mr-2" })}
               Reset All
             </Button>
-            <div className="flex items-center space-x-3">
-              <Dialog.Close asChild>
-                <Button variant="ghost" size="sm">
-                  Cancel
-                </Button>
-              </Dialog.Close>
-              <Dialog.Close asChild>
-                <Button size="sm">
-                  Apply
-                </Button>
-              </Dialog.Close>
-            </div>
           </div>
         </div>
-      </Dialog.Content>
-    </Dialog.Root>
+
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+          <DialogClose asChild>
+            <Button variant="outline">Close</Button>
+          </DialogClose>
+        </div>
+      </DialogPopup>
+    </Dialog>
   );
 };
+
+FontSettingsModal.displayName = 'FontSettingsModal';
 
 export default FontSettingsModal;

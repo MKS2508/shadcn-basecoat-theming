@@ -28,8 +28,6 @@
     "shadcn",
     "hooks",
     "dark-mode",
-    "radix-ui",
-    "lucide-react",
     "nextjs",
     "next-15",
     "react-19"
@@ -37,17 +35,13 @@
   "author": "MKS2508",
   "license": "MIT",
   "dependencies": {
+    "@mks2508/mks-ui": "^0.1.1",
     "@mks2508/shadcn-basecoat-theme-manager": "^4.0.3"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0",
-    "@radix-ui/react-popover": ">=1.0.0",
-    "@radix-ui/react-dialog": ">=1.0.0",
-    "@radix-ui/react-tabs": ">=1.0.0",
-    "@radix-ui/react-switch": ">=1.0.0",
-    "@radix-ui/react-label": ">=2.0.0",
-    "lucide-react": ">=0.400.0",
+    "@mks2508/mks-ui": ">=0.1.0",
     "class-variance-authority": ">=0.6.0",
     "clsx": ">=1.0.0",
     "tailwind-merge": ">=1.0.0"
