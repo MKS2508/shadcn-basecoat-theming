@@ -503,17 +503,18 @@ export class ThemeCore {
         lastUpdated: new Date().toISOString().split('T')[0],
         themes: [
           {
-            id: "default",
-            name: "default",
-            label: "Default",
+            id: "synthwave84",
+            name: "synthwave84",
+            label: "Synthwave84",
             description: "Default shadcn/ui theme",
             author: "shadcn",
             version: "1.0.0",
             source: "local",
             category: "built-in",
+            default: true,
             modes: {
-              light: "/src/themes/default-light.css",
-              dark: "/src/themes/default-dark.css"
+              light: "/src/themes/synthwave84-light.css",
+              dark: "/src/themes/synthwave84-dark.css"
             },
             fonts: {
               sans: "system-ui, sans-serif",

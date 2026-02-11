@@ -1,19 +1,20 @@
 {
   "version": "1.0.0",
-  "lastUpdated": "2025-02-11T18:30:00Z",
+  "lastUpdated": "2025-02-11T19:00:00Z",
   "themes": [
     {
-      "id": "default",
-      "name": "default",
-      "label": "Default",
+      "id": "synthwave84",
+      "name": "synthwave84",
+      "label": "Synthwave84",
       "description": "Clean default theme with system fonts",
       "author": "System",
       "version": "1.0.0",
       "source": "local",
       "category": "built-in",
+      "default": true,
       "modes": {
-        "light": "packages/theme-manager-core/src/themes/default-light.css",
-        "dark": "packages/theme-manager-core/src/themes/default-dark.css"
+        "light": "packages/theme-manager-core/src/themes/synthwave84-light.css",
+        "dark": "packages/theme-manager-core/src/themes/synthwave84-dark.css"
       },
       "fonts": {
         "sans": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans\", sans-serif",
@@ -27,6 +28,60 @@
       },
       "config": {
         "radius": "0.5rem"
+      }
+    },
+    {
+      "id": "graphite",
+      "name": "graphite",
+      "label": "Graphite",
+      "description": "Elegant grayscale theme with subtle shadows",
+      "author": "System",
+      "version": "1.0.0",
+      "source": "local",
+      "category": "built-in",
+      "modes": {
+        "light": "packages/theme-manager-core/src/themes/graphite-light.css",
+        "dark": "packages/theme-manager-core/src/themes/graphite-dark.css"
+      },
+      "fonts": {
+        "sans": "Montserrat, sans-serif",
+        "serif": "Georgia, serif",
+        "mono": "Fira Code, monospace"
+      },
+      "preview": {
+        "primary": "oklch(0.4891 0 0)",
+        "background": "oklch(0.9551 0 0)",
+        "accent": "oklch(0.8078 0 0)"
+      },
+      "config": {
+        "radius": "0.35rem"
+      }
+    },
+    {
+      "id": "darkmatteviolet",
+      "name": "darkmatteviolet",
+      "label": "Dark Matte Violet",
+      "description": "Purple-accented theme with monospace aesthetics",
+      "author": "System",
+      "version": "1.0.0",
+      "source": "local",
+      "category": "built-in",
+      "modes": {
+        "light": "packages/theme-manager-core/src/themes/darkmatteviolet-light.css",
+        "dark": "packages/theme-manager-core/src/themes/darkmatteviolet-dark.css"
+      },
+      "fonts": {
+        "sans": "Geist Mono, ui-monospace, monospace",
+        "serif": "serif",
+        "mono": "JetBrains Mono, monospace"
+      },
+      "preview": {
+        "primary": "oklch(0.5452 0.2088 308.6980)",
+        "background": "oklch(1.0000 0 0)",
+        "accent": "oklch(0.9491 0 0)"
+      },
+      "config": {
+        "radius": "0.75rem"
       }
     }
   ]

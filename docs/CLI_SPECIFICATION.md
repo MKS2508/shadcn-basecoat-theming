@@ -71,13 +71,14 @@ project/
   "version": "1.0.0",
   "themes": [
     {
-      "id": "default",
-      "name": "default",
-      "label": "Default",
+      "id": "synthwave84",
+      "name": "synthwave84",
+      "label": "Synthwave84",
       "category": "built-in",
+      "default": true,
       "modes": {
-        "light": "/src/themes/default-light.css",
-        "dark": "/src/themes/default-dark.css"
+        "light": "/src/themes/synthwave84-light.css",
+        "dark": "/src/themes/synthwave84-dark.css"
       },
       "fonts": {
         "sans": "system-ui, sans-serif",
@@ -89,9 +90,9 @@ project/
 }
 ```
 
-#### C. `/public/src/themes/default-light.css`
+#### C. `/public/src/themes/synthwave84-light.css`
 ```css
-/* Auto-generated default light theme */
+/* Auto-generated synthwave84 light theme */
 :root {
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
@@ -107,9 +108,9 @@ project/
 }
 ```
 
-#### D. `/public/src/themes/default-dark.css`
+#### D. `/public/src/themes/synthwave84-dark.css`
 ```css
-/* Auto-generated default dark theme */
+/* Auto-generated synthwave84 dark theme */
 :root {
   --background: 222.2 84% 4.9%;
   --foreground: 210 40% 98%;

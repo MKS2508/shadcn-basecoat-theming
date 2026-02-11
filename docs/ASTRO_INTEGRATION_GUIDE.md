@@ -36,8 +36,8 @@ project/
 │   ├── src/
 │   │   └── themes/              # Theme CSS files
 │   │       ├── base.css         # Base variables
-│   │       ├── default-light.css
-│   │       ├── default-dark.css
+│   │       ├── synthwave84-light.css
+│   │       ├── synthwave84-dark.css
 │   │       └── [theme-name]-[mode].css
 │   └── themes/
 │       └── registry.json        # Local theme registry
@@ -242,13 +242,14 @@ import ThemeProvider from '../components/ThemeProvider.astro'
   "version": "1.0.0",
   "themes": [
     {
-      "id": "default",
-      "name": "default",
-      "label": "Default",
+      "id": "synthwave84",
+      "name": "synthwave84",
+      "label": "Synthwave84",
       "category": "built-in",
+      "default": true,
       "modes": {
-        "light": "/src/themes/default-light.css",
-        "dark": "/src/themes/default-dark.css"
+        "light": "/src/themes/synthwave84-light.css",
+        "dark": "/src/themes/synthwave84-dark.css"
       },
       "fonts": {
         "sans": "system-ui, sans-serif",
@@ -260,7 +261,7 @@ import ThemeProvider from '../components/ThemeProvider.astro'
 }
 ```
 
-### 5. **Theme CSS Files** (Example: default-light.css)
+### 5. **Theme CSS Files** (Example: synthwave84-light.css)
 ```css
 :root {
   --background: 0 0% 100%;

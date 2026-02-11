@@ -25,7 +25,7 @@ export function InstallationUI({ projectInfo, options }: InstallationUIProps) {
     { id: 'directories', title: 'Creating directories', status: 'pending' },
     { id: 'themes', title: 'Generating theme files', status: 'pending' },
     { id: 'registry', title: 'Creating registry', status: 'pending' },
-    { id: 'css', title: 'Updating global.css', status: 'pending' },
+    { id: 'css', title: 'Updating index.css', status: 'pending' },
     { id: 'complete', title: 'Installation complete', status: 'pending' }
   ]);
   const [progress, setProgress] = useState(0);

@@ -1,6 +1,6 @@
 {
   "name": "@mks2508/shadcn-basecoat-theme-manager",
-  "version": "4.0.3",
+  "version": "4.0.4",
   "description": "Core theme and font management system for shadcn/ui and Basecoat CSS",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -11,12 +11,18 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
     },
-    "./themes/default-light.css": "./dist/themes/default-light.css",
-    "./themes/default-dark.css": "./dist/themes/default-dark.css"
+    "./themes/synthwave84-light.css": "./dist/themes/synthwave84-light.css",
+    "./themes/synthwave84-dark.css": "./dist/themes/synthwave84-dark.css",
+    "./themes/graphite-light.css": "./dist/themes/graphite-light.css",
+    "./themes/graphite-dark.css": "./dist/themes/graphite-dark.css",
+    "./themes/darkmatteviolet-light.css": "./dist/themes/darkmatteviolet-light.css",
+    "./themes/darkmatteviolet-dark.css": "./dist/themes/darkmatteviolet-dark.css",
+    "./registry.json": "./dist/registry.json"
   },
   "scripts": {
-    "build": "tsup && bun run copy:themes",
+    "build": "tsup && bun run copy:themes && bun run copy:registry",
     "copy:themes": "mkdir -p dist/themes && cp src/themes/*.css dist/themes/",
+    "copy:registry": "cd ../.. && cp themes/registry.json packages/theme-manager-core/dist/registry.json",
     "dev": "tsup --watch",
     "type-check": "tsc --noEmit",
     "test": "vitest",
@@ -45,7 +51,7 @@
     "vitest": "^4.0.18"
   },
   "peerDependencies": {
-    "@mks2508/better-logger": "^1.2.1"
+    "@mks2508/better-logger": "^5.0.0"
   },
   "files": [
     "dist",

@@ -3,17 +3,18 @@
   "lastUpdated": "2025-10-11T00:00:00Z",
   "themes": [
     {
-      "id": "default",
-      "name": "default",
-      "label": "Default",
+      "id": "synthwave84",
+      "name": "synthwave84",
+      "label": "Synthwave84",
       "description": "Tema por defecto del sistema",
       "author": "Theme Toolkit",
       "version": "1.0.0",
       "source": "local",
       "category": "built-in",
+      "default": true,
       "modes": {
-        "light": "/themes/css/default-light.css",
-        "dark": "/themes/css/default-dark.css"
+        "light": "/themes/css/synthwave84-light.css",
+        "dark": "/themes/css/synthwave84-dark.css"
       },
       "fonts": {
         "sans": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans\", sans-serif",

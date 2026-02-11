@@ -43,8 +43,8 @@ project/
 │   │   └── registry.json        # Local theme registry
 │   └── src/
 │       └── themes/              # Theme CSS files
-│           ├── default-light.css
-│           ├── default-dark.css
+│           ├── synthwave84-light.css
+│           ├── synthwave84-dark.css
 │           └── [theme-name]-[mode].css
 ├── src/
 │   ├── components/
@@ -56,7 +56,7 @@ project/
 │   ├── lib/
 │   │   └── utils.ts             # Utility functions (cn)
 │   ├── styles/
-│   │   └── globals.css          # Tailwind + theme imports
+│   │   └── index.css          # Tailwind + theme imports
 │   ├── App.tsx                  # Main app component
 │   └── main.tsx                 # App entry point
 ```
@@ -193,7 +193,7 @@ function App() {
 export default App;
 ```
 
-### 3. **globals.css** (Styles Integration)
+### 3. **index.css** (Styles Integration)
 
 ```css
 @import "tailwindcss";
@@ -236,13 +236,14 @@ body {
   "version": "1.0.0",
   "themes": [
     {
-      "id": "default",
-      "name": "default",
-      "label": "Default",
+      "id": "synthwave84",
+      "name": "synthwave84",
+      "label": "Synthwave84",
       "category": "built-in",
+      "default": true,
       "modes": {
-        "light": "/public/src/themes/default-light.css",
-        "dark": "/public/src/themes/default-dark.css"
+        "light": "/public/src/themes/synthwave84-light.css",
+        "dark": "/public/src/themes/synthwave84-dark.css"
       },
       "fonts": {
         "sans": "system-ui, sans-serif",
@@ -254,7 +255,7 @@ body {
 }
 ```
 
-### 5. **Theme CSS Files** (Example: default-light.css)
+### 5. **Theme CSS Files** (Example: synthwave84-light.css)
 
 ```css
 :root {
@@ -402,7 +403,7 @@ export const useThemeInstaller = () => {
 
 ### Required Files
 - [ ] `src/components/ThemeProvider.tsx`
-- [ ] `src/styles/globals.css` with theme imports
+- [ ] `src/styles/index.css` with theme imports
 - [ ] `public/themes/registry.json`
 - [ ] At least one theme CSS file pair (light/dark)
 - [ ] `src/lib/utils.ts` with cn function
@@ -424,7 +425,7 @@ export const useThemeInstaller = () => {
 4. 📦 Install theme manager and Radix UI packages
 5. 📁 Create theme directory structure
 6. 📄 Generate ThemeProvider.tsx with Context
-7. 🎨 Add globals.css theme imports
+7. 🎨 Add index.css theme imports
 8. 📋 Create themes registry.json
 9. 🎯 Generate default theme CSS files
 10. 🔧 Create lib/utils.ts if not exists
@@ -435,7 +436,7 @@ export const useThemeInstaller = () => {
 2. Create folder structure
 3. Generate ThemeProvider.tsx
 4. Update App.tsx with provider
-5. Add globals.css imports
+5. Add index.css imports
 6. Create registry.json
 7. Add theme CSS files
 

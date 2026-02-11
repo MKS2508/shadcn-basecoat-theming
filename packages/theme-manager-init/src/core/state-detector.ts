@@ -34,25 +34,25 @@ const EXPECTED_FILES: ExpectedFile[] = [
     description: 'Theme registry configuration'
   },
   {
-    path: 'public/src/themes/default-light.css',
+    path: 'public/src/themes/synthwave84-light.css',
     required: true,
     checkContent: (content) => content.includes('--background:') && content.includes('--foreground:'),
-    description: 'Default light theme'
+    description: 'Synthwave84 light theme'
   },
   {
-    path: 'public/src/themes/default-dark.css',
+    path: 'public/src/themes/synthwave84-dark.css',
     required: true,
     checkContent: (content) => content.includes('--background:') && content.includes('--foreground:'),
-    description: 'Default dark theme'
+    description: 'Synthwave84 dark theme'
   }
 ];
 
 const MODIFIED_FILES: ExpectedFile[] = [
   {
-    path: 'src/styles/global.css',
+    path: 'src/styles/index.css',
     required: false,
     checkContent: (content) => content.includes('@import "tailwindcss"') && content.includes('@theme inline'),
-    description: 'Global CSS with theme imports'
+    description: 'Index CSS with theme imports'
   }
 ];
 

@@ -13,6 +13,7 @@ export interface ThemeConfig {
   version: string;
   source: 'local' | 'url' | 'custom';
   category: 'built-in' | 'installed' | 'custom';
+  default?: boolean;
   modes: {
     light: string;
     dark: string;
@@ -61,10 +62,13 @@ export class ThemeRegistry {
   private allThemes: Map<string, ThemeConfig> = new Map();
   private isInitialized = false;
   private registryPath: string;
+  private packageRegistryPath: string;
 
   constructor(registryPath: string = '/themes/registry.json') {
     this.storageManager = StorageManager.getInstance();
     this.registryPath = registryPath;
+    // Path to registry when bundled in node_modules
+    this.packageRegistryPath = '@mks2508/shadcn-basecoat-theme-manager/registry.json';
   }
 
   /**
@@ -101,21 +105,47 @@ export class ThemeRegistry {
 
   /**
    * Load built-in themes from registry.json
+   * Tries to import from bundled package, falls back to relative path
    */
   private async loadBuiltInThemes(): Promise<void> {
     try {
-      console.log(`🔄 [ThemeRegistry] Fetching ${this.registryPath}...`);
-      const response = await fetch(this.registryPath);
-      console.log('✅ [ThemeRegistry] Fetch response received:', response.status);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch registry.json: ${response.status}`);
+      // Try to load from bundled package first (node_modules environment)
+      let registryUrl = this.packageRegistryPath;
+      let registryData: ThemeRegistryData;
+
+      try {
+        console.log(`🔄 [ThemeRegistry] Fetching from bundle: ${registryUrl}`);
+        const response = await fetch(registryUrl);
+
+        if (response.ok) {
+          const text = await response.text();
+          // Check if it's actual registry content, not a 404 or module not found
+          if (text.includes('"version"') && text.includes('"themes"')) {
+            registryData = JSON.parse(text);
+            console.log('✅ [ThemeRegistry] Loaded from bundled package');
+          } else {
+            throw new Error('Invalid registry from bundle');
+          }
+        } else {
+          throw new Error(`Bundle fetch failed: ${response.status}`);
+        }
+      } catch (bundleError) {
+        // Fallback to relative path (development or unbundled)
+        console.log(`⚠️ [ThemeRegistry] Bundle not available, trying relative path: ${this.registryPath}`);
+        console.log(`Bundle error: ${bundleError}`);
+
+        const response = await fetch(this.registryPath);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch registry.json: ${response.status}`);
+        }
+
+        const text = await response.text();
+        registryData = JSON.parse(text);
+        console.log('✅ [ThemeRegistry] Loaded from relative path');
       }
 
-      console.log('🔄 [ThemeRegistry] Parsing JSON response...');
-      const registryData: ThemeRegistryData = await response.json();
-      console.log('✅ [ThemeRegistry] JSON parsed successfully');
-      
+      console.log('✅ [ThemeRegistry] Registry parsed successfully');
+
       // Validate registry data
       if (!registryData.themes || !Array.isArray(registryData.themes)) {
         throw new Error('Invalid registry.json format');
@@ -127,7 +157,7 @@ export class ThemeRegistry {
         source: 'local' as const
       }));
 
-      
+
     } catch (error) {
       console.error('❌ ThemeRegistry: Failed to load built-in themes:', error);
       // Continue with empty built-in themes rather than failing completely
@@ -231,6 +261,15 @@ export class ThemeRegistry {
   getTheme(id: string): ThemeConfig | null {
     this.ensureInitialized();
     return this.allThemes.get(id) || null;
+  }
+
+  /**
+   * Get default theme (marked with default: true in registry)
+   */
+  getDefaultTheme(): ThemeConfig | null {
+    this.ensureInitialized();
+    const defaultTheme = Array.from(this.allThemes.values()).find(t => t.default);
+    return defaultTheme || this.builtInThemes[0] || null;
   }
 
   /**

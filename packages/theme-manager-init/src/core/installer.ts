@@ -32,8 +32,8 @@ export async function installThemeManager(
   // 4. Generate registry
   await generateRegistry(cwd, themeDir, verbose ?? false);
 
-  // 5. Update global.css
-  await updateGlobalCSS(cwd, verbose ?? false);
+  // 5. Update index.css
+  await updateIndexCSS(cwd, verbose ?? false);
 
   console.log(chalk.green.bold('\n✅ Theme manager setup complete!\n'));
   displayNextSteps(projectInfo.packageManager || 'npm');
@@ -131,8 +131,8 @@ async function generateThemeFiles(
 
   // All theme files to copy
   const themeFiles = [
-    'default-light.css',
-    'default-dark.css',
+    'synthwave84-light.css',
+    'synthwave84-dark.css',
     'supabase-light.css',
     'supabase-dark.css',
     'tangerine-light.css',
@@ -170,8 +170,8 @@ async function generateRegistry(
 
   // Update paths in registry to match themeDir
   const registry = JSON.parse(registryTemplate);
-  registry.themes[0].modes.light = `/${themeDir}/default-light.css`;
-  registry.themes[0].modes.dark = `/${themeDir}/default-dark.css`;
+  registry.themes[0].modes.light = `/${themeDir}/synthwave84-light.css`;
+  registry.themes[0].modes.dark = `/${themeDir}/synthwave84-dark.css`;
 
   const registryPath = path.join(cwd, 'public/themes/registry.json');
   await fs.writeFile(registryPath, JSON.stringify(registry, null, 2));
@@ -183,46 +183,46 @@ async function generateRegistry(
   console.log(chalk.green('✅ Registry created'));
 }
 
-async function updateGlobalCSS(cwd: string, verbose: boolean): Promise<void> {
-  console.log(chalk.blue('⚙️ Updating global.css...'));
+async function updateIndexCSS(cwd: string, verbose: boolean): Promise<void> {
+  console.log(chalk.blue('⚙️ Updating index.css...'));
 
-  const globalCSSPath = path.join(cwd, 'src/styles/global.css');
+  const indexCSSPath = path.join(cwd, 'src/styles/index.css');
   const currentDir = path.dirname(new URL(import.meta.url).pathname);
   const templateDir = path.join(currentDir, '../templates');
-  
+
   const additionsTemplate = await fs.readFile(
-    path.join(templateDir, 'global-css-additions.template'), 
+    path.join(templateDir, 'index-css-additions.template'),
     'utf8'
   );
 
   let existingContent = '';
-  
-  // Check if global.css exists
-  if (await fs.pathExists(globalCSSPath)) {
-    existingContent = await fs.readFile(globalCSSPath, 'utf8');
-    
+
+  // Check if index.css exists
+  if (await fs.pathExists(indexCSSPath)) {
+    existingContent = await fs.readFile(indexCSSPath, 'utf8');
+
     // Check if already has our additions
     if (existingContent.includes('@mks2508/theme-manager-cli')) {
       if (verbose) {
-        console.log('  global.css already has theme manager additions');
+        console.log('  index.css already has theme manager additions');
       }
-      console.log(chalk.green('✅ Global CSS up to date'));
+      console.log(chalk.green('✅ Index CSS up to date'));
       return;
     }
   } else {
     // Ensure directory exists
-    await fs.ensureDir(path.dirname(globalCSSPath));
+    await fs.ensureDir(path.dirname(indexCSSPath));
   }
 
   // Add our imports at the beginning
   const newContent = additionsTemplate + '\n\n' + existingContent;
-  await fs.writeFile(globalCSSPath, newContent);
+  await fs.writeFile(indexCSSPath, newContent);
 
   if (verbose) {
-    console.log('  Updated: src/styles/global.css');
+    console.log('  Updated: src/styles/index.css');
   }
 
-  console.log(chalk.green('✅ Global CSS updated'));
+  console.log(chalk.green('✅ Index CSS updated'));
 }
 
 function displayNextSteps(packageManager: string): void {

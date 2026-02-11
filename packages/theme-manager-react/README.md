@@ -79,8 +79,8 @@ export function Sidebar() {
 ```
 /public/themes/
 ├── registry.json          ← Theme configuration
-├── default-light.css      ← Individual themes
-├── default-dark.css
+├── synthwave84-light.css  ← Individual themes
+├── synthwave84-dark.css
 ├── rose-light.css
 └── rose-dark.css
 ```
@@ -90,11 +90,12 @@ export function Sidebar() {
 {
   "themes": [
     {
-      "id": "default",
-      "name": "Default",
+      "id": "synthwave84",
+      "name": "Synthwave84",
+      "default": true,
       "modes": {
-        "light": "/themes/default-light.css",
-        "dark": "/themes/default-dark.css"
+        "light": "/themes/synthwave84-light.css",
+        "dark": "/themes/synthwave84-dark.css"
       }
     }
   ]
@@ -118,7 +119,7 @@ npm install lucide-react class-variance-authority clsx tailwind-merge
 // pages/_app.tsx
 import { ThemeProvider } from '@mks2508/theme-manager-react/nextjs'
 import type { AppProps } from 'next/app'
-import './globals.css'
+import './index.css'
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
