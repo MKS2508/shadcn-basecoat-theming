@@ -64,28 +64,28 @@
     "workflow:full": "pnpm run commit:auto && pnpm run workflow:release"
   },
   "dependencies": {
-    "@mks2508/better-logger": "^0.3.0",
-    "@mks2508/shadcn-basecoat-theme-manager": "^1.1.2",
-    "@mks2508/theme-manager-vanilla": "^0.1.1",
+    "@mks2508/better-logger": "^5.0.0",
+    "@mks2508/shadcn-basecoat-theme-manager": "workspace:*",
+    "@mks2508/theme-manager-vanilla": "workspace:*",
     "@radix-ui/react-label": "^2.1.7",
-    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tabs": "^1.1.13",
-    "basecoat-css": "^0.3.0",
+    "basecoat-css": "^0.3.11",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^0.542.0",
-    "tailwind-merge": "^3.3.1",
-    "ws": "^8.18.3"
+    "lucide-react": "^0.563.0",
+    "tailwind-merge": "^3.4.0",
+    "ws": "^8.19.0"
   },
   "devDependencies": {
     "@google/genai": "^1.16.0",
-    "@tailwindcss/vite": "^4.0.0-alpha.26",
-    "shadcn": "^3.0.0",
-    "tailwindcss": "^4.0.0-alpha.26",
-    "tsx": "^4.20.5",
-    "typescript": "^5.6.2",
-    "vite": "^5.4.2"
+    "@tailwindcss/vite": "^4.1.18",
+    "shadcn": "^3.8.4",
+    "tailwindcss": "^4.1.18",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
   },
   "keywords": [
     "vite",

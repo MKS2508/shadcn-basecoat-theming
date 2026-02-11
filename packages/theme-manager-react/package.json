@@ -1,6 +1,6 @@
 {
   "name": "@mks2508/theme-manager-react",
-  "version": "3.4.0",
+  "version": "3.4.1",
   "description": "React hooks and components for theme management (shadcn/ui compatible, Next.js 15 ready)",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -37,7 +37,7 @@
   "author": "MKS2508",
   "license": "MIT",
   "dependencies": {
-    "@mks2508/shadcn-basecoat-theme-manager": "^4.0.1"
+    "@mks2508/shadcn-basecoat-theme-manager": "^4.0.3"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
@@ -53,9 +53,9 @@
     "tailwind-merge": ">=1.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
+    "@types/node": "^25.2.3",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "tsup": "^8.0.0",
     "typescript": "^5.6.2"
   },

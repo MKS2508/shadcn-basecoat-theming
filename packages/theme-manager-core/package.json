@@ -1,6 +1,6 @@
 {
   "name": "@mks2508/shadcn-basecoat-theme-manager",
-  "version": "4.0.2",
+  "version": "4.0.3",
   "description": "Core theme and font management system for shadcn/ui and Basecoat CSS",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -10,10 +10,13 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
-    }
+    },
+    "./themes/default-light.css": "./dist/themes/default-light.css",
+    "./themes/default-dark.css": "./dist/themes/default-dark.css"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && bun run copy:themes",
+    "copy:themes": "mkdir -p dist/themes && cp src/themes/*.css dist/themes/",
     "dev": "tsup --watch",
     "type-check": "tsc --noEmit",
     "test": "vitest",
@@ -33,19 +36,20 @@
   "author": "MKS2508",
   "license": "MIT",
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@types/node": "^25.2.3",
+    "@vitest/coverage-v8": "^4.0.18",
     "fake-indexeddb": "^6.2.2",
-    "happy-dom": "^18.0.1",
+    "happy-dom": "^20.6.1",
     "tsup": "^8.0.0",
     "typescript": "^5.6.2",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.18"
   },
   "peerDependencies": {
-    "@mks2508/better-logger": "^1.0.0"
+    "@mks2508/better-logger": "^1.2.1"
   },
   "files": [
     "dist",
+    "dist/themes/*.css",
     "README.md"
   ],
   "repository": {

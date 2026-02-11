@@ -123,26 +123,42 @@ export function safeGetComputedStyle(element: HTMLElement): CSSStyleDeclaration 
  * Create SSR-safe event listener
  */
 export function safeAddEventListener<K extends keyof DocumentEventMap>(
-  target: Document | Window | HTMLElement,
+  target: Document,
   event: K,
   callback: (this: Document, ev: DocumentEventMap[K]) => any,
   options?: boolean | AddEventListenerOptions
+): () => void;
+export function safeAddEventListener<K extends keyof WindowEventMap>(
+  target: Window,
+  event: K,
+  callback: (this: Window, ev: WindowEventMap[K]) => any,
+  options?: boolean | AddEventListenerOptions
+): () => void;
+export function safeAddEventListener<K extends keyof HTMLElementEventMap>(
+  target: HTMLElement,
+  event: K,
+  callback: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any,
+  options?: boolean | AddEventListenerOptions
+): () => void;
+export function safeAddEventListener(
+  target: Document | Window | HTMLElement,
+  event: string,
+  callback: EventListenerOrEventListenerObject,
+  options?: boolean | AddEventListenerOptions
 ): () => void {
-  if (!isClient()) return () => {}; // Return noop function
+  if (!isClient()) return () => {};
 
   try {
     target.addEventListener(event, callback, options);
 
-    // Return cleanup function
     return () => {
       try {
         target.removeEventListener(event, callback, options);
       } catch {
-        // Ignore cleanup errors
       }
     };
   } catch {
-    return () => {}; // Return noop function if addEventListener fails
+    return () => {};
   }
 }
 

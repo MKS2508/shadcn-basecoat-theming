@@ -115,18 +115,18 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = memo(({
           >
             <span className="flex items-center gap-2">
               <span>{currentThemeLabel}</span>
-              <div className="w-px h-4 bg-border" />
+              <div className="w-px h-4 border" />
               {React.createElement(ChevronDown as any, { className: "h-4 w-4" })}
             </span>
           </Button>
         </Popover.Trigger>
 
-        <Popover.Content 
-          className="w-80 p-0 bg-popover border border-border rounded-md shadow-md z-50"
+        <Popover.Content
+          className="w-80 p-0 bg-background border border rounded-md shadow-md z-50"
           align="end"
         >
           {/* Header */}
-          <div className="grid gap-1.5 p-4 pb-2 border-b">
+          <div className="grid gap-1.5 p-4 pb-2 border">
             <h4 className="leading-none font-medium">Select Theme</h4>
             <p className="text-muted-foreground text-sm">Choose your preferred theme</p>
           </div>
