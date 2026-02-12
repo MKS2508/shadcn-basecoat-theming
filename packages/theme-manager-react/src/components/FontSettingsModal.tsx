@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../index';
-import { Button, Switch, Label } from '@mks2508/mks-ui';
-import { AlertDialog as Dialog, AlertDialogTrigger as DialogTrigger, AlertDialogPortal as DialogPortal, AlertDialogPopup as DialogPopup, AlertDialogBackdrop as DialogBackdrop, AlertDialogTitle as DialogTitle, AlertDialogClose as DialogClose } from '@mks2508/mks-ui';
-import { X, Settings as SettingsIcon, Trash2 } from '@mks2508/mks-ui/icons/lucide-animated';
+import { Button, Label, AlertDialog as Dialog, AlertDialogPopup as DialogPopup, AlertDialogTitle as DialogTitle, AlertDialogClose as DialogClose, SettingsIcon, Trash2 } from '@mks2508/mks-ui';
 import {
   type FontOverride,
-  type FontCatalog
+  type FontOption,
+  getFontsByCategory,
+  FONT_CATEGORIES
 } from '@mks2508/shadcn-basecoat-theme-manager';
 import { cn } from '../lib/utils';
 
@@ -20,34 +20,29 @@ export const FontSettingsModal: React.FC<FontSettingsModalProps> = ({
 }) => {
   const { fontManager, initialized, setFontOverride } = useTheme();
   const [currentOverrides, setCurrentOverrides] = useState<FontOverride>({ enabled: false, fonts: {} });
-  const [availableFonts, setAvailableFonts] = useState<FontCatalog>({});
+  const [availableFonts, setAvailableFonts] = useState<Record<string, FontOption[]>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   // Load current font overrides and available fonts
   useEffect(() => {
     if (!fontManager || !initialized) return;
 
-    const loadFonts = async () => {
-      try {
-        setIsLoading(true);
-        console.log('🔤 [FontSettings] Loading font configuration...');
+    try {
+      setIsLoading(true);
 
-        const overrides = fontManager.getFontOverride();
-        const catalog = fontManager.getFontCatalog();
-
-        console.log('🔤 [FontSettings] Current overrides:', overrides);
-        console.log('📚 [FontSettings] Available fonts:', catalog);
-
-        setCurrentOverrides(overrides);
-        setAvailableFonts(catalog);
-      } catch (error) {
-        console.error('Failed to load font configuration:', error);
-      } finally {
-        setIsLoading(false);
+      const overrides = fontManager.getOverrideConfiguration();
+      const fontsByCategory: Record<string, FontOption[]> = {};
+      for (const cat of Object.keys(FONT_CATEGORIES) as Array<'sans' | 'serif' | 'mono'>) {
+        fontsByCategory[cat] = getFontsByCategory(cat);
       }
-    };
 
-    loadFonts();
+      setCurrentOverrides(overrides);
+      setAvailableFonts(fontsByCategory);
+    } catch (error) {
+      console.error('Failed to load font configuration:', error);
+    } finally {
+      setIsLoading(false);
+    }
   }, [fontManager, initialized]);
 
   const handleFontChange = (category: 'sans' | 'serif' | 'mono', fontId: string) => {
@@ -67,23 +62,11 @@ export const FontSettingsModal: React.FC<FontSettingsModalProps> = ({
     setFontOverride(category, fontId);
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (!fontManager) return;
 
-    console.log('🔄 [FontSettings] Resetting font overrides');
-
-    const resetOverrides: FontOverride = {
-      enabled: false,
-      fonts: {}
-    };
-
-    setCurrentOverrides(resetOverrides);
-
-    // Apply reset to each category
-    Object.keys(availableFonts).forEach(category => {
-      const cat = category as 'sans' | 'serif' | 'mono';
-      fontManager.setFontOverride(cat, '');
-    });
+    await fontManager.resetOverrides();
+    setCurrentOverrides({ enabled: false, fonts: {} });
   };
 
   const getCurrentFontId = (category: 'sans' | 'serif' | 'mono'): string => {
@@ -209,8 +192,8 @@ export const FontSettingsModal: React.FC<FontSettingsModalProps> = ({
         </div>
 
         <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
-          <DialogClose asChild>
-            <Button variant="outline">Close</Button>
+          <DialogClose render={<Button variant="outline" />}>
+            Close
           </DialogClose>
         </div>
       </DialogPopup>

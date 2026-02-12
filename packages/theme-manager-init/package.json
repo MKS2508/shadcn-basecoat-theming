@@ -1,48 +1,36 @@
 {
-  "name": "@mks2508/theme-manager-cli",
-  "version": "1.0.2",
-  "description": "CLI para automatizar la integración del Theme Manager en proyectos Astro",
-  "main": "dist/cli-simple.js",
-  "module": "dist/cli-simple.js",
+  "name": "@mks2508/theme-manager-init",
+  "version": "1.0.0",
+  "description": "CLI to bootstrap React+Tailwind projects with the Theme Manager system",
   "type": "module",
   "bin": {
-    "theme-manager": "./src/cli-simple.tsx",
-    "theme-manager-cli": "./src/cli-simple.tsx"
+    "theme-manager-init": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsup",
-    "dev": "node src/cli.tsx",
-    "test": "node src/cli.tsx init astro --check-only"
+    "build": "rolldown --config rolldown.config.ts && chmod +x dist/index.js"
   },
   "files": [
-    "src/**/*",
+    "dist",
     "README.md"
   ],
   "keywords": [
-    "astro",
     "react",
     "tailwind",
     "theme",
     "cli",
     "shadcn",
-    "basecoat",
-    "theme-manager"
+    "theme-manager",
+    "init"
   ],
   "author": "MKS2508",
   "license": "MIT",
-  "devDependencies": {
-    "@types/bun": "latest",
-    "@types/fs-extra": "^11.0.4",
-    "tsup": "^8.0.0",
-    "typescript": "^5.6.2"
-  },
   "dependencies": {
-    "@opentui/core": "^0.1.18",
-    "@opentui/react": "^0.1.18",
-    "chalk": "^5.6.0",
-    "commander": "^14.0.0",
-    "fs-extra": "^11.3.1",
-    "react": "^19.1.1",
-    "semver": "^7.7.2"
+    "@mks2508/better-logger": "^5.0.0",
+    "@mks2508/shadcn-basecoat-theme-manager": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.3",
+    "rolldown": "^1.0.0-beta.58",
+    "typescript": "^5.9.3"
   }
 }

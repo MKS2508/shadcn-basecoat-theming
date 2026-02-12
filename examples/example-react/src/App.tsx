@@ -1,8 +1,16 @@
+import { useState } from "react";
 import { ComponentExample } from "@/components/component-example";
-import { ThemeSelector } from "@mks2508/theme-manager-react";
-import { AnimatedThemeToggler } from "@mks2508/theme-manager-react";
+import {
+  ThemeSelector,
+  AnimatedThemeToggler,
+  ThemeManagementModal,
+  FontSettingsModal,
+} from "@mks2508/theme-manager-react";
 
 export function App() {
+  const [themeModalOpen, setThemeModalOpen] = useState(false);
+  const [fontModalOpen, setFontModalOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -11,7 +19,10 @@ export function App() {
             <h1 className="text-xl font-bold">Theme Manager Demo</h1>
           </div>
           <div className="flex items-center gap-4">
-            <ThemeSelector />
+            <ThemeSelector
+              onThemeManagement={() => setThemeModalOpen(true)}
+              onFontSettings={() => setFontModalOpen(true)}
+            />
             <AnimatedThemeToggler />
           </div>
         </div>
@@ -20,6 +31,9 @@ export function App() {
       <main className="container py-8">
         <ComponentExample />
       </main>
+
+      <ThemeManagementModal open={themeModalOpen} onOpenChange={setThemeModalOpen} />
+      <FontSettingsModal open={fontModalOpen} onOpenChange={setFontModalOpen} />
     </div>
   );
 }

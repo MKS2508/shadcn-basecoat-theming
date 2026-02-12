@@ -16,7 +16,7 @@ export function AppThemeProvider({
 }: ThemeProviderProps) {
   return (
     <ThemeProvider
-      registryUrl="@mks2508/shadcn-basecoat-theme-manager/registry.json"
+      registryUrl="/registry.json"
       defaultTheme={defaultTheme}
       defaultMode={defaultMode}
       enableTransitions={enableTransitions}

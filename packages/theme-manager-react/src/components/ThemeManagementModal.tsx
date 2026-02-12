@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../index';
-import { Button, Tabs, TabsList, TabsTab, Input, Badge } from '@mks2508/mks-ui';
-import { AlertDialog as Dialog, AlertDialogTrigger as DialogTrigger, AlertDialogPortal as DialogPortal, AlertDialogPopup as DialogPopup, AlertDialogBackdrop as DialogBackdrop, AlertDialogTitle as DialogTitle, AlertDialogClose as DialogClose } from '@mks2508/mks-ui';
-import { X, Search as SearchIcon, RefreshCw, Eye, Download, Trash2, Loader2 } from '@mks2508/mks-ui/icons/lucide-animated';
+import { Button, Input, Badge, AlertDialog as Dialog, AlertDialogPopup as DialogPopup, AlertDialogTitle as DialogTitle, AlertDialogClose as DialogClose, SearchIcon, RefreshCw, DownloadIcon, Trash2 } from '@mks2508/mks-ui';
+import { Eye, Loader2 } from 'lucide-react';
 import {
   type ThemeConfig,
   type RegistryTheme
@@ -299,18 +298,7 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
                         <div className="flex items-start justify-between">
                           <div>
                             <h3 className="font-medium">{theme.name}</h3>
-                            {theme.version && (
-                              <Badge variant="secondary" className="ml-2 text-xs">
-                                v{theme.version}
-                              </Badge>
-                            )}
                           </div>
-                          {theme.author && (
-                            <div className="text-sm text-muted-foreground">
-                              by {theme.author}
-                            </div>
-                          )}
-                        </div>
                           <Button
                             size="sm"
                             onClick={() => startPreview(theme.id, 'light')}
@@ -333,13 +321,13 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
                             size="sm"
                             className="flex-1"
                             onClick={() => handleInstall(
-                              theme.url || `https://tweakcn.com/r/themes/${theme.id}.json`,
+                              `https://tweakcn.com/r/themes/${theme.id}.json`,
                               theme.id,
                               theme.name
                             )}
                             disabled={isPreviewActive}
                           >
-                            <Download className="h-4 w-4 mr-1" />
+                            <DownloadIcon className="h-4 w-4 mr-1" />
                             Install Light
                           </Button>
                           <Button
@@ -347,13 +335,13 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
                             size="sm"
                             className="flex-1"
                             onClick={() => handleInstall(
-                              theme.url || `https://tweakcn.com/r/themes/${theme.id}-dark.json`,
+                              `https://tweakcn.com/r/themes/${theme.id}-dark.json`,
                               `${theme.id}-dark`,
                               `${theme.name} (Dark)`
                             )}
                             disabled={isPreviewActive}
                           >
-                            <Download className="h-4 w-4 mr-1" />
+                            <DownloadIcon className="h-4 w-4 mr-1" />
                             Install Dark
                           </Button>
                         </div>
@@ -383,8 +371,8 @@ export const ThemeManagementModal: React.FC<ThemeManagementModalProps> = ({
         </div>
 
         <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
-          <DialogClose asChild>
-            <Button variant="outline">Close</Button>
+          <DialogClose render={<Button variant="outline" />}>
+            Close
           </DialogClose>
         </div>
       </DialogPopup>
