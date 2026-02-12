@@ -8,17 +8,15 @@ import {
 } from "@/components/example"
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
+  AlertDialogBackdrop,
+  AlertDialogClose,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogMedia,
+  AlertDialogPopup,
+  AlertDialogPortal,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import {
   Badge,
   Button,
   Card,
@@ -28,12 +26,6 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
@@ -98,22 +90,27 @@ function CardExample() {
               <HugeiconsIcon icon={PlusSignIcon} strokeWidth={2} data-icon="inline-start" />
               Show Dialog
             </AlertDialogTrigger>
-            <AlertDialogContent size="sm">
-              <AlertDialogHeader>
-                <AlertDialogMedia>
-                  <HugeiconsIcon icon={BluetoothIcon} strokeWidth={2} />
-                </AlertDialogMedia>
-                <AlertDialogTitle>Allow accessory to connect?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Do you want to allow the USB accessory to connect to this
-                  device?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Don&apos;t allow</AlertDialogCancel>
-                <AlertDialogAction>Allow</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
+            <AlertDialogPortal>
+              <AlertDialogBackdrop />
+              <AlertDialogPopup from="bottom" className="max-w-sm">
+                <AlertDialogHeader>
+                  <div className="bg-muted mb-2 inline-flex size-10 items-center justify-center rounded-md">
+                    <HugeiconsIcon icon={BluetoothIcon} strokeWidth={2} className="size-6" />
+                  </div>
+                  <AlertDialogTitle>Allow accessory to connect?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Do you want to allow the USB accessory to connect to this
+                    device?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogClose render={<Button variant="outline" />}>
+                    Don&apos;t allow
+                  </AlertDialogClose>
+                  <Button>Allow</Button>
+                </AlertDialogFooter>
+              </AlertDialogPopup>
+            </AlertDialogPortal>
           </AlertDialog>
           <Badge variant="secondary" className="ml-auto">
             Warning
@@ -123,14 +120,6 @@ function CardExample() {
     </Example>
   )
 }
-
-const frameworks = [
-  "Next.js",
-  "SvelteKit",
-  "Nuxt.js",
-  "Remix",
-  "Astro",
-] as const
 
 const roleItems = [
   { label: "Developer", value: "developer" },
@@ -427,23 +416,11 @@ function FormExample() {
                 <FieldLabel htmlFor="small-form-framework">
                   Framework
                 </FieldLabel>
-                <Combobox items={frameworks}>
-                  <ComboboxInput
-                    id="small-form-framework"
-                    placeholder="Select a framework"
-                    required
-                  />
-                  <ComboboxContent>
-                    <ComboboxEmpty>No frameworks found.</ComboboxEmpty>
-                    <ComboboxList>
-                      {(item) => (
-                        <ComboboxItem key={item} value={item}>
-                          {item}
-                        </ComboboxItem>
-                      )}
-                    </ComboboxList>
-                  </ComboboxContent>
-                </Combobox>
+                <Input
+                  id="small-form-framework"
+                  placeholder="Select a framework"
+                  required
+                />
               </Field>
               <Field>
                 <FieldLabel htmlFor="small-form-comments">Comments</FieldLabel>

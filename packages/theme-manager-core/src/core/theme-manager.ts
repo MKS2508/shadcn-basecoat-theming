@@ -17,6 +17,7 @@ import {
   safeMatchMedia,
   safeAddEventListener
 } from '../utils/ssr-utils';
+import { generateFOUCScript as generateFOUCScriptUnified } from '../utils/fouc-script';
 
 
 /**
@@ -322,6 +323,13 @@ export class ThemeManager {
       PerformanceTracker.measure('CSS Variables Apply', () => {
         this.applyCSSVariables(cssVariables, enableTransition);
       });
+
+      // Cache CSS variables to localStorage for FOUC script instant replay
+      try {
+        ssrSafeStorage.setItem('theme-css-vars', JSON.stringify(cssVariables));
+      } catch (_) {
+        // Non-fatal if localStorage is unavailable or quota exceeded
+      }
 
       // Remove any previous theme CSS link
       if (this.currentStyleElement) {
@@ -779,129 +787,13 @@ export class ThemeManager {
   }
 
   /**
-   * Generate FOUC prevention script for different storage types
-   * @param storageType 'localStorage' | 'cookie'
-   * @returns Script string for HTML injection
+   * Generate FOUC prevention script for different storage types.
+   * @deprecated Use standalone `generateFOUCScript()` from `@mks2508/shadcn-basecoat-theme-manager`.
+   * @param storageType - `'localStorage'` | `'cookie'`
+   * @returns Script string for HTML injection.
    */
   generateFOUCScript(storageType: 'localStorage' | 'cookie' = 'localStorage'): string {
-    const storageCode = storageType === 'cookie'
-      ? this.generateCookieFOUCCode()
-      : this.generateLocalStorageFOUCCode();
-
-    return `
-(function() {
-  ${storageCode}
-})();
-    `.trim();
-  }
-
-  /**
-   * Generate FOUC script using localStorage (default behavior)
-   */
-  private generateLocalStorageFOUCCode(): string {
-    return `
-try {
-  // Read theme preferences from localStorage
-  var savedTheme = localStorage.getItem('theme-current');
-  var savedMode = localStorage.getItem('theme-mode');
-
-  // Fallback to consolidated config
-  if (!savedTheme || !savedMode) {
-    var cfg = localStorage.getItem('theme-mode-config');
-    if (cfg) {
-      var parsed = JSON.parse(cfg);
-      if (!savedTheme && parsed.currentTheme) savedTheme = parsed.currentTheme;
-      if (!savedMode && parsed.currentMode) savedMode = parsed.currentMode;
-    }
-  }
-
-  // Apply defaults
-  savedTheme = savedTheme || 'default';
-  savedMode = savedMode || 'auto';
-
-  // Resolve auto mode
-  var effectiveMode = savedMode === 'auto'
-    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-    : savedMode;
-
-  // Apply attributes to document
-  document.documentElement.setAttribute('data-theme', savedTheme);
-  document.documentElement.setAttribute('data-mode', effectiveMode);
-
-  if (effectiveMode === 'dark') {
-    document.documentElement.classList.add('dark');
-  } else {
-    document.documentElement.classList.remove('dark');
-  }
-
-  console.log('✅ FOUC prevention: Applied theme', savedTheme, effectiveMode);
-
-} catch (e) {
-  console.warn('⚠️ FOUC prevention failed:', e);
-}
-    `.trim();
-  }
-
-  /**
-   * Generate FOUC script using cookies (for SSR frameworks)
-   */
-  private generateCookieFOUCCode(): string {
-    return `
-try {
-  // Read theme preferences from cookies
-  function getCookie(name) {
-    var match = document.cookie.match(new RegExp('(^|;\\\\s*)(' + name + ')=([^;]*)'));
-    return match ? decodeURIComponent(match[3]) : null;
-  }
-
-  var savedTheme = getCookie('theme-current');
-  var savedMode = getCookie('theme-mode');
-
-  // Fallback to localStorage if cookies not set
-  if (!savedTheme) savedTheme = localStorage.getItem('theme-current');
-  if (!savedMode) savedMode = localStorage.getItem('theme-mode');
-
-  // Fallback to consolidated config
-  if (!savedTheme || !savedMode) {
-    var cfg = localStorage.getItem('theme-mode-config');
-    if (cfg) {
-      var parsed = JSON.parse(cfg);
-      if (!savedTheme && parsed.currentTheme) savedTheme = parsed.currentTheme;
-      if (!savedMode && parsed.currentMode) savedMode = parsed.currentMode;
-    }
-  }
-
-  // Apply defaults
-  savedTheme = savedTheme || 'default';
-  savedMode = savedMode || 'auto';
-
-  // Sync to cookies for next server request
-  var expires = new Date();
-  expires.setFullYear(expires.getFullYear() + 1);
-  document.cookie = 'theme-current=' + encodeURIComponent(savedTheme) + '; expires=' + expires.toUTCString() + '; path=/';
-  document.cookie = 'theme-mode=' + encodeURIComponent(savedMode) + '; expires=' + expires.toUTCString() + '; path=/';
-
-  // Resolve auto mode
-  var effectiveMode = savedMode === 'auto'
-    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-    : savedMode;
-
-  // Apply attributes to document
-  document.documentElement.setAttribute('data-theme', savedTheme);
-  document.documentElement.setAttribute('data-mode', effectiveMode);
-
-  if (effectiveMode === 'dark') {
-    document.documentElement.classList.add('dark');
-  } else {
-    document.documentElement.classList.remove('dark');
-  }
-
-  console.log('✅ FOUC prevention (cookie sync): Applied theme', savedTheme, effectiveMode);
-
-} catch (e) {
-  console.warn('⚠️ FOUC prevention failed:', e);
-}
-    `.trim();
+    return generateFOUCScriptUnified({ storageType, bodyReveal: false });
   }
 
   /**

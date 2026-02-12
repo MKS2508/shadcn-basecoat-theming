@@ -35,7 +35,7 @@
     (function() {
       // Detect theme for basic variables
       try {
-        const savedTheme = localStorage.getItem('theme') || 'default';
+        const savedTheme = localStorage.getItem('theme-current') || localStorage.getItem('theme') || 'default';
         const savedMode = localStorage.getItem('theme-mode') || 'auto';
         
         let resolvedMode = savedMode;

@@ -20,6 +20,7 @@ import {
   safeMatchMedia,
   safeGetComputedStyle
 } from '../utils/ssr-utils';
+import { generateFOUCScript } from '../utils/fouc-script';
 
 export interface ThemeCoreConfig {
   registryPath?: string;
@@ -378,68 +379,11 @@ export class ThemeCore {
   }
 
   /**
-   * Generate FOUC prevention script for frameworks
+   * Generate FOUC prevention script for frameworks.
+   * @deprecated Use standalone `generateFOUCScript()` from `@mks2508/shadcn-basecoat-theme-manager`.
    */
   static getFOUCScript(): string {
-    return `
-(function() {
-  // Apply saved theme immediately to prevent flash
-  function applyThemeVariables() {
-    try {
-      var savedTheme = localStorage.getItem('theme-current');
-      var savedMode = localStorage.getItem('theme-mode');
-
-      // Fallback: read consolidated config if individual keys are missing
-      if (!savedTheme || !savedMode) {
-        try {
-          var cfg = localStorage.getItem('theme-mode-config');
-          if (cfg) {
-            var parsed = JSON.parse(cfg);
-            if (!savedTheme && parsed.currentTheme) savedTheme = parsed.currentTheme;
-            if (!savedMode && parsed.currentMode) savedMode = parsed.currentMode;
-          }
-        } catch (e) {}
-      }
-
-      if (!savedTheme) savedTheme = 'default';
-      if (!savedMode) savedMode = 'auto';
-      
-      // Apply mode class (Tailwind expects .dark)
-      var effectiveMode = savedMode === 'auto' 
-        ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-        : savedMode;
-      
-      if (effectiveMode === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-      document.documentElement.setAttribute('data-theme', savedTheme);
-      document.documentElement.setAttribute('data-mode', effectiveMode);
-      
-    } catch (error) {
-      console.warn('FOUC prevention failed:', error);
-    }
-  }
-
-  // Apply immediately
-  applyThemeVariables();
-  
-  // Reveal body after DOM ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-      setTimeout(function() {
-        document.body.style.visibility = 'visible';
-        document.body.style.opacity = '1';
-        document.body.style.transition = 'opacity 0.3s ease';
-      }, 0);
-    });
-  } else {
-    // Already loaded
-    document.body.style.visibility = 'visible';
-    document.body.style.opacity = '1';
-  }
-})();`.trim();
+    return generateFOUCScript({ storageType: 'localStorage', bodyReveal: true });
   }
 
   /**

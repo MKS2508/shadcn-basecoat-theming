@@ -8,6 +8,8 @@ export { StorageManager } from './core/storage-manager';
 
 // Utilities
 export { PerformanceTracker } from './utils/performance-tracker';
+export { generateFOUCScript } from './utils/fouc-script';
+export type { IFOUCScriptConfig } from './utils/fouc-script';
 
 // Make PerformanceTracker available globally for examples
 import { PerformanceTracker } from './utils/performance-tracker';

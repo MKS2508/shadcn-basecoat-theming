@@ -294,3 +294,7 @@ export { ThemeManagementModalComponent as ThemeManagementModal }
 export { FontSettingsModalComponent as FontSettingsModal }
 export type { ModalProps, ThemeContextValue, ThemeProviderProps }
 
+// FOUC prevention re-exports from core
+export { generateFOUCScript } from '@mks2508/shadcn-basecoat-theme-manager';
+export type { IFOUCScriptConfig } from '@mks2508/shadcn-basecoat-theme-manager';
+

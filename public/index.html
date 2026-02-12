@@ -190,7 +190,7 @@
     (function() {
       // Detect theme for basic variables
       try {
-        const savedTheme = localStorage.getItem('theme') || 'default';
+        const savedTheme = localStorage.getItem('theme-current') || localStorage.getItem('theme') || 'default';
         const savedMode = localStorage.getItem('theme-mode') || 'auto';
         
         let resolvedMode = savedMode;
@@ -317,7 +317,7 @@
     // Basic theme management for landing page
     class LandingThemeManager {
       constructor() {
-        this.currentTheme = localStorage.getItem('theme') || 'default';
+        this.currentTheme = localStorage.getItem('theme-current') || localStorage.getItem('theme') || 'default';
         this.currentMode = localStorage.getItem('theme-mode') || 'auto';
         this.themes = {
           default: { name: 'Default', cssFile: 'default' },
@@ -373,7 +373,7 @@
       async setTheme(theme, mode) {
         this.currentTheme = theme;
         this.currentMode = mode;
-        localStorage.setItem('theme', theme);
+        localStorage.setItem('theme-current', theme);
         localStorage.setItem('theme-mode', mode);
         await this.loadTheme(theme, mode);
       }

@@ -21,3 +21,7 @@ export type { NextJSThemeProviderProps } from './NextJSThemeProvider'
 // Export Next.js utilities
 export { createNextJSConfig } from './utils'
 export type { NextJSThemeConfig } from './utils'
+
+// FOUC prevention re-exports from core
+export { generateFOUCScript } from '@mks2508/shadcn-basecoat-theme-manager'
+export type { IFOUCScriptConfig } from '@mks2508/shadcn-basecoat-theme-manager'
