@@ -27,6 +27,10 @@ export { CookieStorageAdapter } from './adapters/cookie-storage-adapter';
 export { LocalStorageAdapter } from './adapters/local-storage-adapter';
 export type { StorageAdapter, CookieOptions } from './types/storage-adapter';
 
+// Framework Adapters
+export { FumadocsAdapter, fumadocsAdapter } from './adapters/fumadocs-adapter';
+export type { IFumadocsAdapterConfig } from './adapters/fumadocs-adapter';
+
 // Types
 export type { ThemeCoreConfig, ThemeCoreInstance } from './core/theme-core';
 export type { ThemeConfig } from './core/theme-registry';
