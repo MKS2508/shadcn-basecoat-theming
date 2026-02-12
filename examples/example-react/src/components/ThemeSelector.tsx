@@ -17,7 +17,7 @@ import {
   useAnimatedTheme,
   type AnimationPreset,
   type Direction,
-} from '@/hooks/use-animated-theme';
+} from '@mks2508/theme-manager-react';
 
 interface IThemeSelectorProps {
   onFontSettings?: () => void;

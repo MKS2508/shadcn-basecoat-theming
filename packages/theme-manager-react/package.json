@@ -1,6 +1,6 @@
 {
   "name": "@mks2508/theme-manager-react",
-  "version": "3.4.1",
+  "version": "3.4.2",
   "description": "React hooks and components for theme management (shadcn/ui compatible, Next.js 15 ready)",
   "type": "module",
   "main": "dist/index.js",

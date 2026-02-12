@@ -1,10 +1,10 @@
 import { useCallback, useRef } from 'react';
-import { useTheme } from '@mks2508/theme-manager-react';
 import { flushSync } from 'react-dom';
+import { useTheme } from '../index';
 
-type Direction = 'ltr' | 'rtl' | 'ttb' | 'btt';
+export type Direction = 'ltr' | 'rtl' | 'ttb' | 'btt';
 
-type AnimationPreset =
+export type AnimationPreset =
   | 'wipe'
   | 'circle-expand'
   | 'circle-shrink'
@@ -14,7 +14,7 @@ type AnimationPreset =
   | 'gif-mask'
   | 'none';
 
-interface IAnimatedThemeOptions {
+export interface IAnimatedThemeOptions {
   animation?: AnimationPreset;
   direction?: Direction;
   duration?: number;
@@ -60,20 +60,13 @@ const OLD_ON_TOP = `
 ::view-transition-old(root) { z-index: 10; }
 ::view-transition-new(root) { z-index: 9; }`;
 
-const BASE_CSS = `
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-}`;
-
 type PresetHandler = (opts: {
   direction: Direction;
   duration: number;
   event?: MouseEvent | React.MouseEvent;
 }) => {
   css: string;
-  animate: (() => void) | null;
+  animate: (() => Animation | void) | null;
 };
 
 const presets: Record<AnimationPreset, PresetHandler> = {
@@ -82,7 +75,7 @@ const presets: Record<AnimationPreset, PresetHandler> = {
       ltr: ['inset(0 100% 0 0)', 'inset(0 0 0 0)'],
       rtl: ['inset(0 0 0 100%)', 'inset(0 0 0 0)'],
       ttb: ['inset(0 0 100% 0)', 'inset(0 0 0 0)'],
-      btt: ['inset(100% 0 0 0)', 'inset(100% 0 0 0)'],
+      btt: ['inset(100% 0 0 0)', 'inset(0 0 0 0)'],
     };
     const [from, to] = keyframes[direction];
     return {
@@ -174,90 +167,19 @@ const presets: Record<AnimationPreset, PresetHandler> = {
     };
   },
 
-  'gif-mask': ({ duration = 800 }: { direction: Direction; duration: number; event?: MouseEvent | React.MouseEvent }) => {
-    const maskId = `liquid-mask-${Math.random().toString(36).slice(2, 9)}`;
-    const maskUrl = '';
-
+  'gif-mask': ({ duration = 800 }) => {
     return {
-      css: BASE_CSS + `
+      css: BASE_NO_ANIMATION + `
 ::view-transition-new(root) {
-  mask-image: url('${maskUrl}');
-  mask-size: 0;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  animation: mask-reveal ${duration}ms cubic-bezier(0.4, 0, 0.2) forwards,
+  animation: mask-reveal ${duration}ms cubic-bezier(0.4, 0, 0.2) forwards;
 }
 @keyframes mask-reveal {
-  0% { mask-size: 0; }
-  25% { mask-size: 50vmax 50vmax; }
-  50% { mask-size: 100vmax 100vmax; }
-  75% { mask-size: 150vmax 150vmax; }
-  90% { mask-size: 200vmax 200vmax; }
-  100% { mask-size: 250vmax 250vmax; }
-}
-@keyframes mask-dissolve {
-  to { mask-size: 0; }
+  0% { opacity: 0; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
 }`,
       animate: () => {
-        const root = document.documentElement;
-
-        // Create SVG filter for liquid blur effect
-        const svgNS = 'http://www.w3.org/2000/svg';
-        const svg = document.createElementNS(svgNS, 'svg') as SVGElement;
-        svg.setAttribute('viewBox', '0 0 100 100');
-        svg.setAttribute('width', '100%');
-        svg.setAttribute('height', '100%');
-        svg.style.cssText = `
-          #${maskId} { filter: url('data:image/svg+xml;utf8,') }
-          #blur { filter: url('data:image/svg+xml;utf8,') }
-          rect { fill: white; }
-          #mask { mask: url(#${maskId}); }
-        `;
-
-        const defs = document.createElementNS(svgNS, 'defs');
-        const filter = document.createElementNS(svgNS, 'filter');
-        filter.setAttribute('id', maskId);
-        filter.setAttribute('x', '-50%');
-        filter.setAttribute('y', '-50%');
-        filter.setAttribute('width', '200%');
-        filter.setAttribute('height', '200%');
-
-        const blur = document.createElementNS(svgNS, 'feGaussianBlur');
-        blur.setAttribute('stdDeviation', '2');
-        blur.setAttribute('x', '50%');
-        blur.setAttribute('y', '50%');
-        blur.setAttribute('width', '200%');
-        blur.setAttribute('height', '200%');
-
-        const mask = document.createElementNS(svgNS, 'mask');
-        mask.setAttribute('id', maskId);
-        mask.setAttribute('x', '-50%');
-        mask.setAttribute('y', '-50%');
-        mask.setAttribute('width', '200%');
-        mask.setAttribute('height', '200%');
-        mask.setAttribute('mask', 'url(#blur)');
-
-        const rect = document.createElementNS(svgNS, 'rect');
-        rect.setAttribute('x', '-50%');
-        rect.setAttribute('y', '-50%');
-        rect.setAttribute('width', '200%');
-        rect.setAttribute('height', '200%');
-
-        defs.appendChild(filter);
-        defs.appendChild(blur);
-        defs.appendChild(mask);
-        svg.appendChild(defs);
-        svg.appendChild(filter);
-        svg.appendChild(mask);
-        svg.appendChild(rect);
-
-        // Inject SVG as data URI for mask-image
-        root.appendChild(svg);
-
-        // Remove SVG after animation completes
-        setTimeout(() => {
-          svg.remove();
-        }, duration + 100);
+        setTimeout(() => {}, duration + 100);
       },
     };
   },
@@ -286,7 +208,6 @@ export function useAnimatedTheme(options?: IAnimatedThemeOptions) {
       const { animation = 'wipe', direction = 'ltr', duration = 500 } = optsRef.current ?? {};
       const effectiveMode = mode ?? ctx.currentMode;
 
-      // Apply theme + toggle .dark class
       const applyChanges = async () => {
         await ctx.setTheme(theme, mode);
         flushSync(() => {
@@ -294,7 +215,6 @@ export function useAnimatedTheme(options?: IAnimatedThemeOptions) {
         });
       };
 
-      // Respect prefers-reduced-motion
       const reducedMotion =
         typeof window !== 'undefined' &&
         window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -304,17 +224,20 @@ export function useAnimatedTheme(options?: IAnimatedThemeOptions) {
         return;
       }
 
-      // Build preset CSS + optional JS animation
       const preset = presets[animation]({ direction, duration, event });
       const cleanupStyles = injectTransitionStyles(preset.css);
 
       const transition = document.startViewTransition(applyChanges);
 
       await transition.ready;
-      preset.animate?.();
+      const jsAnimation = preset.animate?.() as Animation | undefined;
 
-      // Clean up injected styles after transition finishes
-      transition.finished.then(cleanupStyles, cleanupStyles);
+      await Promise.all([
+        transition.finished,
+        jsAnimation?.finished ?? Promise.resolve(),
+      ]);
+
+      cleanupStyles();
     },
     [ctx],
   );
@@ -322,4 +245,16 @@ export function useAnimatedTheme(options?: IAnimatedThemeOptions) {
   return { ...ctx, setTheme: setThemeAnimated };
 }
 
-export type { AnimationPreset, Direction, IAnimatedThemeOptions };
+export const ANIMATION_PRESETS: readonly AnimationPreset[] = [
+  'wipe',
+  'circle-expand',
+  'circle-shrink',
+  'diamond',
+  'crossfade',
+  'slide',
+  'gif-mask',
+  'none',
+] as const;
+
+export const DIRECTIONAL_PRESETS = new Set<AnimationPreset>(['slide', 'wipe']);
+export const DIRECTION_OPTIONS: readonly Direction[] = ['ltr', 'rtl', 'ttb', 'btt'] as const;

@@ -9,6 +9,20 @@ import {
 } from '@mks2508/shadcn-basecoat-theme-manager';
 import { ThemeManagementModal as ThemeManagementModalComponent } from './components/ThemeManagementModal';
 import { FontSettingsModal as FontSettingsModalComponent } from './components/FontSettingsModal';
+import { SettingsModal as SettingsModalComponent } from './components/SettingsModal';
+import { ThemeManagementContent as ThemeManagementContentComponent } from './components/ThemeManagementContent';
+import { FontSettingsContent as FontSettingsContentComponent } from './components/FontSettingsContent';
+export { useAnimatedTheme } from './hooks/useAnimatedTheme';
+export type { AnimationPreset, Direction, IAnimatedThemeOptions } from './hooks/useAnimatedTheme';
+export { ANIMATION_PRESETS, DIRECTIONAL_PRESETS, DIRECTION_OPTIONS } from './hooks/useAnimatedTheme';
+export { AnimationSettings } from './components/AnimationSettings';
+export type { IAnimationSettings, IAnimationSettingsProps } from './components/AnimationSettings';
+export { SettingsModalComponent as SettingsModal }
+export type { ISettingsModalProps } from './components/SettingsModal';
+export { ThemeManagementContentComponent as ThemeManagementContent }
+export type { IThemeManagementContentProps } from './components/ThemeManagementContent';
+export { FontSettingsContentComponent as FontSettingsContent }
+export type { IFontSettingsContentProps } from './components/FontSettingsContent';
 
 /**
  * Context para el Theme Manager

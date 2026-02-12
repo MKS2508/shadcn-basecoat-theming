@@ -11,7 +11,7 @@ import {
   useAnimatedTheme,
   type AnimationPreset,
   type Direction,
-} from '@/hooks/use-animated-theme';
+} from '@mks2508/theme-manager-react';
 
 /**
  * Resolve display mode to icon shown in button.
