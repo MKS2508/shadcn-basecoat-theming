@@ -196,21 +196,24 @@ export class FumadocsAdapter {
 
   private oklchToRgb(l: number, c: number, h: number): IRGB {
     const hRad = (h * Math.PI) / 180;
-    
+
     const a = c * Math.cos(hRad);
     const b = c * Math.sin(hRad);
-    
-    const L = l;
-    const M = 0.717 * L + 0.396 * a + 0.046 * b;
-    const S = 0.045 * L + 0.066 * a + 1.023 * b;
 
-    const lLinear = this.inverseGamma(L);
-    const mLinear = this.inverseGamma(M);
-    const sLinear = this.inverseGamma(S);
+    // OKLab → LMS' (Bjorn Ottosson reference coefficients)
+    const lp = l + 0.3963377774 * a + 0.2158037573 * b;
+    const mp = l - 0.1055613458 * a - 0.0638541728 * b;
+    const sp = l - 0.0894841775 * a - 1.2914855480 * b;
 
-    const rLinear = 4.066 * lLinear - 2.752 * mLinear + 0.253 * sLinear;
-    const gLinear = -1.219 * lLinear + 2.385 * mLinear - 0.404 * sLinear;
-    const bLinear = 0.053 * lLinear - 0.332 * mLinear + 1.308 * sLinear;
+    // LMS' → LMS (cube)
+    const lLms = lp * lp * lp;
+    const mLms = mp * mp * mp;
+    const sLms = sp * sp * sp;
+
+    // LMS → linear sRGB
+    const rLinear = +4.0767416621 * lLms - 3.3077115913 * mLms + 0.2309699292 * sLms;
+    const gLinear = -1.2684380046 * lLms + 2.6097574011 * mLms - 0.3413193965 * sLms;
+    const bLinear = -0.0041960863 * lLms - 0.7034186147 * mLms + 1.7076147010 * sLms;
 
     return {
       r: Math.max(0, Math.min(255, Math.round(this.gamma(rLinear) * 255))),
@@ -223,12 +226,6 @@ export class FumadocsAdapter {
     return linear > 0.0031308
       ? 1.055 * Math.pow(linear, 1 / 2.4) - 0.055
       : 12.92 * linear;
-  }
-
-  private inverseGamma(srgb: number): number {
-    return srgb > 0.04045
-      ? Math.pow((srgb + 0.055) / 1.055, 2.4)
-      : srgb / 12.92;
   }
 
   private rgbToHsl(r: number, g: number, b: number): IHSL {

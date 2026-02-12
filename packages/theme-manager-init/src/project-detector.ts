@@ -4,16 +4,18 @@ import { execSync } from 'node:child_process';
 
 /** Detected project information. */
 export interface IProjectInfo {
-  framework: 'react';
+  framework: 'react' | 'nextjs';
   packageManager: 'bun' | 'pnpm' | 'npm';
   cssFile: string | null;
   installedPackages: Set<string>;
+  hasFumadocs: boolean;
 }
 
 const CSS_CANDIDATES = [
   'src/index.css',
   'src/globals.css',
   'src/app.css',
+  'src/app/global.css',
   'src/styles/index.css',
   'src/styles/globals.css',
   'app/globals.css',
@@ -60,7 +62,16 @@ export async function detectProject(cwd: string): Promise<IProjectInfo> {
     }
   }
 
-  return { framework: 'react', packageManager, cssFile, installedPackages };
+  const isNextjs = 'next' in allDeps;
+  const hasFumadocs = 'fumadocs-ui' in allDeps || 'fumadocs-core' in allDeps;
+
+  return {
+    framework: isNextjs ? 'nextjs' : 'react',
+    packageManager,
+    cssFile,
+    installedPackages,
+    hasFumadocs,
+  };
 }
 
 /**

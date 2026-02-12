@@ -4,13 +4,14 @@ import { detectProject, installPackages, verifyCSSImports } from './project-dete
 import { parseCSSVariables } from './css-parser.ts';
 import { generateThemeFiles } from './theme-generator.ts';
 import { buildRegistry } from './registry-builder.ts';
+import { injectFumadocsBridge } from './fumadocs-integrator.ts';
 
 const VERSION = '1.0.0';
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 7;
 
 /**
- * Main CLI orchestrator. Runs 6 sequential steps to bootstrap a React+Tailwind
- * project with the Theme Manager system.
+ * Main CLI orchestrator. Runs 7 sequential steps to bootstrap a React+Tailwind
+ * project with the Theme Manager system (including optional Fumadocs integration).
  */
 async function main(): Promise<void> {
   const cwd = process.cwd();
@@ -28,7 +29,8 @@ async function main(): Promise<void> {
     project = await detectProject(cwd);
     spinner1.succeed(
       `Found ${project.framework} project using ${project.packageManager}` +
-        (project.cssFile ? ` (CSS: ${project.cssFile})` : ' (no CSS file found)'),
+        (project.cssFile ? ` (CSS: ${project.cssFile})` : ' (no CSS file found)') +
+        (project.hasFumadocs ? ' [Fumadocs detected]' : ''),
     );
   } catch (error) {
     spinner1.fail('Failed to detect project');
@@ -98,17 +100,45 @@ async function main(): Promise<void> {
     logger.warn(`Error: ${msg}`);
   }
 
-  // Step 6: Verify CSS config
-  logger.step(6, TOTAL_STEPS, 'Verifying CSS configuration...');
-  const spinner6 = logger.spinner('Checking @theme inline mappings');
+  // Step 6: Fumadocs bridge (conditional)
+  logger.step(6, TOTAL_STEPS, 'Checking Fumadocs integration...');
+  const spinner6 = logger.spinner('Fumadocs CSS bridge');
   spinner6.start();
+
+  if (project.hasFumadocs && project.cssFile) {
+    try {
+      const bridgeResult = await injectFumadocsBridge(cwd, project.cssFile);
+      if (bridgeResult === 'injected') {
+        spinner6.succeed(`Fumadocs CSS bridge injected into ${project.cssFile}`);
+      } else if (bridgeResult === 'already-present') {
+        spinner6.succeed('Fumadocs CSS bridge already present');
+      } else {
+        spinner6.fail('No @theme inline block found for insertion point');
+        logger.warn(`Add @theme inline block to ${project.cssFile} first.`);
+      }
+    } catch (error) {
+      spinner6.fail('Failed to inject Fumadocs bridge');
+      const msg = error instanceof Error ? error.message : String(error);
+      logger.warn(`Fumadocs bridge error: ${msg}`);
+    }
+  } else if (project.hasFumadocs) {
+    spinner6.fail('Fumadocs detected but no CSS file found');
+    logger.warn('Create a CSS file with @theme inline before running again.');
+  } else {
+    spinner6.succeed('Not a Fumadocs project, skipping');
+  }
+
+  // Step 7: Verify CSS config
+  logger.step(7, TOTAL_STEPS, 'Verifying CSS configuration...');
+  const spinner7 = logger.spinner('Checking @theme inline mappings');
+  spinner7.start();
 
   if (project.cssFile) {
     const hasMapping = await verifyCSSImports(cwd, project.cssFile);
     if (hasMapping) {
-      spinner6.succeed('CSS @theme inline configuration verified');
+      spinner7.succeed('CSS @theme inline configuration verified');
     } else {
-      spinner6.fail('Missing --color-background: var(--background) mapping');
+      spinner7.fail('Missing --color-background: var(--background) mapping');
       logger.warn(
         `Add @theme inline block to ${project.cssFile} with color variable mappings.`,
       );
@@ -117,18 +147,31 @@ async function main(): Promise<void> {
       );
     }
   } else {
-    spinner6.fail('No CSS file to verify');
+    spinner7.fail('No CSS file to verify');
     logger.warn('Create src/index.css with Tailwind v4 @theme inline configuration.');
   }
 
   // Summary
   logger.blank();
 
-  const summaryLines = [
+  const baseSummary = [
     `Themes directory:  public/themes/`,
     `Registry:          public/registry.json`,
     `Themes available:  ${themeCount}`,
     `Default theme:     default`,
+  ];
+
+  const fumadocsSummary = project.hasFumadocs
+    ? [
+        '',
+        'Fumadocs integration:',
+        `  CSS bridge:      ${project.cssFile ?? 'N/A'}`,
+        '  Variables:       19 --color-fd-* mappings via var()',
+        '  Layout width:    --fd-layout-width: 1400px',
+      ]
+    : [];
+
+  const usageSummary = [
     '',
     'Usage in your app:',
     '',
@@ -141,7 +184,9 @@ async function main(): Promise<void> {
     '  >',
     '    <App />',
     '  </ThemeProvider>',
-  ].join('\n');
+  ];
+
+  const summaryLines = [...baseSummary, ...fumadocsSummary, ...usageSummary].join('\n');
 
   logger.box(summaryLines, { title: 'Setup Complete', borderColor: 'green' });
 }
