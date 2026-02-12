@@ -7,7 +7,6 @@ import {
   ThemeConfig,
   FontOverride
 } from '@mks2508/shadcn-basecoat-theme-manager';
-import { ThemeSelector as ThemeSelectorComponent } from './components/ThemeSelector';
 import { ThemeManagementModal as ThemeManagementModalComponent } from './components/ThemeManagementModal';
 import { FontSettingsModal as FontSettingsModalComponent } from './components/FontSettingsModal';
 
@@ -277,10 +276,7 @@ interface ModalProps {
 }
 
 // Export all components and utilities
-export { ThemeSelectorComponent as ThemeSelector }
 export { ThemeManagementModalComponent as ThemeManagementModal }
 export { FontSettingsModalComponent as FontSettingsModal }
-export { default as AnimatedThemeToggler } from './components/AnimatedThemeToggler'
-export { default as AnimatedThemeSelector } from './components/AnimatedThemeSelector'
 export type { ModalProps, ThemeContextValue, ThemeProviderProps }
 
