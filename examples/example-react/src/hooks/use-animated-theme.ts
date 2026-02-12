@@ -96,7 +96,7 @@ const presets: Record<AnimationPreset, PresetHandler> = {
     };
   },
 
-  circleExpand: ({ duration, event }) => {
+  'circle-expand': ({ duration, event }) => {
     const { x, y } = getOrigin(event);
     const r = maxRadius(x, y);
     return {
@@ -110,7 +110,7 @@ const presets: Record<AnimationPreset, PresetHandler> = {
     };
   },
 
-  circleShrink: ({ duration, event }) => {
+  'circle-shrink': ({ duration, event }) => {
     const { x, y } = getOrigin(event);
     const r = maxRadius(x, y);
     return {
@@ -172,15 +172,16 @@ const presets: Record<AnimationPreset, PresetHandler> = {
 }`,
       animate: null,
     };
-  }),
+  },
 
-  gifMask: ({ url, duration = 800 }) => {
+  'gif-mask': ({ duration = 800 }: { direction: Direction; duration: number; event?: MouseEvent | React.MouseEvent }) => {
     const maskId = `liquid-mask-${Math.random().toString(36).slice(2, 9)}`;
+    const maskUrl = '';
 
     return {
       css: BASE_CSS + `
 ::view-transition-new(root) {
-  mask-image: url('${url}');
+  mask-image: url('${maskUrl}');
   mask-size: 0;
   mask-repeat: no-repeat;
   mask-position: center;
@@ -259,7 +260,7 @@ const presets: Record<AnimationPreset, PresetHandler> = {
         }, duration + 100);
       },
     };
-  }),
+  },
 
   none: () => ({
     css: `

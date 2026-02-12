@@ -1,6 +1,7 @@
 import { Palette, Settings, Download } from 'lucide-react';
 
 import {
+  Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -10,14 +11,12 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
+} from '@mks2508/mks-ui/react';
 
 import {
   useAnimatedTheme,
   type AnimationPreset,
   type Direction,
-  type IAnimatedThemeOptions,
 } from '@/hooks/use-animated-theme';
 
 interface IThemeSelectorProps {

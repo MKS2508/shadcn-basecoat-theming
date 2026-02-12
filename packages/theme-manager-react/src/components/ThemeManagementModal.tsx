@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../index';
-import { Button, Input, Badge, AlertDialog as Dialog, AlertDialogPopup as DialogPopup, AlertDialogTitle as DialogTitle, AlertDialogClose as DialogClose, SearchIcon, RefreshCw, DownloadIcon, Trash2 } from '@mks2508/mks-ui';
+import { Button, Input, Badge, AlertDialog as Dialog, AlertDialogPopup as DialogPopup, AlertDialogTitle as DialogTitle, AlertDialogClose as DialogClose, SearchIcon, RefreshCw, DownloadIcon, Trash2 } from '@mks2508/mks-ui/react';
 import { Eye, Loader2 } from 'lucide-react';
 import {
   type ThemeConfig,

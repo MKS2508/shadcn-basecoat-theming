@@ -17,6 +17,7 @@ export default defineConfig({
     'react/jsx-runtime',
     '@mks2508/shadcn-basecoat-theme-manager',
     '@mks2508/mks-ui',
+    '@mks2508/mks-ui/react',
     'lucide-react',
     'clsx',
     'tailwind-merge',

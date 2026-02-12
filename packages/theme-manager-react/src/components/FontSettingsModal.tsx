@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../index';
-import { Button, Label, AlertDialog as Dialog, AlertDialogPopup as DialogPopup, AlertDialogTitle as DialogTitle, AlertDialogClose as DialogClose, SettingsIcon, Trash2 } from '@mks2508/mks-ui';
+import { Button, Label, AlertDialog as Dialog, AlertDialogPopup as DialogPopup, AlertDialogTitle as DialogTitle, AlertDialogClose as DialogClose, SettingsIcon, Trash2 } from '@mks2508/mks-ui/react';
 import {
   type FontOverride,
   type FontOption,

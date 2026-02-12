@@ -79,7 +79,7 @@
     "ws": "^8.19.0"
   },
   "devDependencies": {
-    "@google/genai": "^1.16.0",
+    "@google/genai": "^1.41.0",
     "@tailwindcss/vite": "^4.1.18",
     "shadcn": "^3.8.4",
     "tailwindcss": "^4.1.18",

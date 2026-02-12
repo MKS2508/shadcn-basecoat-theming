@@ -7,7 +7,7 @@ import {
   Button as ButtonPrimitive,
   type ButtonProps as ButtonPrimitiveProps,
 } from '@/components/animate-ui/primitives/buttons/button';
-import { cn } from '@/lib/utils';
+import { cn } from '@mks2508/mks-ui/react';
 import {
   Particles,
   ParticlesEffect,
@@ -62,14 +62,24 @@ function IconButton({
   const [key, setKey] = React.useState(0);
 
   return (
-    <Particles animate={isActive} key={key} render={<ButtonPrimitive data-slot="icon-button" className={cn(buttonVariants({ variant, size, className }))} onClick={(e) => {
-                setKey((prev) => prev + 1);
-                setIsActive(true);
-                onClick?.(e);
-              }} {...props} />}>{children}<ParticlesEffect
-                data-variant={variant}
-                className="bg-neutral-500 size-1 rounded-full"
-              /></Particles>
+    <Particles animate={isActive} key={key}>
+      <ButtonPrimitive
+        data-slot="icon-button"
+        className={cn(buttonVariants({ variant, size, className }))}
+        onClick={(e) => {
+          setKey((prev) => prev + 1);
+          setIsActive(true);
+          onClick?.(e);
+        }}
+        {...props}
+      >
+        {children}
+      </ButtonPrimitive>
+      <ParticlesEffect
+        data-variant={variant}
+        className="bg-neutral-500 size-1 rounded-full"
+      />
+    </Particles>
   );
 }
 

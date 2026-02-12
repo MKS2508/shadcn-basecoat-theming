@@ -10,10 +10,8 @@ export {
   ThemeProvider,
   useTheme,
   ThemeInstallerComponent,
-  AnimatedThemeToggler,
   ThemeManagementModal,
   FontSettingsModal,
-  ThemeSelector
 } from '../index'
 
 // Export Next.js specific components

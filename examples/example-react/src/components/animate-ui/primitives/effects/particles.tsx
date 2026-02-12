@@ -6,9 +6,9 @@ import { motion, AnimatePresence, type HTMLMotionProps } from 'motion/react';
 import { Slot, type WithAsChild } from '@/components/animate-ui/primitives/animate/slot';
 import {
   useIsInView,
-  type UseIsInViewOptions,
-} from '@/hooks/use-is-in-view';
-import { getStrictContext } from '@/lib/get-strict-context';
+  type IUseIsInViewOptions,
+  getStrictContext,
+} from '@mks2508/mks-ui/react';
 
 type Side = 'top' | 'bottom' | 'left' | 'right';
 type Align = 'start' | 'center' | 'end';
@@ -25,7 +25,7 @@ type ParticlesProps = WithAsChild<
   Omit<HTMLMotionProps<'div'>, 'children'> & {
     animate?: boolean;
     children: React.ReactNode;
-  } & UseIsInViewOptions
+  } & IUseIsInViewOptions
 >;
 
 function Particles({

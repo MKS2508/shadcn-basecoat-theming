@@ -6,12 +6,11 @@ import type { VariantProps } from 'class-variance-authority';
 
 import type { ThemeSelection } from '@/components/animate-ui/primitives/effects/theme-toggler';
 import { buttonVariants } from '@/components/animate-ui/components/buttons/icon';
-import { cn } from '@/lib/utils';
+import { cn } from '@mks2508/mks-ui/react';
 import {
   useAnimatedTheme,
   type AnimationPreset,
   type Direction,
-  type IAnimatedThemeOptions,
 } from '@/hooks/use-animated-theme';
 
 /**
