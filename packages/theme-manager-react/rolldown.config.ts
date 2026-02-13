@@ -3,7 +3,9 @@ import { defineConfig } from 'rolldown';
 export default defineConfig({
   input: {
     'index': 'src/index.tsx',
-    'nextjs/index': 'src/nextjs/index.ts'
+    'nextjs/index': 'src/nextjs/index.ts',
+    'ssr/index': 'src/ssr/index.ts',
+    'tanstack-start/index': 'src/tanstack-start/index.ts',
   },
   output: {
     dir: 'dist',
@@ -25,6 +27,10 @@ export default defineConfig({
     'next',
     'next/navigation',
     'next/headers',
+    '@tanstack/react-start',
+    '@tanstack/react-start/server',
+    'fs/promises',
+    'path',
   ],
   resolve: {
     extensions: ['.tsx', '.ts', '.jsx', '.js'],

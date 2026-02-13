@@ -3,6 +3,7 @@ import { readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { createRequire } from 'node:module';
 import type { ICSSParseResult } from './css-parser.ts';
+import { confirmChanges, type IFileChange } from './diff-preview.ts';
 
 /** Standard shadcn/neutral light variables used when the project has no :root block. */
 const FALLBACK_LIGHT_VARS: Record<string, string> = {
@@ -89,30 +90,33 @@ const THEME_FILES = [
 
 /**
  * Copies 6 core theme CSS files + generates 2 default theme files (8 total) to public/themes/.
+ * Shows a diff preview and asks for confirmation before writing.
  * When the project has :root/.dark variables, the default theme uses those.
  * Otherwise, standard shadcn/neutral fallback values are used.
  * Dark CSS files are rewritten from .dark {} to :root {} because ThemeManager's
  * extractCSSVariables() only parses :root blocks.
- * @param cwd - Project root directory
- * @param cssResult - Parsed CSS variables from the project
- * @returns List of generated file names (always 8)
+ * @param cwd - Project root directory.
+ * @param cssResult - Parsed CSS variables from the project.
+ * @returns List of generated file names, or `'declined'` if user declines.
  */
-export async function generateThemeFiles(cwd: string, cssResult: ICSSParseResult): Promise<string[]> {
+export async function generateThemeFiles(
+  cwd: string,
+  cssResult: ICSSParseResult,
+): Promise<string[] | 'declined'> {
   const themesDir = join(cwd, 'public', 'themes');
-  await mkdir(themesDir, { recursive: true });
 
   const coreThemesDir = resolveCoreThemesDir();
-  const generated: string[] = [];
+  const changes: IFileChange[] = [];
 
   for (const file of THEME_FILES) {
     let content = await readFile(join(coreThemesDir, file), 'utf-8');
-
     if (file.includes('-dark')) {
       content = rewriteDarkToRoot(content);
     }
 
-    await writeFile(join(themesDir, file), content, 'utf-8');
-    generated.push(file);
+    const targetPath = join(themesDir, file);
+    const oldContent = await readFileSafe(targetPath);
+    changes.push({ filePath: targetPath, oldContent, newContent: content });
   }
 
   const lightVars = cssResult.hasVariables
@@ -122,11 +126,44 @@ export async function generateThemeFiles(cwd: string, cssResult: ICSSParseResult
     ? cssResult.darkVars
     : new Map(Object.entries(FALLBACK_DARK_VARS));
 
-  await writeFile(join(themesDir, 'default-light.css'), buildCSSBlock(lightVars), 'utf-8');
-  await writeFile(join(themesDir, 'default-dark.css'), buildCSSBlock(darkVars), 'utf-8');
-  generated.push('default-light.css', 'default-dark.css');
+  const defaultLightPath = join(themesDir, 'default-light.css');
+  const defaultDarkPath = join(themesDir, 'default-dark.css');
+  const defaultLightContent = buildCSSBlock(lightVars);
+  const defaultDarkContent = buildCSSBlock(darkVars);
 
-  return generated;
+  changes.push({
+    filePath: defaultLightPath,
+    oldContent: await readFileSafe(defaultLightPath),
+    newContent: defaultLightContent,
+  });
+  changes.push({
+    filePath: defaultDarkPath,
+    oldContent: await readFileSafe(defaultDarkPath),
+    newContent: defaultDarkContent,
+  });
+
+  const confirmed = await confirmChanges(changes);
+  if (!confirmed) return 'declined';
+
+  await mkdir(themesDir, { recursive: true });
+  for (const change of changes) {
+    await writeFile(change.filePath, change.newContent, 'utf-8');
+  }
+
+  return changes.map((c) => c.filePath.split('/').pop()!);
+}
+
+/**
+ * Safely reads a file, returning `null` if it doesn't exist.
+ * @param filePath - Absolute path to the file.
+ * @returns File content or `null`.
+ */
+async function readFileSafe(filePath: string): Promise<string | null> {
+  try {
+    return await readFile(filePath, 'utf-8');
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -137,10 +174,7 @@ export async function generateThemeFiles(cwd: string, cssResult: ICSSParseResult
 function resolveCoreThemesDir(): string {
   const esmRequire = createRequire(import.meta.url);
   const mainEntry = esmRequire.resolve('@mks2508/shadcn-basecoat-theme-manager');
-  // mainEntry is something like .../dist/index.js or .../dist/index.mjs
-  // Go up to package root: dirname of dist/ parent
   let coreRoot = dirname(mainEntry);
-  // If we're inside dist/, go up one more level
   if (coreRoot.endsWith('/dist') || coreRoot.endsWith('\\dist')) {
     coreRoot = dirname(coreRoot);
   }
@@ -160,8 +194,8 @@ function resolveCoreThemesDir(): string {
 
 /**
  * Rewrites .dark { ... } selector to :root { ... } so ThemeManager can parse it.
- * @param css - CSS content with .dark selector
- * @returns CSS content with :root selector
+ * @param css - CSS content with .dark selector.
+ * @returns CSS content with :root selector.
  */
 function rewriteDarkToRoot(css: string): string {
   return css.replace(/\.dark\s*\{/, ':root {');
@@ -169,8 +203,8 @@ function rewriteDarkToRoot(css: string): string {
 
 /**
  * Builds a :root { } CSS block from a variable map.
- * @param vars - Map of CSS variable names to values
- * @returns Complete CSS block string
+ * @param vars - Map of CSS variable names to values.
+ * @returns Complete CSS block string.
  */
 function buildCSSBlock(vars: Map<string, string>): string {
   if (vars.size === 0) return ':root {\n}\n';

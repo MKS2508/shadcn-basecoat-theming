@@ -7,6 +7,10 @@ export interface IProjectInfo {
   framework: 'react' | 'nextjs';
   packageManager: 'bun' | 'pnpm' | 'npm';
   cssFile: string | null;
+  /** HTML entry point for React/Vite projects (e.g. `index.html`). */
+  htmlEntryPoint: string | null;
+  /** Root layout file for Next.js projects (e.g. `app/layout.tsx`). */
+  layoutFile: string | null;
   installedPackages: Set<string>;
   hasFumadocs: boolean;
 }
@@ -19,6 +23,13 @@ const CSS_CANDIDATES = [
   'src/styles/index.css',
   'src/styles/globals.css',
   'app/globals.css',
+];
+
+const LAYOUT_CANDIDATES = [
+  'app/layout.tsx',
+  'app/layout.jsx',
+  'src/app/layout.tsx',
+  'src/app/layout.jsx',
 ];
 
 const REQUIRED_PACKAGES = [
@@ -65,10 +76,27 @@ export async function detectProject(cwd: string): Promise<IProjectInfo> {
   const isNextjs = 'next' in allDeps;
   const hasFumadocs = 'fumadocs-ui' in allDeps || 'fumadocs-core' in allDeps;
 
+  let htmlEntryPoint: string | null = null;
+  if (!isNextjs && await fileExists(join(cwd, 'index.html'))) {
+    htmlEntryPoint = 'index.html';
+  }
+
+  let layoutFile: string | null = null;
+  if (isNextjs) {
+    for (const candidate of LAYOUT_CANDIDATES) {
+      if (await fileExists(join(cwd, candidate))) {
+        layoutFile = candidate;
+        break;
+      }
+    }
+  }
+
   return {
     framework: isNextjs ? 'nextjs' : 'react',
     packageManager,
     cssFile,
+    htmlEntryPoint,
+    layoutFile,
     installedPackages,
     hasFumadocs,
   };

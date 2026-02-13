@@ -337,13 +337,20 @@ export class ThemeManager {
         this.currentStyleElement = null;
       }
 
-      // Set data attributes for debugging
+      // Set data attributes and manage dark mode class + colorScheme
       safeDOMManipulation(() => {
         const document = safeGetDocument();
         if (!document?.documentElement) return;
 
         document.documentElement.setAttribute('data-theme', themeName);
         document.documentElement.setAttribute('data-mode', resolvedMode);
+
+        if (resolvedMode === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+        document.documentElement.style.colorScheme = resolvedMode;
       });
 
       // Load fonts for this theme if available
@@ -404,30 +411,31 @@ export class ThemeManager {
   }
 
   /**
-   * Extract CSS variables from CSS content
+   * Extract CSS variables from CSS content.
+   * Matches any CSS block containing custom properties (:root, .dark, etc.).
    */
   private extractCSSVariables(cssContent: string): Record<string, string> {
     const variables: Record<string, string> = {};
-    
-    // Match :root { ... } block
-    const rootMatch = cssContent.match(/:root\s*{([^}]+)}/);
-    if (!rootMatch) {
-      return variables;
+
+    // Match all CSS rule blocks that contain custom properties
+    const blockRegex = /[^{}]*\{([^}]+)\}/g;
+    let blockMatch: RegExpExecArray | null;
+
+    while ((blockMatch = blockRegex.exec(cssContent)) !== null) {
+      const blockContent = blockMatch[1];
+      const variableMatches = blockContent.match(/--[\w-]+:\s*[^;]+/g);
+      if (variableMatches) {
+        variableMatches.forEach(match => {
+          const colonIdx = match.indexOf(':');
+          const property = match.slice(0, colonIdx).trim();
+          const value = match.slice(colonIdx + 1).trim();
+          if (property && value) {
+            variables[property] = value;
+          }
+        });
+      }
     }
-    
-    const rootContent = rootMatch[1];
-    
-    // Extract CSS variable declarations
-    const variableMatches = rootContent.match(/--[\w-]+:\s*[^;]+/g);
-    if (variableMatches) {
-      variableMatches.forEach(match => {
-        const [property, value] = match.split(':').map(s => s.trim());
-        if (property && value) {
-          variables[property] = value;
-        }
-      });
-    }
-    
+
     return variables;
   }
 

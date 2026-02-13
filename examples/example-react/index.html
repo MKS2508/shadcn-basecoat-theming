@@ -11,6 +11,22 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>example-react</title>
+    <script id="theme-fouc-prevention">(function(){try{var t=localStorage.getItem('theme-current');
+var m=localStorage.getItem('theme-mode');
+
+if(!t||!m){try{var c=localStorage.getItem('theme-mode-config');if(c){var p=JSON.parse(c);if(!t&&p.currentTheme)t=p.currentTheme;if(!m&&p.currentMode)m=p.currentMode;}}catch(e){}}
+
+t=t||'default';m=m||'auto';
+
+var em=m==='auto'?(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):m;
+
+var d=document.documentElement;
+d.setAttribute('data-theme',t);
+d.setAttribute('data-mode',em);
+d.style.colorScheme=em;
+if(em==='dark'){d.classList.add('dark');}else{d.classList.remove('dark');}
+
+try{var cv=localStorage.getItem('theme-css-vars');if(cv){var vars=JSON.parse(cv);for(var k in vars){if(vars.hasOwnProperty(k))d.style.setProperty(k,vars[k]);}}}catch(e){}}catch(e){console.warn('FOUC prevention failed:',e);}})();</script>
   </head>
   <body>
     <div id="root"></div>

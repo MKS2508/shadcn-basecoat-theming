@@ -1,6 +1,7 @@
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { ICSSParseResult } from './css-parser.ts';
+import { confirmChanges, type IFileChange } from './diff-preview.ts';
 
 interface IThemeEntry {
   id: string;
@@ -104,14 +105,18 @@ const CORE_THEMES: IThemeEntry[] = [
 
 /**
  * Builds and writes public/registry.json with default theme + 3 core themes (4 total).
+ * Shows a diff preview and asks for confirmation before writing.
  * The default theme always comes first and is marked as the default.
  * When the project has CSS variables, preview colors come from those.
  * Otherwise, standard shadcn/neutral preview colors are used.
- * @param cwd - Project root directory
- * @param cssResult - Parsed CSS variables from the project
- * @returns Number of themes in the registry
+ * @param cwd - Project root directory.
+ * @param cssResult - Parsed CSS variables from the project.
+ * @returns Number of themes in the registry, or `'declined'` if user declines.
  */
-export async function buildRegistry(cwd: string, cssResult: ICSSParseResult): Promise<number> {
+export async function buildRegistry(
+  cwd: string,
+  cssResult: ICSSParseResult,
+): Promise<number | 'declined'> {
   const description = cssResult.hasVariables
     ? 'Original project theme extracted from CSS variables'
     : 'Standard shadcn/neutral theme';
@@ -153,7 +158,22 @@ export async function buildRegistry(cwd: string, cssResult: ICSSParseResult): Pr
   };
 
   const registryPath = join(cwd, 'public', 'registry.json');
-  await writeFile(registryPath, JSON.stringify(registry, null, 2) + '\n', 'utf-8');
+  const newContent = JSON.stringify(registry, null, 2) + '\n';
 
+  let oldContent: string | null = null;
+  try {
+    oldContent = await readFile(registryPath, 'utf-8');
+  } catch {
+    // File doesn't exist yet
+  }
+
+  const changes: IFileChange[] = [
+    { filePath: registryPath, oldContent, newContent },
+  ];
+
+  const confirmed = await confirmChanges(changes);
+  if (!confirmed) return 'declined';
+
+  await writeFile(registryPath, newContent, 'utf-8');
   return themes.length;
 }

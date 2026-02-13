@@ -12,6 +12,9 @@ export default defineConfig({
   external: [
     '@mks2508/better-logger',
     '@mks2508/shadcn-basecoat-theme-manager',
+    /^shiki/,
+    /^@shikijs/,
+    /^@shiki-/,
     ...builtinModules,
     ...builtinModules.map((m) => `node:${m}`),
   ],

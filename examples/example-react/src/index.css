@@ -3,6 +3,8 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist-mono";
 
+@source "../node_modules/@mks2508/mks-ui/dist";
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
