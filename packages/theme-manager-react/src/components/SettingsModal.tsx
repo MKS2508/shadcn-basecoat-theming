@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { Palette, Type, Zap, Settings, X } from 'lucide-react';
-import { Button, AlertDialog as Dialog, AlertDialogPopup as DialogPopup, AlertDialogTitle } from '@mks2508/mks-ui/react';
+import {
+  Button,
+  AlertDialog,
+  AlertDialogPortal,
+  AlertDialogBackdrop,
+  AlertDialogPopup,
+  AlertDialogTitle,
+  AlertDialogClose
+} from '@mks2508/mks-ui/react';
 import { cn } from '../lib/utils';
 import { ThemeManagementContent } from './ThemeManagementContent';
 import { FontSettingsContent } from './FontSettingsContent';
@@ -40,8 +48,10 @@ export const SettingsModal: React.FC<ISettingsModalProps> = ({
   if (!open) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogPopup className="max-w-2xl w-full">
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogPortal>
+        <AlertDialogBackdrop />
+        <AlertDialogPopup className="max-w-2xl w-full">
         <div className="flex items-center justify-between border-b pb-4 mb-4">
           <AlertDialogTitle className="flex items-center gap-2 text-lg font-semibold">
             <div className="p-2 bg-primary/10 rounded-lg">
@@ -49,14 +59,11 @@ export const SettingsModal: React.FC<ISettingsModalProps> = ({
             </div>
             Settings
           </AlertDialogTitle>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onOpenChange(false)}
-            className="h-8 w-8"
+          <AlertDialogClose
+            render={<Button variant="ghost" size="icon" className="h-8 w-8" />}
           >
             <X className="size-4" />
-          </Button>
+          </AlertDialogClose>
         </div>
 
         <div className="flex items-center justify-center rounded-lg border p-1 mb-4">
@@ -89,12 +96,13 @@ export const SettingsModal: React.FC<ISettingsModalProps> = ({
         </div>
 
         <div className="flex justify-end border-t pt-4 mt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <AlertDialogClose render={<Button variant="outline" />}>
             Close
-          </Button>
+          </AlertDialogClose>
         </div>
-      </DialogPopup>
-    </Dialog>
+        </AlertDialogPopup>
+      </AlertDialogPortal>
+    </AlertDialog>
   );
 };
 
