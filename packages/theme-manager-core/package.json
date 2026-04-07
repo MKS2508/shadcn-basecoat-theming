@@ -1,6 +1,6 @@
 {
   "name": "@mks2508/shadcn-basecoat-theme-manager",
-  "version": "4.1.1",
+  "version": "4.3.0",
   "description": "Core theme and font management system for shadcn/ui and Basecoat CSS",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -51,7 +51,7 @@
     "vitest": "^4.0.18"
   },
   "peerDependencies": {
-    "@mks2508/better-logger": "^5.0.0"
+    "@mks2508/better-logger": "^5.0.1"
   },
   "files": [
     "dist",

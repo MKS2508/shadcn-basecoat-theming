@@ -5,6 +5,7 @@ export { FontManager } from './core/font-manager';
 export { FontLoader } from './core/font-loader';
 export { ThemeRegistry } from './core/theme-registry';
 export { StorageManager } from './core/storage-manager';
+export { ThemeResolver } from './core/theme-resolver';
 
 // Utilities
 export { PerformanceTracker } from './utils/performance-tracker';
@@ -35,10 +36,17 @@ export type { IFumadocsAdapterConfig } from './adapters/fumadocs-adapter';
 
 // Types
 export type { ThemeCoreConfig, ThemeCoreInstance } from './core/theme-core';
-export type { ThemeConfig } from './core/theme-registry';
+export type { ThemeConfig, ThemeRegistryData } from './core/theme-registry';
 export type { FontOverride } from './core/font-manager';
 export type { CachedTheme, FontOverrideConfig, ThemeModeConfig } from './core/storage-manager';
 export type { ThemeGlobalWindow, ThemeHTMLDialogElement } from './types/global';
+export type {
+  IThemeResolverConfig,
+  IEmbeddedThemeData,
+  IThemeMetadata,
+  IResolvedThemeResult,
+  TDiscriminatedInput,
+} from './types/theme-resolver';
 
 // Font-related types
 export type FontCategory = 'sans' | 'serif' | 'mono';

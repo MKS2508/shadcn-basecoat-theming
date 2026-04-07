@@ -1,6 +1,6 @@
 {
   "name": "@mks2508/theme-manager-react",
-  "version": "3.6.2",
+  "version": "3.8.0",
   "description": "React hooks and components for theme management (shadcn/ui compatible, SSR-ready for Next.js, TanStack Start, Remix)",
   "type": "module",
   "main": "dist/index.js",
@@ -44,7 +44,7 @@
   "license": "MIT",
   "dependencies": {
     "@mks2508/mks-ui": "latest",
-    "@mks2508/shadcn-basecoat-theme-manager": "^4.1.1"
+    "@mks2508/shadcn-basecoat-theme-manager": "^4.3.0"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

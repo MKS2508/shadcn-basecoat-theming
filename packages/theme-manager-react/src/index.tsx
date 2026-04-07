@@ -5,7 +5,8 @@ import {
   FontManager,
   ThemeInstaller,
   ThemeConfig,
-  FontOverride
+  FontOverride,
+  ThemeResolver
 } from '@mks2508/shadcn-basecoat-theme-manager';
 import { ThemeManagementModal as ThemeManagementModalComponent } from './components/ThemeManagementModal';
 import { FontSettingsModal as FontSettingsModalComponent } from './components/FontSettingsModal';
@@ -58,7 +59,9 @@ interface ThemeProviderProps {
   children: React.ReactNode;
   defaultTheme?: string;
   defaultMode?: 'light' | 'dark' | 'auto';
+  themeResolver?: ThemeResolver;
   registryUrl?: string;
+  registryData?: any;
   storageKey?: string;
   enableTransitions?: boolean;
 }
@@ -67,7 +70,9 @@ export function ThemeProvider({
   children,
   defaultTheme = 'default',
   defaultMode = 'auto',
+  themeResolver,
   registryUrl = '/themes/registry.json',
+  registryData,
   storageKey = 'theme-preference',
   enableTransitions = true
 }: ThemeProviderProps) {
@@ -106,6 +111,8 @@ export function ThemeProvider({
         // Auto-initialize with provided configuration
         await ThemeCore.init({
           registryPath: registryUrl,
+          registryData,
+          themeResolver,
           debug: false
         });
 
@@ -181,7 +188,7 @@ export function ThemeProvider({
     };
 
     initThemeManager();
-  }, [defaultTheme, defaultMode, registryUrl]);
+  }, [defaultTheme, defaultMode, registryUrl, registryData, themeResolver]);
 
   const setTheme = useCallback(async (theme: string, mode?: 'light' | 'dark' | 'auto') => {
     if (!themeManager) return;

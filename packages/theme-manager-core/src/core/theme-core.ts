@@ -8,6 +8,7 @@ import { StorageManager } from './storage-manager';
 import { ThemeInstaller } from '../installers/theme-installer';
 import { ThemeListFetcher } from '../installers/theme-list-fetcher';
 import { getFontsByCategory } from '../catalogs/font-catalog';
+import { ThemeResolver } from './theme-resolver';
 import {
   isClient,
   isServer,
@@ -24,16 +25,18 @@ import { generateFOUCScript } from '../utils/fouc-script';
 
 export interface ThemeCoreConfig {
   registryPath?: string;
+  registryData?: import('./theme-registry').ThemeRegistryData;
   themesPath?: string;
+  themeResolver?: ThemeResolver;
   debug?: boolean;
-  
+
   // FOUC prevention
   fouc?: {
     prevent?: boolean;
     method?: 'auto' | 'inline' | 'programmatic';
     revealDelay?: number;
   };
-  
+
   // Default configuration (hardcoded)
   defaults?: {
     theme?: string;
@@ -142,7 +145,11 @@ export class ThemeCore {
       this.handleFOUCPrevention();
 
       // Create core instances
-      const themeManager = new ThemeManager(this.config.registryPath);
+      const themeManager = new ThemeManager(
+        this.config.registryPath,
+        this.config.registryData,
+        this.config.themeResolver
+      );
       const themeInstaller = new ThemeInstaller(themeManager);
       const themeListFetcher = new ThemeListFetcher();
 
