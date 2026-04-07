@@ -7,5 +7,8 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   clean: true,
-  external: ['@mks2508/better-logger']
+  treeshake: true,
+  external: ['@mks2508/better-logger'],
+  // Ensure all internal files are bundled
+  noExternal: []
 });
