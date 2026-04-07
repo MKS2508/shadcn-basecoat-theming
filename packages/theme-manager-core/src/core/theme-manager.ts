@@ -262,12 +262,29 @@ export class ThemeManager {
       return;
     }
 
-    // Get theme config from registry
-    const themeConfig = this.themeRegistry.getTheme(themeName);
+    // Get theme config from registry (try ThemeResolver first if available)
+    let themeConfig = this.themeResolver?.hasTheme(themeName)
+      ? this.themeResolver.getRegistry().find(t => t.id === themeName)
+      : this.themeRegistry.getTheme(themeName);
+
     if (!themeConfig) {
-      themeName = 'default';
-      const fallbackTheme = this.themeRegistry.getTheme('default');
+      // Try fallback from ThemeResolver or ThemeRegistry
+      const fallbackTheme = this.themeResolver?.hasTheme('default')
+        ? this.themeResolver.getRegistry().find(t => t.id === 'default')
+        : this.themeRegistry.getTheme('default');
+
       if (!fallbackTheme) {
+        // If ThemeResolver has themes, use first available theme
+        if (this.themeResolver) {
+          const availableThemes = this.themeResolver.getRegistry();
+          if (availableThemes.length > 0) {
+            themeName = availableThemes[0].id;
+            themeConfig = availableThemes[0];
+          }
+        }
+      }
+
+      if (!themeConfig) {
         throw new Error('Default theme not found in registry');
       }
     }
@@ -347,8 +364,8 @@ export class ThemeManager {
         // ThemeResolver failed, fall through to original fetch-based approach
       }
 
-      // FALLBACK: Original fetch-based approach
-      const finalThemeConfig = this.themeRegistry.getTheme(themeName)!;
+      // FALLBACK: Original fetch-based approach (use themeConfig from above)
+      const finalThemeConfig = themeConfig!;
       const cssPath = finalThemeConfig.modes[resolvedMode];
 
       if (cssPath.startsWith('blob:')) {
@@ -678,6 +695,10 @@ export class ThemeManager {
    */
   getAvailableThemes(): ThemeConfig[] {
     try {
+      // Use ThemeResolver registry if available
+      if (this.themeResolver && this.themeResolver.hasTheme('any')) {
+        return this.themeResolver.getRegistry();
+      }
       return this.themeRegistry.getAvailableThemes();
     } catch (error) {
       return [];

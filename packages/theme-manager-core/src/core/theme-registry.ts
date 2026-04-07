@@ -46,7 +46,7 @@ export interface ThemeConfig {
 /**
  * Registry schema for built-in themes
  */
-interface ThemeRegistryData {
+export interface ThemeRegistryData {
   version: string;
   lastUpdated: string;
   themes: ThemeConfig[];
@@ -63,12 +63,13 @@ export class ThemeRegistry {
   private isInitialized = false;
   private registryPath: string;
   private packageRegistryPath: string;
+  private inlineRegistryData?: ThemeRegistryData;
 
-  constructor(registryPath: string = '/themes/registry.json') {
+  constructor(registryPath: string = '/themes/registry.json', registryData?: ThemeRegistryData) {
     this.storageManager = StorageManager.getInstance();
     this.registryPath = registryPath;
-    // Path to registry when bundled in node_modules
     this.packageRegistryPath = '@mks2508/shadcn-basecoat-theme-manager/registry.json';
+    this.inlineRegistryData = registryData;
   }
 
   /**
@@ -109,39 +110,43 @@ export class ThemeRegistry {
    */
   private async loadBuiltInThemes(): Promise<void> {
     try {
-      // Try to load from bundled package first (node_modules environment)
-      let registryUrl = this.packageRegistryPath;
       let registryData: ThemeRegistryData;
 
-      try {
-        console.log(`🔄 [ThemeRegistry] Fetching from bundle: ${registryUrl}`);
-        const response = await fetch(registryUrl);
+      if (this.inlineRegistryData) {
+        registryData = this.inlineRegistryData;
+        console.log('✅ [ThemeRegistry] Using inline registry data');
+      } else {
+        // Try to load from bundled package first (node_modules environment)
+        let registryUrl = this.packageRegistryPath;
 
-        if (response.ok) {
-          const text = await response.text();
-          // Check if it's actual registry content, not a 404 or module not found
-          if (text.includes('"version"') && text.includes('"themes"')) {
-            registryData = JSON.parse(text);
-            console.log('✅ [ThemeRegistry] Loaded from bundled package');
+        try {
+          console.log(`🔄 [ThemeRegistry] Fetching from bundle: ${registryUrl}`);
+          const response = await fetch(registryUrl);
+
+          if (response.ok) {
+            const text = await response.text();
+            if (text.includes('"version"') && text.includes('"themes"')) {
+              registryData = JSON.parse(text);
+              console.log('✅ [ThemeRegistry] Loaded from bundled package');
+            } else {
+              throw new Error('Invalid registry from bundle');
+            }
           } else {
-            throw new Error('Invalid registry from bundle');
+            throw new Error(`Bundle fetch failed: ${response.status}`);
           }
-        } else {
-          throw new Error(`Bundle fetch failed: ${response.status}`);
-        }
-      } catch (bundleError) {
-        // Fallback to relative path (development or unbundled)
-        console.log(`⚠️ [ThemeRegistry] Bundle not available, trying relative path: ${this.registryPath}`);
-        console.log(`Bundle error: ${bundleError}`);
+        } catch (bundleError) {
+          console.log(`⚠️ [ThemeRegistry] Bundle not available, trying relative path: ${this.registryPath}`);
+          console.log(`Bundle error: ${bundleError}`);
 
-        const response = await fetch(this.registryPath);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch registry.json: ${response.status}`);
-        }
+          const response = await fetch(this.registryPath);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch registry.json: ${response.status}`);
+          }
 
-        const text = await response.text();
-        registryData = JSON.parse(text);
-        console.log('✅ [ThemeRegistry] Loaded from relative path');
+          const text = await response.text();
+          registryData = JSON.parse(text);
+          console.log('✅ [ThemeRegistry] Loaded from relative path');
+        }
       }
 
       console.log('✅ [ThemeRegistry] Registry parsed successfully');
