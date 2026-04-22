@@ -64,7 +64,7 @@
     "workflow:full": "pnpm run commit:auto && pnpm run workflow:release"
   },
   "dependencies": {
-    "@mks2508/better-logger": "^5.0.0",
+    "@mks2508/better-logger": "^5.0.2",
     "@mks2508/shadcn-basecoat-theme-manager": "workspace:*",
     "@mks2508/theme-manager-vanilla": "workspace:*",
     "@radix-ui/react-label": "^2.1.7",
@@ -74,18 +74,18 @@
     "basecoat-css": "^0.3.11",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^0.563.0",
-    "tailwind-merge": "^3.4.0",
-    "ws": "^8.19.0"
+    "lucide-react": "^1.7.0",
+    "tailwind-merge": "^3.5.0",
+    "ws": "^8.20.0"
   },
   "devDependencies": {
-    "@google/genai": "^1.41.0",
-    "@tailwindcss/vite": "^4.1.18",
-    "shadcn": "^3.8.4",
-    "tailwindcss": "^4.1.18",
+    "@google/genai": "^1.48.0",
+    "@tailwindcss/vite": "^4.2.2",
+    "shadcn": "^4.2.0",
+    "tailwindcss": "^4.2.2",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
-    "vite": "^7.3.1"
+    "typescript": "^6.0.2",
+    "vite": "^8.0.7"
   },
   "keywords": [
     "vite",

@@ -85,16 +85,16 @@ export class ThemeManager {
       await this.storageManager.init();
       console.log('✅ [ThemeManager] StorageManager initialized');
 
-      // Initialize theme registry
-      console.log('🔄 [ThemeManager] Initializing ThemeRegistry...');
-      await this.themeRegistry.init();
-      console.log('✅ [ThemeManager] ThemeRegistry initialized');
-
-      // Initialize ThemeResolver if provided
+      // Initialize ThemeResolver if provided, otherwise initialize ThemeRegistry
       if (this.themeResolver) {
         console.log('🔄 [ThemeManager] Initializing ThemeResolver...');
         await this.themeResolver.init();
         console.log('✅ [ThemeManager] ThemeResolver initialized');
+      } else {
+        // Initialize theme registry
+        console.log('🔄 [ThemeManager] Initializing ThemeRegistry...');
+        await this.themeRegistry.init();
+        console.log('✅ [ThemeManager] ThemeRegistry initialized');
       }
 
       // Initialize font manager with timeout fallback
@@ -123,10 +123,25 @@ export class ThemeManager {
       const savedMode = savedConfig?.currentMode || 'auto';
       console.log('✅ [ThemeManager] Saved theme:', savedTheme, 'mode:', savedMode);
 
-      // Validate saved theme exists in registry
+      // Validate saved theme exists in registry (try ThemeResolver first, then ThemeRegistry)
       console.log('🔄 [ThemeManager] Validating saved theme exists...');
-      const themeExists = this.themeRegistry.getTheme(savedTheme);
-      this.currentTheme = themeExists ? savedTheme : 'default';
+
+      let themeExists = this.themeResolver?.hasTheme(savedTheme);
+      if (!themeExists && !this.themeResolver) {
+        // Only check ThemeRegistry when no ThemeResolver (registry not initialized otherwise)
+        themeExists = !!this.themeRegistry.getTheme(savedTheme);
+      }
+
+      // Set current theme (use saved theme if exists, otherwise first from ThemeResolver or 'default')
+      if (themeExists) {
+        this.currentTheme = savedTheme;
+      } else if (this.themeResolver) {
+        const firstTheme = this.themeResolver.getRegistry()[0];
+        this.currentTheme = firstTheme?.id || 'default';
+        console.log('🔍 [ThemeManager] Using first theme from ThemeResolver:', this.currentTheme);
+      } else {
+        this.currentTheme = 'default';
+      }
       this.currentMode = savedMode;
       console.log('✅ [ThemeManager] Current theme set to:', this.currentTheme);
 
@@ -202,8 +217,8 @@ export class ThemeManager {
    * Prefetch a specific theme (single-request optimization)
    */
   private prefetchTheme(themeName: string, mode: 'light' | 'dark'): void {
-    // Skip prefetching on server
-    if (!isClient()) return;
+    // Skip prefetching on server or when using ThemeResolver (no CSS file paths to prefetch)
+    if (!isClient() || this.themeResolver) return;
 
     const themeConfig = this.themeRegistry.getTheme(themeName);
     if (!themeConfig) return;
@@ -501,6 +516,10 @@ export class ThemeManager {
    */
   private async loadThemeFonts(themeName: string): Promise<void> {
     try {
+      // Skip font loading from ThemeRegistry when using ThemeResolver
+      // (ThemeResolver-based themes handle fonts through CSS variables directly)
+      if (this.themeResolver) return;
+
       const themeConfig = this.themeRegistry.getTheme(themeName);
       if (themeConfig && themeConfig.fonts) {
 
@@ -696,7 +715,7 @@ export class ThemeManager {
   getAvailableThemes(): ThemeConfig[] {
     try {
       // Use ThemeResolver registry if available
-      if (this.themeResolver && this.themeResolver.hasTheme('any')) {
+      if (this.themeResolver) {
         return this.themeResolver.getRegistry();
       }
       return this.themeRegistry.getAvailableThemes();
