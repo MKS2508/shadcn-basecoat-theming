@@ -154,10 +154,12 @@ export function SSRThemeProvider({
     initialized, loading, error, setTheme, toggleTheme, toggleMode,
   };
 
-  if (!mounted) {
-    return <div suppressHydrationWarning>{children}</div>;
-  }
-
+  // El context se provee SIEMPRE (también en SSR/primer render): el value
+  // pre-mount contiene los defaults deterministas (mismos en server y primer
+  // render cliente), así los consumidores de useSSRTheme renderizan en SSR sin
+  // throw y sin hydration mismatch. El antiguo guard `if (!mounted) return
+  // <div>{children}</div>` dejaba a los hijos FUERA del provider durante SSR
+  // (throw en useSSRTheme) y metía un <div> extra que alteraba el layout.
   return (
     <SSRThemeContext.Provider value={value}>
       {children}

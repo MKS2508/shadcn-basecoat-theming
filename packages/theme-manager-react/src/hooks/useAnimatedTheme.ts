@@ -71,21 +71,24 @@ type PresetHandler = (opts: {
 
 const presets: Record<AnimationPreset, PresetHandler> = {
   wipe: ({ direction, duration }) => {
-    const keyframes: Record<Direction, [string, string]> = {
-      ltr: ['inset(0 100% 0 0)', 'inset(0 0 0 0)'],
-      rtl: ['inset(0 0 0 100%)', 'inset(0 0 0 0)'],
-      ttb: ['inset(0 0 100% 0)', 'inset(0 0 0 0)'],
-      btt: ['inset(100% 0 0 0)', 'inset(0 0 0 0)'],
+    const fromClip: Record<Direction, string> = {
+      ltr: 'inset(0 100% 0 0)',
+      rtl: 'inset(0 0 0 100%)',
+      ttb: 'inset(0 0 100% 0)',
+      btt: 'inset(100% 0 0 0)',
     };
-    const [from, to] = keyframes[direction];
     return {
-      css: BASE_NO_ANIMATION,
-      animate: () => {
-        document.documentElement.animate(
-          { clipPath: [from, to] },
-          { duration, easing: 'ease-in-out', pseudoElement: '::view-transition-new(root)' },
-        );
-      },
+      css: `
+::view-transition-old(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-new(root) {
+  animation: ${duration}ms ease-in-out both vt-wipe-${direction};
+  mix-blend-mode: normal;
+}
+@keyframes vt-wipe-${direction} {
+  from { clip-path: ${fromClip[direction]}; }
+  to   { clip-path: inset(0 0 0 0); }
+}`,
+      animate: null,
     };
   },
 
@@ -93,13 +96,17 @@ const presets: Record<AnimationPreset, PresetHandler> = {
     const { x, y } = getOrigin(event);
     const r = maxRadius(x, y);
     return {
-      css: BASE_NO_ANIMATION,
-      animate: () => {
-        document.documentElement.animate(
-          { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`] },
-          { duration, easing: 'ease-in-out', pseudoElement: '::view-transition-new(root)' },
-        );
-      },
+      css: `
+::view-transition-old(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-new(root) {
+  animation: ${duration}ms ease-in-out both vt-circle-expand;
+  mix-blend-mode: normal;
+}
+@keyframes vt-circle-expand {
+  from { clip-path: circle(0px at ${x}px ${y}px); }
+  to   { clip-path: circle(${r}px at ${x}px ${y}px); }
+}`,
+      animate: null,
     };
   },
 
@@ -107,29 +114,33 @@ const presets: Record<AnimationPreset, PresetHandler> = {
     const { x, y } = getOrigin(event);
     const r = maxRadius(x, y);
     return {
-      css: BASE_NO_ANIMATION + OLD_ON_TOP,
-      animate: () => {
-        document.documentElement.animate(
-          { clipPath: [`circle(${r}px at ${x}px ${y}px)`, `circle(0px at ${x}px ${y}px)`] },
-          { duration, easing: 'ease-in-out', pseudoElement: '::view-transition-old(root)' },
-        );
-      },
+      css: `
+::view-transition-new(root) { animation: none; mix-blend-mode: normal; z-index: 9; }
+::view-transition-old(root) {
+  animation: ${duration}ms ease-in-out both vt-circle-shrink;
+  mix-blend-mode: normal;
+  z-index: 10;
+}
+@keyframes vt-circle-shrink {
+  from { clip-path: circle(${r}px at ${x}px ${y}px); }
+  to   { clip-path: circle(0px at ${x}px ${y}px); }
+}`,
+      animate: null,
     };
   },
 
   diamond: ({ duration }) => ({
-    css: BASE_NO_ANIMATION,
-    animate: () => {
-      document.documentElement.animate(
-        {
-          clipPath: [
-            'polygon(50% 50%, 50% 50%, 50% 50%)',
-            'polygon(50% -50%, 150% 50%, 50% 150%, -50% 50%)',
-          ],
-        },
-        { duration, easing: 'ease-in-out', pseudoElement: '::view-transition-new(root)' },
-      );
-    },
+    css: `
+::view-transition-old(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-new(root) {
+  animation: ${duration}ms ease-in-out both vt-diamond;
+  mix-blend-mode: normal;
+}
+@keyframes vt-diamond {
+  from { clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%); }
+  to   { clip-path: polygon(50% -50%, 150% 50%, 50% 150%, -50% 50%); }
+}`,
+    animate: null,
   }),
 
   crossfade: ({ duration }) => ({
