@@ -16,23 +16,34 @@ import { join } from 'path';
 /**
  * Extract CSS custom properties from a CSS string.
  *
+ * Matches `:root { … }` blocks and, when `mode` is given, also `.light { … }`
+ * / `.dark { … }` blocks — the theme CSS emitted by
+ * `shadcn-basecoat-theme-manager` scopes dark-mode vars under `.dark` instead
+ * of `:root`, so parsing only `:root` returned `{}` for dark themes and the
+ * SSR first paint lost the theme (FOUC). Class-scoped values override `:root`.
+ *
  * @param css - Raw CSS file content.
+ * @param mode - Active mode whose class-scoped block should also be parsed.
  * @returns Map of `--property: value` pairs.
  */
-function extractCSSVariables(css: string): Record<string, string> {
+function extractCSSVariables(
+  css: string,
+  mode?: 'light' | 'dark',
+): Record<string, string> {
   const vars: Record<string, string> = {};
-  const rootMatch = css.match(/:root\s*\{([^}]+)\}/g);
-  if (!rootMatch) return vars;
+  const selectors = [':root', ...(mode ? [`.${mode}`] : [])];
 
-  for (const block of rootMatch) {
-    const content = block.replace(/:root\s*\{/, '').replace(/\}/, '');
-    const lines = content.split(';').filter(l => l.trim());
-    for (const line of lines) {
-      const colonIdx = line.indexOf(':');
-      if (colonIdx === -1) continue;
-      const prop = line.slice(0, colonIdx).trim();
-      const val = line.slice(colonIdx + 1).trim();
-      if (prop.startsWith('--')) vars[prop] = val;
+  for (const selector of selectors) {
+    const re = new RegExp(`${selector.replace('.', '\\.')}\\s*\\{([^}]+)\\}`, 'g');
+    for (const match of css.matchAll(re)) {
+      const lines = match[1].split(';').filter(l => l.trim());
+      for (const line of lines) {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx === -1) continue;
+        const prop = line.slice(0, colonIdx).trim();
+        const val = line.slice(colonIdx + 1).trim();
+        if (prop.startsWith('--')) vars[prop] = val;
+      }
     }
   }
   return vars;
@@ -62,7 +73,10 @@ export const getThemeConfigForSSR = createServerFn({ method: 'GET' })
       const cssPath = join(process.cwd(), 'public', cssFile);
       try {
         const cssContent = await readFile(cssPath, 'utf-8');
-        cssVars = extractCSSVariables(cssContent);
+        cssVars = extractCSSVariables(
+          cssContent,
+          data.mode === 'light' || data.mode === 'dark' ? data.mode : undefined,
+        );
       } catch (_) {
         // CSS file not found — return empty vars
       }

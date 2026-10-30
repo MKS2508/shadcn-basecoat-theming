@@ -1,6 +1,6 @@
 {
   "name": "@mks2508/theme-manager-react",
-  "version": "3.8.4",
+  "version": "3.8.6",
   "description": "React hooks and components for theme management (shadcn/ui compatible, SSR-ready for Next.js, TanStack Start, Remix)",
   "type": "module",
   "main": "dist/index.js",
@@ -21,6 +21,10 @@
     "./tanstack-start": {
       "types": "./dist/tanstack-start/index.d.ts",
       "import": "./dist/tanstack-start/index.js"
+    },
+    "./tanstack-start/server": {
+      "types": "./dist/tanstack-start/server.d.ts",
+      "import": "./dist/tanstack-start/server.js"
     }
   },
   "scripts": {

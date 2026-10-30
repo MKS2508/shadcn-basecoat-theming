@@ -60,7 +60,9 @@ export interface ISSRThemeProviderProps {
  * SSR-optimized theme provider with cookie persistence.
  *
  * Wraps your app and provides theme state + methods via context.
- * Uses a mount guard to prevent hydration mismatches.
+ * Provides context on every render (SSR + first client render) with
+ * deterministic pre-mount defaults so `useSSRTheme` never throws and there
+ * is no hydration mismatch (see the inline note near the return).
  *
  * @example
  * ```tsx
@@ -97,11 +99,34 @@ export function SSRThemeProvider({
       try {
         const cookieAdapter = new CookieStorageAdapter();
 
-        await ThemeCore.init({ registryPath: registryUrl, debug: false });
+        // FIX 3.8.5: propagate defaultTheme/defaultMode to ThemeCore via the
+        // designed ThemeCoreConfig.defaults API. Without this, ThemeManager.init
+        // falls back to the hardcoded id "default" (absent from non-basecoat
+        // registries), applyTheme throws "Default theme not found in registry",
+        // init() swallows the error, and currentTheme stays "default" with no
+        // CSS applied at boot. Bonus: applySyncFOUCPrevention also reads
+        // defaults.theme, so this fixes first-frame FOUC too.
+        await ThemeCore.init({
+          registryPath: registryUrl,
+          debug: false,
+          defaults: { theme: defaultTheme, mode: defaultMode },
+        });
         StorageManager.getInstanceWithAdapter(cookieAdapter);
 
         const mgr = ThemeCore.getManager()!;
         setThemeManager(mgr);
+
+        // Defensive guard: covers a persisted theme (cookie/localStorage) that
+        // no longer exists in the current registry — applyDefaultConfiguration
+        // skips those because !storage.getCurrentTheme() is false. Force the
+        // default back so the app never boots on an invalid theme id.
+        const currentIsValid = mgr
+          .getAvailableThemes()
+          .some((t) => t.id === mgr.getCurrentTheme());
+        if (!currentIsValid) {
+          await mgr.setTheme(defaultTheme, defaultMode);
+        }
+
         setCurrentTheme(mgr.getCurrentTheme());
         setCurrentMode(mgr.getCurrentMode());
         setThemes(mgr.getAvailableThemes());

@@ -1,210 +1,26 @@
 import { useCallback, useRef } from 'react';
-import { flushSync } from 'react-dom';
 import { useTheme } from '../index';
+import {
+  animateThemeChange,
+  type AnimationPreset,
+  type Direction,
+  type IAnimatedThemeOptions,
+} from './animate-transition';
 
-export type Direction = 'ltr' | 'rtl' | 'ttb' | 'btt';
+export type { AnimationPreset, Direction, IAnimatedThemeOptions } from './animate-transition';
+export { ANIMATION_PRESETS, DIRECTIONAL_PRESETS, DIRECTION_OPTIONS } from './animate-transition';
 
-export type AnimationPreset =
-  | 'wipe'
-  | 'circle-expand'
-  | 'circle-shrink'
-  | 'diamond'
-  | 'crossfade'
-  | 'slide'
-  | 'gif-mask'
-  | 'none';
-
-export interface IAnimatedThemeOptions {
-  animation?: AnimationPreset;
-  direction?: Direction;
-  duration?: number;
-}
-
-function resolveMode(mode: 'light' | 'dark' | 'auto'): 'light' | 'dark' {
-  if (mode !== 'auto') return mode;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'dark'
-    : 'light';
-}
-
-function injectTransitionStyles(css: string): () => void {
-  const style = document.createElement('style');
-  style.setAttribute('data-theme-transition', '');
-  style.textContent = css;
-  document.head.appendChild(style);
-  return () => style.remove();
-}
-
-function getOrigin(event?: MouseEvent | React.MouseEvent): { x: number; y: number } {
-  if (event && 'clientX' in event) {
-    return { x: event.clientX, y: event.clientY };
-  }
-  return { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-}
-
-function maxRadius(x: number, y: number): number {
-  return Math.hypot(
-    Math.max(x, window.innerWidth - x),
-    Math.max(y, window.innerHeight - y),
-  );
-}
-
-const BASE_NO_ANIMATION = `
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-}`;
-
-const OLD_ON_TOP = `
-::view-transition-old(root) { z-index: 10; }
-::view-transition-new(root) { z-index: 9; }`;
-
-type PresetHandler = (opts: {
-  direction: Direction;
-  duration: number;
-  event?: MouseEvent | React.MouseEvent;
-}) => {
-  css: string;
-  animate: (() => Animation | void) | null;
-};
-
-const presets: Record<AnimationPreset, PresetHandler> = {
-  wipe: ({ direction, duration }) => {
-    const fromClip: Record<Direction, string> = {
-      ltr: 'inset(0 100% 0 0)',
-      rtl: 'inset(0 0 0 100%)',
-      ttb: 'inset(0 0 100% 0)',
-      btt: 'inset(100% 0 0 0)',
-    };
-    return {
-      css: `
-::view-transition-old(root) { animation: none; mix-blend-mode: normal; }
-::view-transition-new(root) {
-  animation: ${duration}ms ease-in-out both vt-wipe-${direction};
-  mix-blend-mode: normal;
-}
-@keyframes vt-wipe-${direction} {
-  from { clip-path: ${fromClip[direction]}; }
-  to   { clip-path: inset(0 0 0 0); }
-}`,
-      animate: null,
-    };
-  },
-
-  'circle-expand': ({ duration, event }) => {
-    const { x, y } = getOrigin(event);
-    const r = maxRadius(x, y);
-    return {
-      css: `
-::view-transition-old(root) { animation: none; mix-blend-mode: normal; }
-::view-transition-new(root) {
-  animation: ${duration}ms ease-in-out both vt-circle-expand;
-  mix-blend-mode: normal;
-}
-@keyframes vt-circle-expand {
-  from { clip-path: circle(0px at ${x}px ${y}px); }
-  to   { clip-path: circle(${r}px at ${x}px ${y}px); }
-}`,
-      animate: null,
-    };
-  },
-
-  'circle-shrink': ({ duration, event }) => {
-    const { x, y } = getOrigin(event);
-    const r = maxRadius(x, y);
-    return {
-      css: `
-::view-transition-new(root) { animation: none; mix-blend-mode: normal; z-index: 9; }
-::view-transition-old(root) {
-  animation: ${duration}ms ease-in-out both vt-circle-shrink;
-  mix-blend-mode: normal;
-  z-index: 10;
-}
-@keyframes vt-circle-shrink {
-  from { clip-path: circle(${r}px at ${x}px ${y}px); }
-  to   { clip-path: circle(0px at ${x}px ${y}px); }
-}`,
-      animate: null,
-    };
-  },
-
-  diamond: ({ duration }) => ({
-    css: `
-::view-transition-old(root) { animation: none; mix-blend-mode: normal; }
-::view-transition-new(root) {
-  animation: ${duration}ms ease-in-out both vt-diamond;
-  mix-blend-mode: normal;
-}
-@keyframes vt-diamond {
-  from { clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%); }
-  to   { clip-path: polygon(50% -50%, 150% 50%, 50% 150%, -50% 50%); }
-}`,
-    animate: null,
-  }),
-
-  crossfade: ({ duration }) => ({
-    css: `
-::view-transition-old(root) {
-  animation: ${duration}ms ease-out both vt-fade-out;
-}
-::view-transition-new(root) {
-  animation: ${duration}ms ease-in both vt-fade-in;
-}
-@keyframes vt-fade-out { to { opacity: 0; } }
-@keyframes vt-fade-in { from { opacity: 0; } }`,
-    animate: null,
-  }),
-
-  slide: ({ direction, duration }) => {
-    const axis = direction === 'ltr' || direction === 'rtl' ? 'X' : 'Y';
-    const outSign = direction === 'ltr' || direction === 'ttb' ? '-' : '';
-    const inSign = direction === 'ltr' || direction === 'ttb' ? '' : '-';
-    return {
-      css: `
-::view-transition-old(root) {
-  animation: ${duration}ms ease-in-out both vt-slide-out;
-}
-::view-transition-new(root) {
-  animation: ${duration}ms ease-in-out both vt-slide-in;
-}
-@keyframes vt-slide-out {
-  to { transform: translate${axis}(${outSign}100%); opacity: 0; }
-}
-@keyframes vt-slide-in {
-  from { transform: translate${axis}(${inSign}100%); opacity: 0; }
-}`,
-      animate: null,
-    };
-  },
-
-  'gif-mask': ({ duration = 800 }) => {
-    return {
-      css: BASE_NO_ANIMATION + `
-::view-transition-new(root) {
-  animation: mask-reveal ${duration}ms cubic-bezier(0.4, 0, 0.2) forwards;
-}
-@keyframes mask-reveal {
-  0% { opacity: 0; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
-}`,
-      animate: () => {
-        setTimeout(() => {}, duration + 100);
-      },
-    };
-  },
-
-  none: () => ({
-    css: `
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 0s !important;
-}`,
-    animate: null,
-  }),
-};
-
+/**
+ * Classic-context hook that wraps {@link useTheme} with animated theme
+ * changes via the View Transitions API.
+ *
+ * Returns the full classic context (`{...ctx}`) with `setTheme` replaced by
+ * an animated version. The animation core lives in {@link animateThemeChange}
+ * (framework-agnostic) and is shared with `useAnimatedSSRTheme`.
+ *
+ * @param options - Preset/direction/duration overrides.
+ * @returns The classic context with an animated `setTheme`.
+ */
 export function useAnimatedTheme(options?: IAnimatedThemeOptions) {
   const ctx = useTheme();
   const optsRef = useRef(options);
@@ -216,56 +32,10 @@ export function useAnimatedTheme(options?: IAnimatedThemeOptions) {
       mode?: 'light' | 'dark' | 'auto',
       event?: MouseEvent | React.MouseEvent,
     ) => {
-      const { animation = 'wipe', direction = 'ltr', duration = 500 } = optsRef.current ?? {};
-      const effectiveMode = mode ?? ctx.currentMode;
-
-      const applyChanges = async () => {
-        await ctx.setTheme(theme, mode);
-        flushSync(() => {
-          document.documentElement.classList.toggle('dark', resolveMode(effectiveMode) === 'dark');
-        });
-      };
-
-      const reducedMotion =
-        typeof window !== 'undefined' &&
-        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-      if (reducedMotion || !document.startViewTransition) {
-        await applyChanges();
-        return;
-      }
-
-      const preset = presets[animation]({ direction, duration, event });
-      const cleanupStyles = injectTransitionStyles(preset.css);
-
-      const transition = document.startViewTransition(applyChanges);
-
-      await transition.ready;
-      const jsAnimation = preset.animate?.() as Animation | undefined;
-
-      await Promise.all([
-        transition.finished,
-        jsAnimation?.finished ?? Promise.resolve(),
-      ]);
-
-      cleanupStyles();
+      await animateThemeChange({ api: ctx, options: optsRef.current, theme, mode, event });
     },
     [ctx],
   );
 
   return { ...ctx, setTheme: setThemeAnimated };
 }
-
-export const ANIMATION_PRESETS: readonly AnimationPreset[] = [
-  'wipe',
-  'circle-expand',
-  'circle-shrink',
-  'diamond',
-  'crossfade',
-  'slide',
-  'gif-mask',
-  'none',
-] as const;
-
-export const DIRECTIONAL_PRESETS = new Set<AnimationPreset>(['slide', 'wipe']);
-export const DIRECTION_OPTIONS: readonly Direction[] = ['ltr', 'rtl', 'ttb', 'btt'] as const;

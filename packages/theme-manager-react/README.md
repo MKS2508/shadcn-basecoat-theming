@@ -1,405 +1,180 @@
 # @mks2508/theme-manager-react
 
-React hooks and components for theme management (shadcn/ui compatible, Next.js 15 ready) with **animated transitions**
+React hooks and components for theme management — shadcn/ui compatible,
+**animated** theme transitions via the View Transitions API, SSR-ready for
+Next.js, TanStack Start and Remix.
 
-## 🚀 Features v3.3.0
+## Entries
 
-- ✅ **Animated Theme Transitions**: Smooth View Transitions API integration
-- ✅ **Next.js Optimized**: Dedicated `/nextjs` export for SSR/SSG
-- ✅ **React 19 Compatible**: Full support with TypeScript fixes
-- ✅ **Flexible Dependencies**: Compatible with wide range of peer dependency versions
+| Subpath | Stack | Contents |
+|---|---|---|
+| `@mks2508/theme-manager-react` | Classic (SPA/CSR) | `ThemeProvider`, `useTheme`, `useAnimatedTheme`, `SettingsModal`, `ThemeManagementModal`, `FontSettingsModal`, `AnimationSettings` |
+| `…/ssr` | SSR (framework-agnostic) | `SSRThemeProvider`, `useSSRTheme`, `useAnimatedSSRTheme`, `SSRThemeSelect`, `SSRModeToggle`, `ThemeSSRHead`, `ThemeSSRStyle`, `generateFOUCScript` |
+| `…/tanstack-start` | SSR (client side) | everything in `/ssr` (client) |
+| `…/tanstack-start/server` | SSR (server only) | `getThemeFromCookie`, `setThemeInCookie`, `getThemeConfigForSSR`, `getAvailableThemesForSSR`, `useServerTheme` |
+| `…/nextjs` | Next.js | `NextJSThemeProvider`, `createNextJSConfig` |
 
-## 📘 Quick Start Guide for Existing Next.js Projects
+> **Note:** selector/toggle components are **not** exported pre-built from the
+> classic `/nextjs` entry. For SSR use `SSRThemeSelect` / `SSRModeToggle` from
+> `/ssr` or `/tanstack-start`. For a classic SPA, build them on top of
+> `useAnimatedTheme` (see the starter pattern below).
 
-### **Prerequisites**:
-- ✅ Next.js project configured
-- ✅ `/public/themes/registry.json` present
-- ✅ `/public/themes/` folder with CSS theme files
+## Install
 
-### **Installation**
 ```bash
-npm install @mks2508/theme-manager-react@3.3.0
+bun add @mks2508/theme-manager-react @mks2508/shadcn-basecoat-theme-manager
+# peers
+bun add react react-dom lucide-react class-variance-authority clsx tailwind-merge
+# optional (for SSR server functions)
+bun add @tanstack/react-start
+# optional (pre-built selectors use DropdownMenu / Button)
+bun add @mks2508/mks-ui
 ```
 
-### **Setup in layout.tsx (App Router)**
-```tsx
-// app/layout.tsx
-import { ThemeProvider } from '@mks2508/theme-manager-react/nextjs'
+## SSR setup (TanStack Start) — zero-FOUC
 
-export default function RootLayout({ children }) {
+The server reads the theme cookie, resolves the CSS variables from the
+registry, and injects them into `<head>` **before** the first paint. The
+client hydrates against the same values — no flash.
+
+```tsx
+// src/routes/__root.tsx
+import { createServerFn } from '@tanstack/react-start';
+import {
+  getThemeFromCookie,
+  getThemeConfigForSSR,
+  SSRThemeProvider,
+  ThemeSSRHead,
+} from '@mks2508/theme-manager-react/tanstack-start';
+import { getThemeFromCookie as readCookie, getThemeConfigForSSR as readConfig } from '@mks2508/theme-manager-react/tanstack-start/server';
+
+// Resolve theme server-side (no "use client")
+const resolveTheme = createServerFn({ method: 'GET' }).handler(async () => {
+  const { theme, mode } = await readCookie();
+  const { cssVars, fonts } = await readConfig({ data: { theme, mode } });
+  return { theme, mode, cssVars, fonts };
+});
+
+export function RootDocument({ children, theme, mode, cssVars, fonts }: RootProps) {
   return (
-    <html lang="en">
-      <body>
-        <ThemeProvider 
-          registryUrl="/themes/registry.json"
-          defaultTheme="default"
-          defaultMode="auto"
-          enableTransitions={true}
-        >
-          {children}
-        </ThemeProvider>
-      </body>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <ThemeSSRHead
+          theme={theme}
+          mode={mode}
+          cssVars={cssVars}
+          fonts={fonts}
+          foucConfig={{ storageType: 'cookie', defaultTheme: 'graphite', defaultMode: 'dark' }}
+        />
+      </head>
+      <body>{children}</body>
     </html>
-  )
+  );
 }
-```
 
-### **Sidebar with Animated Components**
-```tsx
-// components/Sidebar.tsx
-import { 
-  ModeToggle,
-  AnimatedThemeToggler,
-  ThemeSelector
-} from '@mks2508/theme-manager-react/nextjs'
-
-export function Sidebar() {
+export function RootLayout() {
   return (
-    <aside className="w-64 p-4">
-      {/* Toggle light/dark with animations */}
-      <ModeToggle />
-      
-      {/* Custom animated toggler */}
-      <AnimatedThemeToggler direction="ltr">
-        {({ effective, toggleTheme }) => (
-          <button onClick={() => toggleTheme()}>
-            {effective === 'light' ? '🌙' : '☀️'} Toggle
-          </button>
-        )}
-      </AnimatedThemeToggler>
-      
-      {/* Full theme selector */}
-      <ThemeSelector />
-    </aside>
-  )
+    <SSRThemeProvider defaultTheme="graphite" defaultMode="dark" registryUrl="/themes/registry.json">
+      <Outlet />
+    </SSRThemeProvider>
+  );
 }
 ```
 
-### **Expected File Structure**
-```
-/public/themes/
-├── registry.json          ← Theme configuration
-├── synthwave84-light.css  ← Individual themes
-├── synthwave84-dark.css
-├── rose-light.css
-└── rose-dark.css
+### Pre-built animated selector + toggle
+
+```tsx
+import { SSRThemeSelect, SSRModeToggle } from '@mks2508/theme-manager-react/tanstack-start';
+
+export function Header() {
+  return (
+    <div className="flex gap-2">
+      <SSRThemeSelect animation="wipe" duration={500} />
+      <SSRModeToggle modes={['light', 'dark', 'system']} animation="circle-expand" />
+    </div>
+  );
+}
 ```
 
-### **Registry.json Structure**
+Animation presets: `wipe` · `circle-expand` · `circle-shrink` · `diamond` ·
+`crossfade` · `slide` · `gif-mask` · `none`. Honours `prefers-reduced-motion`
+(instant swap when set or when the View Transitions API is unavailable).
+
+## Classic setup (SPA / CSR — Vite)
+
+```tsx
+// src/main.tsx
+import { ThemeProvider } from '@mks2508/theme-manager-react';
+
+<ThemeProvider registryUrl="/themes/registry.json" defaultTheme="synthwave84" defaultMode="auto">
+  <App />
+</ThemeProvider>
+```
+
+Build an animated selector on top of `useAnimatedTheme` (the classic hook):
+
+```tsx
+import { useAnimatedTheme } from '@mks2508/theme-manager-react';
+import { DropdownMenu, DropdownMenuTrigger, Button } from '@mks2508/mks-ui/react';
+
+function ThemeSelector() {
+  const { currentTheme, themes, setTheme } = useAnimatedTheme({ animation: 'wipe', duration: 500 });
+  // …render a DropdownMenu bound to currentTheme / setTheme
+}
+```
+
+`useAnimatedTheme` spreads the full classic context and replaces `setTheme`
+with an animated version. `useAnimatedSSRTheme` (SSR entry) is the twin built
+on `useSSRTheme` — same shape, safe under `SSRThemeProvider`.
+
+## Settings modal (classic)
+
+```tsx
+import { SettingsModal, type IAnimationSettings } from '@mks2508/theme-manager-react';
+import { useState } from 'react';
+
+function Settings() {
+  const [open, setOpen] = useState(false);
+  const [anim, setAnim] = useState<IAnimationSettings>({ preset: 'wipe', direction: 'ltr', duration: 500 });
+  return <SettingsModal open={open} onOpenChange={setOpen} animationSettings={anim} onAnimationSettingsChange={setAnim} />;
+}
+```
+
+`AnimationSettings` (the preset/direction/duration panel) is context-free and
+SSR-safe — it can be rendered under either provider.
+
+## Registry & CSS
+
 ```json
+// public/themes/registry.json
 {
   "themes": [
     {
       "id": "synthwave84",
-      "name": "Synthwave84",
-      "default": true,
-      "modes": {
-        "light": "/themes/synthwave84-light.css",
-        "dark": "/themes/synthwave84-dark.css"
-      }
+      "label": "Synthwave84",
+      "modes": { "light": "/themes/synthwave84-light.css", "dark": "/themes/synthwave84-dark.css" },
+      "fonts": { "sans": "…", "serif": "…", "mono": "…" },
+      "preview": { "primary": "oklch(…)", "background": "oklch(…)", "accent": "oklch(…)" },
+      "config": { "radius": "0.5rem" }
     }
   ]
 }
 ```
 
-## Full Installation (New Projects)
+Each theme CSS file defines its variables under `:root { … }`. For SSR,
+`getThemeConfigForSSR` reads `public/themes/<cssFile>` relative to
+`process.cwd()` and extracts those variables — keep mode paths absolute
+from the `public/` root (`/themes/…`).
 
-```bash
-npm install @mks2508/theme-manager-react@^3.3.0
-npm install @mks2508/shadcn-basecoat-theme-manager@^3.2.1
+## Compatibility
 
-# Required peer dependencies (flexible versions)
-npm install react react-dom
-npm install @radix-ui/react-popover @radix-ui/react-dialog @radix-ui/react-tabs @radix-ui/react-switch @radix-ui/react-label
-npm install lucide-react class-variance-authority clsx tailwind-merge
-```
-
-### Pages Router Setup
-```tsx
-// pages/_app.tsx
-import { ThemeProvider } from '@mks2508/theme-manager-react/nextjs'
-import type { AppProps } from 'next/app'
-import './index.css'
-
-export default function App({ Component, pageProps }: AppProps) {
-  return (
-    <ThemeProvider
-      registryUrl="/themes/registry.json"
-      defaultTheme="default"
-      defaultMode="auto"
-      enableTransitions={true}
-    >
-      <Component {...pageProps} />
-    </ThemeProvider>
-  )
-}
-```
-
-## 🎨 Animated Components
-
-### Animated Theme Toggler
-```tsx
-import { AnimatedThemeToggler } from '@mks2508/theme-manager-react/nextjs'
-
-export default function Navigation() {
-  return (
-    <nav>
-      <AnimatedThemeToggler direction="ltr">
-        {({ effective, toggleTheme, isAnimating }) => (
-          <button 
-            onClick={() => toggleTheme()}
-            disabled={isAnimating}
-            className="animated-toggle"
-          >
-            {effective === 'light' ? '🌙' : '☀️'}
-          </button>
-        )}
-      </AnimatedThemeToggler>
-    </nav>
-  )
-}
-```
-
-### Animated Theme Selector
-```tsx
-import { AnimatedThemeSelector } from '@mks2508/theme-manager-react/nextjs'
-
-export default function ThemeGrid() {
-  const themes = ['default', 'rose', 'blue', 'green']
-  
-  return (
-    <div className="grid grid-cols-2 gap-4">
-      {themes.map(theme => (
-        <AnimatedThemeSelector 
-          key={theme}
-          targetTheme={theme}
-          direction="ltr"
-        >
-          {({ switchToTheme, isCurrentTheme, isAnimating }) => (
-            <button
-              onClick={switchToTheme}
-              disabled={isCurrentTheme || isAnimating}
-              className={`theme-card ${isCurrentTheme ? 'active' : ''}`}
-            >
-              {theme} {isCurrentTheme && '✓'}
-            </button>
-          )}
-        </AnimatedThemeSelector>
-      ))}
-    </div>
-  )
-}
-```
-
-### Mode Toggle (Enhanced)
-```tsx
-import { ModeToggle } from '@mks2508/theme-manager-react/nextjs'
-
-export default function Header() {
-  return (
-    <header>
-      <ModeToggle />
-    </header>
-  )
-}
-```
-
-### Theme Selector
-```tsx
-import { ThemeSelector } from '@mks2508/theme-manager-react/nextjs'
-
-export default function Sidebar() {
-  return (
-    <aside>
-      <ThemeSelector 
-        onThemeManagement={() => console.log('Open theme manager')}
-        onFontSettings={() => console.log('Open font settings')}
-      />
-    </aside>
-  )
-}
-```
-
-### Font Settings
-```tsx
-import { FontSettingsModal } from '@mks2508/theme-manager-react'
-
-export default function Settings() {
-  return (
-    <div>
-      <FontSettingsModal />
-    </div>
-  )
-}
-```
-
-### Theme Management
-```tsx
-import { ThemeManagementModal } from '@mks2508/theme-manager-react'
-
-export default function Admin() {
-  return (
-    <div>
-      <ThemeManagementModal />
-    </div>
-  )
-}
-```
-
-## Hooks
-
-### useTheme
-```tsx
-import { useTheme } from '@mks2508/theme-manager-react/nextjs'
-
-export default function CustomComponent() {
-  const { 
-    currentTheme, 
-    currentMode,
-    setTheme,
-    themes,
-    themeManager 
-  } = useTheme()
-
-  return (
-    <div>
-      <p>Current theme: {currentTheme}</p>
-      <p>Current mode: {currentMode}</p>
-      <button onClick={() => setTheme('rose', 'dark')}>
-        Switch to Rose Dark
-      </button>
-      <p>Available themes: {themes.length}</p>
-    </div>
-  )
-}
-```
-
-## CSS Setup
-
-Required CSS variables for theming:
-
-```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-:root {
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  --primary: 222.2 47.4% 11.2%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222.2 84% 4.9%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96%;
-  --accent-foreground: 222.2 84% 4.9%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 222.2 84% 4.9%;
-  --radius: 0.5rem;
-}
-
-.dark {
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
-  --primary: 210 40% 98%;
-  --primary-foreground: 222.2 47.4% 11.2%;
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --accent: 217.2 32.6% 17.5%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 212.7 26.8% 83.9%;
-}
-```
-
-## Compatibility Matrix
-
-| Next.js Version | React Version | Router | Status |
-|----------------|---------------|---------|---------|
-| 15.x | 19.x | App Router | ✅ Recommended |
-| 15.x | 18.2+ | Pages Router | ✅ Fully Supported |
-| 15.x | 19.x | Pages Router | ✅ Supported |
-| 14.x | 18.x | Both | ✅ Legacy Support |
-
-## Known Issues & Workarounds
-
-### Radix UI Warnings with React 19
-Some Radix UI components may show warnings in the console when using React 19. These are cosmetic and don't affect functionality:
-
-```
-Warning: useEffectEvent is not yet implemented
-Warning: Accessing element.ref was removed in React 19
-```
-
-**Workaround**: These warnings are expected and will be resolved when Radix UI fully supports React 19.
-
-### TypeScript Strict Mode
-If using strict TypeScript settings, you may need to add:
-
-```json
-// tsconfig.json
-{
-  "compilerOptions": {
-    "skipLibCheck": true
-  }
-}
-```
-
-## Migration Guides
-
-### From v3.2.x to v3.3.0
-
-**New Features:**
-- ✅ Animated theme transitions with View Transitions API
-- ✅ New components: `AnimatedThemeToggler`, `AnimatedThemeSelector`
-- ✅ Enhanced `ModeToggle` with animations
-- ✅ Flexible peer dependencies
-
-**Update package.json:**
-```diff
-- "@mks2508/theme-manager-react": "^3.2.1"
-+ "@mks2508/theme-manager-react": "^3.3.0"
-```
-
-**Update imports for Next.js:**
-```diff
-- import { ThemeProvider } from '@mks2508/theme-manager-react'
-+ import { ThemeProvider } from '@mks2508/theme-manager-react/nextjs'
-```
-
-### From v3.0.0 to v3.3.0
-
-```diff
-- "@mks2508/theme-manager-react": "^3.0.0"
-+ "@mks2508/theme-manager-react": "^3.3.0"
-
-- "lucide-react": "^0.400.0"
-+ "lucide-react": ">=0.400.0"
-
-- "tailwind-merge": "^2.0.0"
-+ "tailwind-merge": ">=1.0.0"
-```
-
-## Support
-
-- **React**: 18.2+ or 19.x
-- **Next.js**: 14.x, 15.x
-- **TypeScript**: 5.x
-- **Tailwind CSS**: 3.x, 4.x
+| Framework | React | Status |
+|---|---|---|
+| TanStack Start (SSR) | 19 | ✅ Recommended (zero-FOUC via `/tanstack-start` + `/tanstack-start/server`) |
+| Next.js 15 (App Router) | 19 | ✅ via `/nextjs` |
+| Any React SSR | 18.2+ / 19 | ✅ via `/ssr` (framework-agnostic) |
+| Vite SPA (classic) | 18.2+ / 19 | ✅ via `.` entry |
 
 ## License
 
-MIT
-
-## Author
-
-MKS2508
+MIT — MKS2508
